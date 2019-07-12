@@ -5,4 +5,4 @@ install:
   - 'pip install pipenv'
   - 'pipenv sync --dev'
 
-script:
+script: echo "Test"

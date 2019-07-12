@@ -140,7 +140,6 @@ disable=print-statement,
         exception-escape,
         comprehension-escape,
         no-member,
-        logging-fstring-interpolation,
         unused-variable,
         unused-import
 
@@ -426,7 +425,7 @@ redefining-builtins-modules=six.moves,past.builtins,future.builtins,builtins,io
 
 # Format style used to check logging format string. `old` means using %
 # formatting, while `new` is for `{}` formatting.
-logging-format-style=new
+logging-format-style=old
 
 # Logging modules to check that the string format arguments are in logging
 # function parameter format.
