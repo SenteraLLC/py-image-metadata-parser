@@ -33,6 +33,27 @@ should be a simple extension of these instructions.  The library uses Python3.
 
 If no errors appear, the **imgparse** library should be installed correctly.
 
+#### Linux (Pipenv)
+
+1) If not installed, install **pipenv** with the command
+
+        >> pip install pipenv
+        
+2) Open a terminal and clone **py-image-metadata-parser** with
+
+        >> git clone https://github.com/SenteraLLC/py-image-metadata-parser.git        
+        
+3) Navigate to **py-image-metadata-parser** and run
+
+        >> pipenv install
+   
+4) Everything should be properly installed within a pipenv environment.  To check it is, run
+
+        >> pipenv run python
+        >> import imgparse
+        
+If no errors appear, the **imgparse** library should be installed correctly
+
 ### Documentation
 
 This library is documented using sphinx. Generate the documentation with the following commands
