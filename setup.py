@@ -13,7 +13,8 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     install_requires=[
         "exifread",
-        "xmltodict"
+        "xmltodict",
+        "pandas"
     ],
     extras_require={
         'dev': [

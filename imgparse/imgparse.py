@@ -347,13 +347,17 @@ def parse_session_alt(image_path):
     return None
 
 
-def get_gsd(image_path=None, exif_data=None):
+def get_gsd(image_path, exif_data=None):
     """
     Parses the necessary metadata and calculates the gsd of the image.
 
     Returns None if couldn't calculate the gsd.
 
-    :param image_path: the full path to the image (optional if `exif_data` provided)
+    .. note::
+
+        Unlike some other functions in ``imgparse``, `image_path` is mandatory whether or not `exif_data` is provided.
+
+    :param image_path: the full path to the image
     :param exif_data: the exif dictionary for the image (optional to speed up processing)
     :return: **gsd** - the ground sample distance of the image in meters
     """

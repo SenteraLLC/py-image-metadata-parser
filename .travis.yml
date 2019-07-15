@@ -5,4 +5,4 @@ install:
   - 'pip install pipenv'
   - 'pipenv sync --dev'
 
-script: echo "Test"
+script: pipenv run pytest

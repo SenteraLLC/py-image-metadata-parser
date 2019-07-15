@@ -28,8 +28,7 @@ should be a simple extension of these instructions.  The library uses Python3.
 5) To check it is properly installed, open a new Anaconda shell, navigate to **py-image-metadata-parser**, and run
 
         >> activate image-parsing
-        >> python
-        >> import imgparse
+        >> pytest
 
 If no errors appear, the **imgparse** library should be installed correctly.
 
@@ -49,8 +48,7 @@ If no errors appear, the **imgparse** library should be installed correctly.
    
 4) Everything should be properly installed within a pipenv environment.  To check it is, run
 
-        >> pipenv run python
-        >> import imgparse
+        >> pipenv run pytest
         
 If no errors appear, the **imgparse** library should be installed correctly
 
