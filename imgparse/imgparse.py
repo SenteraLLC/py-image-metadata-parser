@@ -1,0 +1,372 @@
+"""
+This module contains various functions that extract imagery information from exif and xmp tags in the
+images.  Supports some DJI, some Hasselblad, and all Sentera sensors.
+
+"""
+
+import os
+import logging
+import exifread
+import xmltodict
+from imgparse import pixel_pitches
+
+logger = logging.getLogger(__name__)
+
+
+def _get_if_exist(dictionary, key):
+    """
+    Helper function for looking up a key in a dictionary.  If key doesn't exist, returns None.  Helps avoid
+    key not found error handling.
+
+    :param dictionary: dictionary of key/value pairs
+    :param key: key to look up in provided dictionary
+    :return: **value** - value associated with key, else None
+    """
+    if key in dictionary:
+        return dictionary[key]
+
+    return None
+
+
+def _convert_to_degrees(tag):
+    """
+    Helper function to convert the `exifread` GPS coordinate IfdTag object to degrees in float format
+
+    :param tag:
+    :type tag: exifread.classes.IfdTag
+    :rtype: float
+    """
+    degrees = _convert_to_float(tag, 0)
+    minutes = _convert_to_float(tag, 1)
+    seconds = _convert_to_float(tag, 2)
+
+    return degrees + (minutes / 60.0) + (seconds / 3600.0)
+
+
+def _convert_to_float(tag, index=0):
+    """
+    Helper function to convert `exifread` IfdTag object to float.
+
+    :param tag:
+    :param index:
+    :return:
+    """
+    return float(tag.values[index].num) / float(tag.values[index].den)
+
+
+def _get_xmp_data(image_path):
+    """
+    Returns a dictionary of lookup keys/values for the xmp data of the provided image.  This function is currently only
+    used when extracting the relative altitude from DJI images, so is private.
+
+    Returns None if couldn't read xmp data.
+
+    :param image_path: full path to image to parse xmp from
+    :return: **xmp_data** - a dictionary of lookup keys/values for image exif data.
+    """
+    if not os.path.isfile(image_path):
+        logger.error("Image doesn't exist.  Couldn't read exif data for image: %s", image_path)
+        return None
+
+    with open(image_path, "rb") as file:
+        img = str(file.read())
+        file.close()
+
+    xmp_start = img.find('<x:xmpmeta')
+    xmp_end = img.find('</x:xmpmeta')
+    if xmp_start != xmp_end:
+        xmp = img[xmp_start:xmp_end + 12].replace("\\n", "\n")
+        xmp_dict = xmltodict.parse(xmp)
+        return xmp_dict['x:xmpmeta']
+
+    logger.error("Couldn't read xmp data for image: %s", image_path)
+    return None
+
+
+def get_exif_data(image_path):
+    """
+    Returns a dictionary of lookup keys/values for the exif data of the provided image.  This dictionary is an optional
+    argument for the various ``imgparse`` functions to speed up processing by only reading the exif data once per image.
+    Otherwise this function is used internally for ``imgparse`` functions to extract the needed exif data.
+
+    Returns None if couldn't read exif data.
+
+    :param image_path: full path to image to parse exif from
+    :return: **exif_data** - a dictionary of lookup keys/values for image exif data.
+    """
+    if not os.path.isfile(image_path):
+        logger.error("Image doesn't exist.  Can't read exif data for image: %s", image_path)
+        return None
+
+    file = open(image_path, 'rb')
+    exif_data = exifread.process_file(file)
+    file.close()
+    return exif_data
+
+
+def get_camera_params(image_path=None, exif_data=None):
+    """
+    Returns the focal length and pixel pitch of the sensor that took the image, extracted
+    from the image's exif tags.  DJI doesn't store the pixel pitch in the exif tags, so
+    that is found in a lookup table.  See `pixel_pitches.py` to see which DJI sensor models are supported.
+    To support new sensors, add the model name and associated pixel pitch to the **DJI_PIXEL_PITCH** dictionary at the
+    top of `pixel_pitches.py`.
+
+    Both returned values are None if couldn't parse the camera parameters.
+
+    :param image_path: the full path to the image (optional if `exif_data` provided)
+    :param exif_data: the exif dictionary for the image (optional to speed up processing)
+    :return: **focal_length, pixel_pitch** - the camera parameters in meters
+    """
+    make, model = get_make_and_model(image_path, exif_data)
+    focal_length = get_focal_length(image_path, exif_data)
+    pixel_pitch = None
+    if make == 'DJI':
+        pixel_pitch = _get_if_exist(pixel_pitches.DJI_PIXEL_PITCH, model)
+    elif make == 'Hasselblad':
+        pixel_pitch = _get_if_exist(pixel_pitches.HASSELBLAD_PIXEL_PITCH, model)
+    elif make == 'Sentera':
+        pixel_pitch = get_sentera_pixel_pitch(image_path, exif_data)
+
+    if focal_length and pixel_pitch:
+        return focal_length, pixel_pitch
+
+    logger.error("Couldn't parse camera parameters")
+    return None, None
+
+
+def get_relative_altitude(image_path, exif_data=None):
+    """
+    Returns the relative altitude of the camera above the ground that is stored in the image exif
+    and xmp tags.  If image is from a Sentera sensor, `session.txt` must be in the image's directory
+    in order for the relative altitude to be calculated.
+
+    Returns None if couldn't parse the relative altitude or couldn't find `session.txt`.
+
+    .. note::
+
+        Unlike some other functions in ``imgparse``, `image_path` is mandatory whether or not `exif_data` is provided.
+
+    :param image_path: the full path to the image
+    :param exif_data: the exif dictionary for the image (optional to speed up processing)
+    :return: **relative_alt** - the relative altitude of the camera above the ground
+    """
+    make, model = get_make_and_model(image_path, exif_data)
+    rel_alt = None
+    if make in ('DJI', 'Hasselblad'):
+        xmp_dict = _get_xmp_data(image_path)
+        if xmp_dict:
+            try:
+                alt_str = xmp_dict['rdf:RDF']['rdf:Description']['@drone-dji:RelativeAltitude']
+                rel_alt = float(alt_str)
+            except KeyError:
+                pass
+    elif make == 'Sentera':
+        abs_alt = get_altitude_msl(image_path)
+        session_alt = parse_session_alt(image_path)
+        if abs_alt and session_alt:
+            rel_alt = abs_alt - session_alt
+
+    if not rel_alt:
+        logger.error("Couldn't parse relative altitude")
+
+    return rel_alt
+
+
+def get_lat_lon(image_path=None, exif_data=None):
+    """
+    Returns the latitude and longitude of where the image was taken, stored in the image's
+    exif tags.
+
+    Both returned values will be None if couldn't parse latitude and longitude.
+
+    :param image_path: the full path to the image (optional if `exif_data` provided)
+    :param exif_data: the exif dictionary for the image (optional to speed up processing)
+    :return: **latitude, longitude** - the location of where the image was taken
+    """
+    if not exif_data:
+        if image_path:
+            exif_data = get_exif_data(image_path)
+
+        if not exif_data:
+            logger.error("Couldn't extract lat/lon")
+            return None, None
+
+    lat = None
+    lon = None
+
+    gps_latitude = _get_if_exist(exif_data, 'GPS GPSLatitude')
+    gps_latitude_ref = _get_if_exist(exif_data, 'GPS GPSLatitudeRef')
+    gps_longitude = _get_if_exist(exif_data, 'GPS GPSLongitude')
+    gps_longitude_ref = _get_if_exist(exif_data, 'GPS GPSLongitudeRef')
+
+    if gps_latitude and gps_latitude_ref and gps_longitude and gps_longitude_ref:
+        lat = _convert_to_degrees(gps_latitude)
+        if gps_latitude_ref.values[0] != 'N':
+            lat = 0 - lat
+
+        lon = _convert_to_degrees(gps_longitude)
+        if gps_longitude_ref.values[0] != 'E':
+            lon = 0 - lon
+
+    if not lat or not lon:
+        logger.error("Couldn't extract lat/lon")
+
+    return lat, lon
+
+
+def get_altitude_msl(image_path=None, exif_data=None):
+    """
+    Parses the absolute altitude of the image.
+
+    Returns None if couldn't parse altitude.
+
+    :param image_path: the full path to the image (optional if `exif_data` provided)
+    :param exif_data: the exif dictionary for the image (optional to speed up processing)
+    :return: **altitude_msl** - the absolute altitude of the image in meters.
+    """
+    if not exif_data:
+        if image_path:
+            exif_data = get_exif_data(image_path)
+
+        if not exif_data:
+            logger.error("Couldn't extract altitude msl")
+            return None
+
+    alt_tag = _get_if_exist(exif_data, 'GPS GPSAltitude')
+    if alt_tag:
+        return _convert_to_float(alt_tag)
+
+    logger.error("Couldn't extract altitude msl")
+    return None
+
+
+def get_focal_length(image_path=None, exif_data=None):
+    """
+    Parses the focal length of the camera from the image.
+
+    Returns None if couldn't parse focal length.
+
+    :param image_path: the full path to the image (optional if `exif_data` provided)
+    :param exif_data: the exif dictionary for the image (optional to speed up processing)
+    :return: **focal_length** - the focal length of the camera in meters
+    """
+    if not exif_data:
+        if image_path:
+            exif_data = get_exif_data(image_path)
+
+        if not exif_data:
+            logger.error("Couldn't parse the focal length")
+            return None
+
+    fl_tag = _get_if_exist(exif_data, 'EXIF FocalLength')
+    if fl_tag:
+        return _convert_to_float(fl_tag) / 1000
+
+    logger.error("Couldn't parse the focal length")
+    return None
+
+
+def get_make_and_model(image_path=None, exif_data=None):
+    """
+    Parses the make and model of the camera from the image.
+
+    Returns both values as None if couldn't parse make and/or model.
+
+    :param image_path: the full path to the image (optional if `exif_data` provided)
+    :param exif_data: the exif dictionary for the image (optional to speed up processing)
+    :return: **make**, **model** - the make and model of the camera
+    """
+    if not exif_data:
+        if image_path:
+            exif_data = get_exif_data(image_path)
+
+        if not exif_data:
+            logger.error("Couldn't parse the make and model of the camera")
+            return None, None
+
+    make_tag = _get_if_exist(exif_data, 'Image Make')
+    model_tag = _get_if_exist(exif_data, 'Image Model')
+    if make_tag and model_tag:
+        return make_tag.values, model_tag.values
+
+    logger.error("Couldn't parse the make and model of the camera")
+    return None, None
+
+
+def get_sentera_pixel_pitch(image_path=None, exif_data=None):
+    """
+    Parses the pixel pitch from Sentera cameras.  Won't parse pixel pitch for non-Sentera cameras.
+
+    Returns None if couldn't parse pixel pitch.
+
+    :param image_path: the full path to the image (optional if `exif_data` provided)
+    :param exif_data: the exif dictionary for the image (optional to speed up processing)
+    :return: **pixel_pitch** - the pixel_pitch of the camera
+    """
+    if not exif_data:
+        if image_path:
+            exif_data = get_exif_data(image_path)
+
+        if not exif_data:
+            logger.error("Couldn't parse the pixel pitch")
+            return None
+
+    focal_res_tag = _get_if_exist(exif_data, 'EXIF FocalPlaneXResolution')
+    if focal_res_tag:
+        return 1 / _convert_to_float(focal_res_tag) / 100
+
+    logger.error("Couldn't parse the pixel pitch")
+    return None
+
+
+def parse_session_alt(image_path):
+    """
+    Parses the session ground altitude from `session.txt`.  Used for Sentera cameras since relative altitude isn't
+    stored in exif or xmp tags, and instead the session ground altitude is written as a text file that needs to be read.
+    The `session.txt` must be in the same directory as the image in order to be read.
+
+    Returns None if couldn't parse the session altitude.
+
+    :param image_path: the full path to the image
+    :return: **pixel_pitch** - the pixel_pitch of the camera
+    """
+    imagery_dir = os.path.dirname(image_path)
+    session_path = os.path.join(imagery_dir, "session.txt")
+    if not os.path.isfile(session_path):
+        logger.error("Couldn't find session.txt file in image directory: %s", imagery_dir)
+        return None
+
+    session_file = open(session_path, "r")
+    session_alt = session_file.readline().split("\n")[0].split("=")[1]
+    session_file.close()
+    if session_alt:
+        return float(session_alt)
+
+    logger.error("Couldn't parse session altitude from session.txt for image: %s", imagery_dir)
+    return None
+
+
+def get_gsd(image_path, exif_data=None):
+    """
+    Parses the necessary metadata and calculates the gsd of the image.
+
+    Returns None if couldn't calculate the gsd.
+
+    .. note::
+
+        Unlike some other functions in ``imgparse``, `image_path` is mandatory whether or not `exif_data` is provided.
+
+    :param image_path: the full path to the image
+    :param exif_data: the exif dictionary for the image (optional to speed up processing)
+    :return: **gsd** - the ground sample distance of the image in meters
+    """
+
+    focal, pitch = get_camera_params(image_path, exif_data)
+    alt = get_relative_altitude(image_path, exif_data)
+
+    if focal and pitch and alt:
+        return pitch * alt / focal
+
+    logger.error("Couldn't calculate gsd")
+    return None

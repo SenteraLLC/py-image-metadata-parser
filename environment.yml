@@ -1,0 +1,13 @@
+name: image-parsing
+channels:
+  - conda-forge
+dependencies:
+  - python=3.6
+  - exifread
+  - xmltodict
+  - pylint
+  - sphinx
+  - sphinx_rtd_theme
+  - m2r
+  - pytest
+  - pandas
