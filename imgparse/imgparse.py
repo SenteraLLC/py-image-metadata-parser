@@ -8,7 +8,7 @@ import os
 import logging
 import exifread
 import xmltodict
-from imgparse import pixel_pitches
+from imgparse.pixel_pitches import PIXEL_PITCHES
 
 logger = logging.getLogger(__name__)
 
@@ -121,12 +121,13 @@ def get_camera_params(image_path=None, exif_data=None):
     make, model = get_make_and_model(image_path, exif_data)
     focal_length = get_focal_length(image_path, exif_data)
     pixel_pitch = None
-    if make == 'DJI':
-        pixel_pitch = _get_if_exist(pixel_pitches.DJI_PIXEL_PITCH, model)
-    elif make == 'Hasselblad':
-        pixel_pitch = _get_if_exist(pixel_pitches.HASSELBLAD_PIXEL_PITCH, model)
-    elif make == 'Sentera':
+
+    if make == "Sentera":
         pixel_pitch = get_sentera_pixel_pitch(image_path, exif_data)
+    else:
+        pixel_pitch_dict = _get_if_exist(PIXEL_PITCHES, make)
+        if pixel_pitch_dict:
+            pixel_pitch = _get_if_exist(pixel_pitch_dict, model)
 
     if focal_length and pixel_pitch:
         return focal_length, pixel_pitch
