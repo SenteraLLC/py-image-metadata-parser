@@ -63,7 +63,7 @@ def _get_xmp_data(image_path):
     :return: **xmp_data** - a dictionary of lookup keys/values for image exif data.
     :raises: ValueError
     """
-    if not os.path.isfile(image_path):
+    if not image_path or not os.path.isfile(image_path):
         logger.error("Image doesn't exist.  Couldn't read xmp data for image: %s", image_path)
         raise ValueError("Image doesn't exist. Couldn't read xmp data")
 
@@ -92,7 +92,7 @@ def get_exif_data(image_path):
     :return: **exif_data** - a dictionary of lookup keys/values for image exif data.
     :raises: ValueError
     """
-    if not os.path.isfile(image_path):
+    if not image_path or not os.path.isfile(image_path):
         logger.error("Image doesn't exist.  Can't read exif data for image: %s", image_path)
         raise ValueError("Image doesn't exist. Couldn't read exif data.")
 

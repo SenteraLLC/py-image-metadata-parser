@@ -25,19 +25,17 @@ def test_get_exif_data(sentera_image_data, dji_image_data):
 
 
 def test_get_camera_params_invalid():
-    focal1, pitch1 = imgparse.get_camera_params()
-    focal2, pitch2 = imgparse.get_camera_params("")
-    focal3, pitch3 = imgparse.get_camera_params(exif_data={})
-    focal4, pitch4 = imgparse.get_camera_params("", exif_data={})
+    with pytest.raises(ValueError):
+        focal, pitch = imgparse.get_camera_params()
 
-    assert focal1 is None
-    assert focal2 is None
-    assert focal3 is None
-    assert focal4 is None
-    assert pitch1 is None
-    assert pitch2 is None
-    assert pitch3 is None
-    assert pitch4 is None
+    with pytest.raises(ValueError):
+        focal, pitch = imgparse.get_camera_params("")
+
+    with pytest.raises(ValueError):
+        focal, pitch = imgparse.get_camera_params(exif_data={})
+
+    with pytest.raises(ValueError):
+        focal, pitch = imgparse.get_camera_params("", exif_data={})
 
 
 def test_get_camera_params_dji(dji_image_data):
@@ -67,19 +65,17 @@ def test_get_camera_params_sentera(sentera_image_data):
 
 
 def test_get_make_and_model_invalid():
-    make1, model1 = imgparse.get_camera_params()
-    make2, model2 = imgparse.get_camera_params("")
-    make3, model3 = imgparse.get_camera_params(exif_data={})
-    make4, model4 = imgparse.get_camera_params("", exif_data={})
+    with pytest.raises(ValueError):
+        make, model = imgparse.get_camera_params()
 
-    assert make1 is None
-    assert make2 is None
-    assert make3 is None
-    assert make4 is None
-    assert model1 is None
-    assert model2 is None
-    assert model3 is None
-    assert model4 is None
+    with pytest.raises(ValueError):
+        make, model = imgparse.get_camera_params("")
+
+    with pytest.raises(ValueError):
+        make, model = imgparse.get_camera_params(exif_data={})
+
+    with pytest.raises(ValueError):
+        make, model = imgparse.get_camera_params("", exif_data={})
 
 
 def test_get_make_and_model_dji(dji_image_data):
@@ -109,9 +105,8 @@ def test_get_make_and_model_sentera(sentera_image_data):
 
 
 def test_parse_session_alt_invalid():
-    alt = imgparse.parse_session_alt("")
-
-    assert alt is None
+    with pytest.raises(ValueError):
+        alt = imgparse.parse_session_alt("")
 
 
 def test_parse_session_alt(sentera_image_data):
@@ -121,23 +116,25 @@ def test_parse_session_alt(sentera_image_data):
 
 
 def test_get_relative_altitude_invalid():
-    alt1 = imgparse.get_relative_altitude("")
-    alt2 = imgparse.get_relative_altitude("", exif_data={})
+    with pytest.raises(ValueError):
+        alt = imgparse.get_relative_altitude("")
 
-    assert alt1 is None
-    assert alt2 is None
+    with pytest.raises(ValueError):
+        alt = imgparse.get_relative_altitude("", exif_data={})
 
 
 def test_get_altitude_msl_invalid():
-    alt1 = imgparse.get_altitude_msl()
-    alt2 = imgparse.get_altitude_msl("")
-    alt3 = imgparse.get_altitude_msl(exif_data={})
-    alt4 = imgparse.get_altitude_msl("", exif_data={})
+    with pytest.raises(ValueError):
+        alt = imgparse.get_altitude_msl()
 
-    assert alt1 is None
-    assert alt2 is None
-    assert alt3 is None
-    assert alt4 is None
+    with pytest.raises(ValueError):
+        alt = imgparse.get_altitude_msl("")
+
+    with pytest.raises(ValueError):
+        alt = imgparse.get_altitude_msl(exif_data={})
+
+    with pytest.raises(ValueError):
+        alt = imgparse.get_altitude_msl("", exif_data={})
 
 
 def test_get_relative_altitude_sentera(sentera_image_data):
@@ -177,11 +174,11 @@ def test_get_altitude_msl_dji(dji_image_data):
 
 
 def test_get_gsd_invalid():
-    gsd1 = imgparse.get_gsd("")
-    gsd2 = imgparse.get_gsd("", exif_data={})
+    with pytest.raises(ValueError):
+        gsd = imgparse.get_gsd("")
 
-    assert gsd1 is None
-    assert gsd2 is None
+    with pytest.raises(ValueError):
+        gsd = imgparse.get_gsd("", exif_data={})
 
 
 def test_get_gsd_sentera(sentera_image_data):
@@ -201,16 +198,14 @@ def test_get_gsd_dji(dji_image_data):
 
 
 def test_get_lat_lon_invalid():
-    lat1, lon1 = imgparse.get_lat_lon()
-    lat2, lon2 = imgparse.get_lat_lon("")
-    lat3, lon3 = imgparse.get_lat_lon("", exif_data={})
+    with pytest.raises(ValueError):
+        lat, lon = imgparse.get_lat_lon()
 
-    assert lat1 is None
-    assert lat2 is None
-    assert lat3 is None
-    assert lon1 is None
-    assert lon2 is None
-    assert lon3 is None
+    with pytest.raises(ValueError):
+        lat, lon = imgparse.get_lat_lon("")
+
+    with pytest.raises(ValueError):
+        lat, lon = imgparse.get_lat_lon("", exif_data={})
 
 
 def test_get_lat_lon_sentera(sentera_image_data):
