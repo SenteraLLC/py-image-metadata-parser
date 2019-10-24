@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="imgparse",
-    version="1.0.0",
+    version="1.0.1",
     description="Python image-metadata-parser utilities",
     long_description=long_description,
     long_description_content_type="text/markdown",
