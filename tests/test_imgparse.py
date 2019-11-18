@@ -232,3 +232,15 @@ def test_get_lat_lon_dji(dji_image_data):
     assert lon1 == pytest.approx(-93.973210, abs=1e-06)
     assert lon2 == pytest.approx(-93.973210, abs=1e-06)
     assert lon3 == pytest.approx(-93.973210, abs=1e-06)
+
+
+def test_get_roll_pitch_yaw_sentera(sentera_image_data):
+    roll, pitch, yaw = imgparse.get_roll_pitch_yaw(sentera_image_data[0])
+
+    assert [roll, pitch, yaw] == pytest.approx([-2.445596, 1.003452, 29.639198], abs=1e-06)
+
+
+def test_get_roll_pitch_yaw_dji(dji_image_data):
+    roll, pitch, yaw = imgparse.get_roll_pitch_yaw(dji_image_data[0])
+
+    assert [roll, pitch, yaw] == pytest.approx([-0.10, -11.30, 89.80], abs=1e-06)

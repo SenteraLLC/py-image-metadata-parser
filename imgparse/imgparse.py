@@ -54,10 +54,9 @@ def _convert_to_float(tag, index=0):
     return float(tag.values[index].num) / float(tag.values[index].den)
 
 
-def _get_xmp_data(image_path):
+def get_xmp_data(image_path):
     """
-    Returns a dictionary of lookup keys/values for the xmp data of the provided image.  This function is currently only
-    used when extracting the relative altitude from DJI images, so is private.
+    Returns a dictionary of lookup keys/values for the xmp data of the provided image.
 
     :param image_path: full path to image to parse xmp from
     :return: **xmp_data** - a dictionary of lookup keys/values for image exif data.
@@ -158,7 +157,7 @@ def get_relative_altitude(image_path, exif_data=None):
         session_alt = parse_session_alt(image_path)
         rel_alt = abs_alt - session_alt
     else:
-        xmp_dict = _get_xmp_data(image_path)
+        xmp_dict = get_xmp_data(image_path)
         try:
             alt_str = xmp_dict['rdf:RDF']['rdf:Description']['@drone-dji:RelativeAltitude']
             rel_alt = float(alt_str)
@@ -227,6 +226,47 @@ def get_altitude_msl(image_path=None, exif_data=None):
 
     logger.error("Couldn't extract altitude msl")
     raise ValueError("Couldn't extract altitude msl")
+
+
+def get_roll_pitch_yaw(image_path):
+    """
+    Returns the latitude and longitude of where the image was taken, stored in the image's
+    exif tags.
+
+    :param image_path: the full path to the image (optional if `exif_data` provided)
+    :param exif_data: the exif dictionary for the image (optional to speed up processing)
+    :return: **roll, pitch, yaw** - the orientation (degrees) of the camera with respect to the NED frame
+    :raises: ValueError
+    """
+    roll = None
+    pitch = None
+    yaw = None
+
+    make, model = get_make_and_model(image_path)
+    xmp_dict = get_xmp_data(image_path)
+    if make == 'Sentera':
+        roll_str = xmp_dict['rdf:RDF']['rdf:Description']['@Camera:Roll']
+        roll = float(roll_str)
+        pitch_str = xmp_dict['rdf:RDF']['rdf:Description']['@Camera:Pitch']
+        pitch = float(pitch_str)
+        yaw_str = xmp_dict['rdf:RDF']['rdf:Description']['@Camera:Yaw']
+        yaw = float(yaw_str)
+    else:
+        try:
+            roll_str = xmp_dict['rdf:RDF']['rdf:Description']['@drone-dji:FlightRollDegree']
+            roll = float(roll_str)
+            pitch_str = xmp_dict['rdf:RDF']['rdf:Description']['@drone-dji:FlightPitchDegree']
+            pitch = float(pitch_str)
+            yaw_str = xmp_dict['rdf:RDF']['rdf:Description']['@drone-dji:FlightYawDegree']
+            yaw = float(yaw_str)
+        except KeyError:
+            raise ValueError("Couldn't parse euler angles from xmp data.  Camera type may not be supported.")
+
+    if roll is None or pitch is None or yaw is None:
+        logger.error("Couldn't extract roll/pitch/yaw")
+        raise ValueError("Couldn't extract roll/pitch/yaw")
+
+    return roll, pitch, yaw
 
 
 def get_focal_length(image_path=None, exif_data=None):
