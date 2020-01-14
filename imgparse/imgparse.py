@@ -230,12 +230,13 @@ def get_altitude_msl(image_path=None, exif_data=None):
     raise ValueError("Couldn't extract altitude msl")
 
 
-def get_roll_pitch_yaw(image_path, xmp_data=None):
+def get_roll_pitch_yaw(image_path=None, exif_data=None, xmp_data=None):
     """
     Returns the latitude and longitude of where the image was taken, stored in the image's
     exif tags.
 
     :param image_path: the full path to the image (optional if `exif_data` provided)
+    :param exif_data: the exif dictionary for the image (optional to speed up processing)
     :param xmp_data: the xmp dictionary for the image (optional to speed up processing)
     :return: **roll, pitch, yaw** - the orientation (degrees) of the camera with respect to the NED frame
     :raises: ValueError
@@ -247,7 +248,7 @@ def get_roll_pitch_yaw(image_path, xmp_data=None):
     if not xmp_data:
         xmp_data = get_xmp_data(image_path)
 
-    make, model = get_make_and_model(image_path)
+    make, model = get_make_and_model(image_path, exif_data)
     if make == 'Sentera':
         roll_str = xmp_data['rdf:RDF']['rdf:Description']['@Camera:Roll']
         roll = float(roll_str)
@@ -312,6 +313,27 @@ def get_make_and_model(image_path=None, exif_data=None):
 
     logger.error("Couldn't parse the make and model of the camera")
     raise ValueError("Couldn't parse the make and model of the camera")
+
+
+def get_dimensions(image_path=None, exif_data=None):
+    """
+    Parses the height and width (in pixels) of the image from the exif data.
+
+    :param image_path: the full path to the image (optional if `exif_data` provided)
+    :param exif_data: the exif dictionary for the image (optional to speed up processing)
+    :return: **height**, **width** - the height and width of the image
+    :raises: ValueError
+    """
+    if not exif_data:
+        exif_data = get_exif_data(image_path)
+
+    height_tag = _get_if_exist(exif_data, 'EXIF ExifImageLength')
+    width_tag = _get_if_exist(exif_data, 'EXIF ExifImageWidth')
+    if width_tag and height_tag:
+        return height_tag.values[0], width_tag.values[0]
+
+    logger.error("Couldn't parse the height and width of the image")
+    raise ValueError("Couldn't parse the height and width of the image")
 
 
 def get_sentera_pixel_pitch(image_path=None, exif_data=None):
