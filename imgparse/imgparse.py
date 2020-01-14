@@ -136,7 +136,7 @@ def get_camera_params(image_path=None, exif_data=None):
     raise ValueError("Couldn't parse camera parameters.\nCamera make/model may not exist in pixel_pitches.py")
 
 
-def get_relative_altitude(image_path, exif_data=None):
+def get_relative_altitude(image_path, exif_data=None, xmp_data=None):
     """
     Returns the relative altitude of the camera above the ground that is stored in the image exif
     and xmp tags.  If image is from a Sentera sensor, `session.txt` must be in the image's directory
@@ -148,6 +148,7 @@ def get_relative_altitude(image_path, exif_data=None):
 
     :param image_path: the full path to the image
     :param exif_data: the exif dictionary for the image (optional to speed up processing)
+    :param xmp_data: the xmp dictionary for the image (optional to speed up processing)
     :return: **relative_alt** - the relative altitude of the camera above the ground
     :raises: ValueError
     """
@@ -157,9 +158,10 @@ def get_relative_altitude(image_path, exif_data=None):
         session_alt = parse_session_alt(image_path)
         rel_alt = abs_alt - session_alt
     else:
-        xmp_dict = get_xmp_data(image_path)
+        if not xmp_data:
+            xmp_data = get_xmp_data(image_path)
         try:
-            alt_str = xmp_dict['rdf:RDF']['rdf:Description']['@drone-dji:RelativeAltitude']
+            alt_str = xmp_data['rdf:RDF']['rdf:Description']['@drone-dji:RelativeAltitude']
             rel_alt = float(alt_str)
         except KeyError:
             raise ValueError("Couldn't parse relative altitude from xmp data.  Camera type may not be supported.")
@@ -228,13 +230,13 @@ def get_altitude_msl(image_path=None, exif_data=None):
     raise ValueError("Couldn't extract altitude msl")
 
 
-def get_roll_pitch_yaw(image_path):
+def get_roll_pitch_yaw(image_path, xmp_data=None):
     """
     Returns the latitude and longitude of where the image was taken, stored in the image's
     exif tags.
 
     :param image_path: the full path to the image (optional if `exif_data` provided)
-    :param exif_data: the exif dictionary for the image (optional to speed up processing)
+    :param xmp_data: the xmp dictionary for the image (optional to speed up processing)
     :return: **roll, pitch, yaw** - the orientation (degrees) of the camera with respect to the NED frame
     :raises: ValueError
     """
@@ -242,22 +244,24 @@ def get_roll_pitch_yaw(image_path):
     pitch = None
     yaw = None
 
+    if not xmp_data:
+        xmp_data = get_xmp_data(image_path)
+
     make, model = get_make_and_model(image_path)
-    xmp_dict = get_xmp_data(image_path)
     if make == 'Sentera':
-        roll_str = xmp_dict['rdf:RDF']['rdf:Description']['@Camera:Roll']
+        roll_str = xmp_data['rdf:RDF']['rdf:Description']['@Camera:Roll']
         roll = float(roll_str)
-        pitch_str = xmp_dict['rdf:RDF']['rdf:Description']['@Camera:Pitch']
+        pitch_str = xmp_data['rdf:RDF']['rdf:Description']['@Camera:Pitch']
         pitch = float(pitch_str)
-        yaw_str = xmp_dict['rdf:RDF']['rdf:Description']['@Camera:Yaw']
+        yaw_str = xmp_data['rdf:RDF']['rdf:Description']['@Camera:Yaw']
         yaw = float(yaw_str)
     else:
         try:
-            roll_str = xmp_dict['rdf:RDF']['rdf:Description']['@drone-dji:FlightRollDegree']
+            roll_str = xmp_data['rdf:RDF']['rdf:Description']['@drone-dji:FlightRollDegree']
             roll = float(roll_str)
-            pitch_str = xmp_dict['rdf:RDF']['rdf:Description']['@drone-dji:FlightPitchDegree']
+            pitch_str = xmp_data['rdf:RDF']['rdf:Description']['@drone-dji:FlightPitchDegree']
             pitch = float(pitch_str)
-            yaw_str = xmp_dict['rdf:RDF']['rdf:Description']['@drone-dji:FlightYawDegree']
+            yaw_str = xmp_data['rdf:RDF']['rdf:Description']['@drone-dji:FlightYawDegree']
             yaw = float(yaw_str)
         except KeyError:
             raise ValueError("Couldn't parse euler angles from xmp data.  Camera type may not be supported.")
@@ -356,7 +360,7 @@ def parse_session_alt(image_path):
     raise ValueError("Couldn't parse session altitude from session.txt")
 
 
-def get_gsd(image_path, exif_data=None):
+def get_gsd(image_path, exif_data=None, xmp_data=None):
     """
     Parses the necessary metadata and calculates the gsd of the image.
 
@@ -366,11 +370,12 @@ def get_gsd(image_path, exif_data=None):
 
     :param image_path: the full path to the image
     :param exif_data: the exif dictionary for the image (optional to speed up processing)
+    :param xmp_data: the xmp dictionary for the image (optional to speed up processing)
     :return: **gsd** - the ground sample distance of the image in meters
     :raises: ValueError
     """
 
     focal, pitch = get_camera_params(image_path, exif_data)
-    alt = get_relative_altitude(image_path, exif_data)
+    alt = get_relative_altitude(image_path, exif_data, xmp_data)
 
     return pitch * alt / focal
