@@ -47,6 +47,7 @@ def create_analytics_metadata(imagery_dir, sample_size=-1):
     for image_path in images:
         image = os.path.split(image_path)[1]
         exif_data = imgparse.get_exif_data(image_path)
+        xmp_data = imgparse.get_xmp_data(image_path)
 
         lat, lon = imgparse.get_lat_lon(image_path, exif_data)
         if not lat:
@@ -60,12 +61,9 @@ def create_analytics_metadata(imagery_dir, sample_size=-1):
             logger.error("Couldn't construct analytics metadata file")
             return False
 
-        # TODO: Parse from image metadata
-        roll = 0
-        pitch = 0
-        yaw = 0
+        roll, pitch, yaw = imgparse.get_roll_pitch_yaw(image_path, exif_data, xmp_data)
 
-        relative_alt = imgparse.get_relative_altitude(image_path, exif_data)
+        relative_alt = imgparse.get_relative_altitude(image_path, exif_data, xmp_data)
 
         if not relative_alt:
             logger.error("Couldn't extract relative altitude for image: %s", image_path)
