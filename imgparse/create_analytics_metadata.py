@@ -25,12 +25,12 @@ def create_analytics_metadata(imagery_dir, sample_size=-1):
 
     if not os.path.isdir(imagery_dir):
         logger.error("Input imagery directory doesn't exist.  Couldn't construct analytics metadata file")
-        return False
+        raise ValueError("Input imagery directory doesn't exist.  Couldn't construct analytics metadata file")
 
     images = [os.path.join(imagery_dir, image) for image in os.listdir(imagery_dir) if os.path.splitext(image)[1].lower() == ".jpg"]
     if not images:
         logger.error("No jpegs found in imagery dir. Couldn't construct analytics metadata file")
-        return False
+        raise ValueError("No jpegs found in imagery dir. Couldn't construct analytics metadata file")
 
     if 0 < sample_size < len(images):
         images = random.sample(images, k=sample_size)
@@ -53,13 +53,13 @@ def create_analytics_metadata(imagery_dir, sample_size=-1):
         if not lat:
             logger.error("Couldn't extract lat and lon from image: %s", image_path)
             logger.error("Couldn't construct analytics metadata file")
-            return False
+            raise ValueError("Couldn't extract lat and lon from image")
 
         abs_alt = imgparse.get_altitude_msl(image_path, exif_data)
         if not abs_alt:
             logger.error("Couldn't extract msl altitude for image: %s", image_path)
             logger.error("Couldn't construct analytics metadata file")
-            return False
+            raise ValueError("Couldn't extract msl altitude from image")
 
         roll, pitch, yaw = imgparse.get_roll_pitch_yaw(image_path, exif_data, xmp_data)
 
@@ -68,7 +68,7 @@ def create_analytics_metadata(imagery_dir, sample_size=-1):
         if not relative_alt:
             logger.error("Couldn't extract relative altitude for image: %s", image_path)
             logger.error("Couldn't construct analytics metadata file")
-            return False
+            raise ValueError("Couldn't extract relative altitude from image")
 
         data_frame.loc[len(data_frame)] = [image, lat, lon, abs_alt, roll, pitch, yaw, relative_alt]
 
@@ -76,4 +76,3 @@ def create_analytics_metadata(imagery_dir, sample_size=-1):
     data_frame.to_csv(analytics_path, index=False)
 
     logger.info("Analytics metadata file saved at: %s", analytics_path)
-    return True
