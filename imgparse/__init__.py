@@ -1,6 +1,7 @@
 """
 This module contains various functions that extract imagery information from exif and xmp tags in images.
-Supports some DJI, some Hasselblad, and all Sentera sensors.
+
+Supports some DJI, some Hasselblad, one Sony, and all Sentera sensors.
 
 All functions take an image path as an argument for easy use, but optionally can take the dictionary of exif key/value
 pairs returned by ``imgparse.get_exif_data()``.  This allows the user to avoid rereading the exif data for an image

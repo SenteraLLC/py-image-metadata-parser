@@ -1,6 +1,4 @@
-"""
-Deprecated function to create an analytics metadata file needed by the old version of ape
-"""
+"""Creates an analytics-metadata.csv file that is needed by ape quicktiling."""
 
 import os
 import random
@@ -13,13 +11,13 @@ logger = logging.getLogger(__name__)
 
 def create_analytics_metadata(imagery_dir, sample_size=-1):
     """
-    Constructs an *analytics-metadata.csv* file within the imagery directory provided.  This file is needed by the
-    old version of ape in order to process a directory of images.  This function is deprecated and will be removed
-    with creation of a new version of ape that no longer needs this *analytics-metadata.csv* file.
+    Construct an *analytics-metadata.csv* file within the imagery directory provided.
+
+    The *analytics-metadata.csv* file is needed by **ape** in order to quicktile a directory of images.
 
     :param imagery_dir: directory of images to create analytics metadata file from
     :param sample_size: (optional) samples metadata from provided number of images in the directory
-    :return: **True/False** - indicating success
+    :raises ValueError
     """
     logger.info("Creating analytics-metadata file")
 

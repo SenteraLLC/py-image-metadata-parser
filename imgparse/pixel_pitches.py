@@ -1,9 +1,11 @@
 """
-Lookup tables for DJI and Hasselblad pixel pitches.  Neither camera types store the pixel pitch in image metadata, so
-they need to be manually coded and accessed.
+Lookup tables for DJI, Sony, and Hasselblad pixel pitches.
+
+None of these camera types store the pixel pitch in xmp or exif tags, so they need to be manually coded and accessed.
 
 To add a new supported camera make, create a new dictionary of camera model/pixel pitch pairs, then add dictionary
 to PIXEL_PITCHES, indexed by camera make.
+
 To add a new supported camera model, simply append a new model/pixel pitch pair to the existing camera make dictionary.
 """
 
