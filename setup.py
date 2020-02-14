@@ -25,5 +25,7 @@ setuptools.setup(
     url="https://github.com/SenteraLLC/py-image-metadata-parser",
     packages=setuptools.find_packages(),
     install_requires=["exifread", "xmltodict", "pandas"],
-    extras_require={"dev": ["pytest", "sphinx_rtd_theme", "pylint", "m2r", "sphinx"]},
+    extras_require={
+        "dev": ["pytest", "sphinx_rtd_theme", "m2r", "sphinx", "pre_commit"]
+    },
 )
