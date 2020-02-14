@@ -1,7 +1,8 @@
 """imgparse parses metadata from imagery needed for image processing."""
 
-import setuptools
 import re
+
+import setuptools
 
 VERSIONFILE = "imgparse/_version.py"
 verstrline = open(VERSIONFILE, "rt").read()

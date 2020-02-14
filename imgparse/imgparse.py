@@ -1,10 +1,13 @@
 """Extract metadata from exif and xmp tags in images."""
 
-import os
 import logging
+import os
+
 import exifread
-import xmltodict
+
 from imgparse.pixel_pitches import PIXEL_PITCHES
+
+import xmltodict
 
 logger = logging.getLogger(__name__)
 

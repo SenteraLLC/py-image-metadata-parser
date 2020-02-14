@@ -17,23 +17,23 @@ is shown below.
 
 """
 
-from imgparse.imgparse import (
-    get_xmp_data,
-    get_exif_data,
-    get_camera_params,
-    get_relative_altitude,
-    get_lat_lon,
-    get_altitude_msl,
-    get_roll_pitch_yaw,
-    get_focal_length,
-    get_make_and_model,
-    get_dimensions,
-    get_sentera_pixel_pitch,
-    parse_session_alt,
-    get_gsd,
-)
-from imgparse.create_analytics_metadata import create_analytics_metadata
 from imgparse._version import __version__
+from imgparse.create_analytics_metadata import create_analytics_metadata
+from imgparse.imgparse import (
+    get_altitude_msl,
+    get_camera_params,
+    get_dimensions,
+    get_exif_data,
+    get_focal_length,
+    get_gsd,
+    get_lat_lon,
+    get_make_and_model,
+    get_relative_altitude,
+    get_roll_pitch_yaw,
+    get_sentera_pixel_pitch,
+    get_xmp_data,
+    parse_session_alt,
+)
 
 __all__ = [
     "__version__",

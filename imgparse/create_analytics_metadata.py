@@ -1,10 +1,12 @@
 """Creates an analytics-metadata.csv file that is needed by ape quicktiling."""
 
+import logging
 import os
 import random
-import logging
+
+import imgparse
+
 import pandas
-from . import imgparse
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +19,8 @@ def create_analytics_metadata(imagery_dir, sample_size=-1):
 
     :param imagery_dir: directory of images to create analytics metadata file from
     :param sample_size: (optional) samples metadata from provided number of images in the directory
-    :raises ValueError
+    :return: None
+    :raises: ValueError
     """
     logger.info("Creating analytics-metadata file")
 
