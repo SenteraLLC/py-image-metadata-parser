@@ -45,7 +45,9 @@ def test_get_camera_params_invalid(bad_data):
 def test_get_camera_params_dji(dji_image_data):
     focal1, pitch1 = imgparse.get_camera_params(dji_image_data[0])
     focal2, pitch2 = imgparse.get_camera_params(exif_data=dji_image_data[1])
-    focal3, pitch3 = imgparse.get_camera_params(dji_image_data[0], exif_data=dji_image_data[1])
+    focal3, pitch3 = imgparse.get_camera_params(
+        dji_image_data[0], exif_data=dji_image_data[1]
+    )
 
     assert [focal1, pitch1] == [0.0088, 2.41e-06]
     assert [focal2, pitch2] == [0.0088, 2.41e-06]
@@ -55,7 +57,9 @@ def test_get_camera_params_dji(dji_image_data):
 def test_get_camera_params_sentera(sentera_image_data):
     focal1, pitch1 = imgparse.get_camera_params(sentera_image_data[0])
     focal2, pitch2 = imgparse.get_camera_params(exif_data=sentera_image_data[1])
-    focal3, pitch3 = imgparse.get_camera_params(sentera_image_data[0], exif_data=sentera_image_data[1])
+    focal3, pitch3 = imgparse.get_camera_params(
+        sentera_image_data[0], exif_data=sentera_image_data[1]
+    )
 
     assert [focal1, pitch1] == pytest.approx([0.025, 1.55e-06], abs=1e-06)
     assert [focal2, pitch2] == pytest.approx([0.025, 1.55e-06], abs=1e-06)
@@ -79,21 +83,25 @@ def test_get_make_and_model_invalid(bad_data):
 def test_get_make_and_model_dji(dji_image_data):
     make1, model1 = imgparse.get_make_and_model(dji_image_data[0])
     make2, model2 = imgparse.get_make_and_model(exif_data=dji_image_data[1])
-    make3, model3 = imgparse.get_make_and_model(dji_image_data[0], exif_data=dji_image_data[1])
+    make3, model3 = imgparse.get_make_and_model(
+        dji_image_data[0], exif_data=dji_image_data[1]
+    )
 
-    assert [make1, model1] == ['DJI', 'FC6310']
-    assert [make2, model2] == ['DJI', 'FC6310']
-    assert [make3, model3] == ['DJI', 'FC6310']
+    assert [make1, model1] == ["DJI", "FC6310"]
+    assert [make2, model2] == ["DJI", "FC6310"]
+    assert [make3, model3] == ["DJI", "FC6310"]
 
 
 def test_get_make_and_model_sentera(sentera_image_data):
     make1, model1 = imgparse.get_make_and_model(sentera_image_data[0])
     make2, model2 = imgparse.get_make_and_model(exif_data=sentera_image_data[1])
-    make3, model3 = imgparse.get_make_and_model(sentera_image_data[0], exif_data=sentera_image_data[1])
+    make3, model3 = imgparse.get_make_and_model(
+        sentera_image_data[0], exif_data=sentera_image_data[1]
+    )
 
-    assert [make1, model1] == ['Sentera', '21022-06_12MP-ERS-0001']
-    assert [make2, model2] == ['Sentera', '21022-06_12MP-ERS-0001']
-    assert [make3, model3] == ['Sentera', '21022-06_12MP-ERS-0001']
+    assert [make1, model1] == ["Sentera", "21022-06_12MP-ERS-0001"]
+    assert [make2, model2] == ["Sentera", "21022-06_12MP-ERS-0001"]
+    assert [make3, model3] == ["Sentera", "21022-06_12MP-ERS-0001"]
 
 
 def test_parse_session_alt_invalid(bad_data):
@@ -117,7 +125,9 @@ def test_get_relative_altitude_invalid(bad_data):
 
 def test_get_relative_altitude_sentera(sentera_image_data):
     alt1 = imgparse.get_relative_altitude(sentera_image_data[0])
-    alt2 = imgparse.get_relative_altitude(sentera_image_data[0], exif_data=sentera_image_data[1])
+    alt2 = imgparse.get_relative_altitude(
+        sentera_image_data[0], exif_data=sentera_image_data[1]
+    )
 
     assert alt1 == 51.042
     assert alt2 == 51.042
@@ -125,7 +135,9 @@ def test_get_relative_altitude_sentera(sentera_image_data):
 
 def test_get_relative_altitude_dji(dji_image_data):
     alt1 = imgparse.get_relative_altitude(dji_image_data[0])
-    alt2 = imgparse.get_relative_altitude(dji_image_data[0], exif_data=dji_image_data[1])
+    alt2 = imgparse.get_relative_altitude(
+        dji_image_data[0], exif_data=dji_image_data[1]
+    )
 
     assert alt1 == 15.2
     assert alt2 == 15.2
@@ -148,7 +160,9 @@ def test_get_altitude_msl_invalid(bad_data):
 def test_get_altitude_msl_sentera(sentera_image_data):
     alt1 = imgparse.get_altitude_msl(sentera_image_data[0])
     alt2 = imgparse.get_altitude_msl(exif_data=sentera_image_data[1])
-    alt3 = imgparse.get_altitude_msl(sentera_image_data[0], exif_data=sentera_image_data[1])
+    alt3 = imgparse.get_altitude_msl(
+        sentera_image_data[0], exif_data=sentera_image_data[1]
+    )
 
     assert alt1 == 50.592
     assert alt2 == 50.592
@@ -183,7 +197,11 @@ def test_get_gsd_sentera(sentera_image_data):
     gsd1 = imgparse.get_gsd(sentera_image_data[0])
     gsd2 = imgparse.get_gsd(sentera_image_data[0], exif_data=sentera_image_data[1])
     gsd3 = imgparse.get_gsd(sentera_image_data[0], xmp_data=sentera_image_data[2])
-    gsd4 = imgparse.get_gsd(sentera_image_data[0], exif_data=sentera_image_data[1], xmp_data=sentera_image_data[2])
+    gsd4 = imgparse.get_gsd(
+        sentera_image_data[0],
+        exif_data=sentera_image_data[1],
+        xmp_data=sentera_image_data[2],
+    )
 
     assert gsd1 == pytest.approx(0.00316, rel=0.01)
     assert gsd2 == pytest.approx(0.00316, rel=0.01)
@@ -195,7 +213,9 @@ def test_get_gsd_dji(dji_image_data):
     gsd1 = imgparse.get_gsd(dji_image_data[0])
     gsd2 = imgparse.get_gsd(dji_image_data[0], exif_data=dji_image_data[1])
     gsd3 = imgparse.get_gsd(dji_image_data[0], xmp_data=dji_image_data[2])
-    gsd4 = imgparse.get_gsd(dji_image_data[0], exif_data=dji_image_data[1], xmp_data=dji_image_data[2])
+    gsd4 = imgparse.get_gsd(
+        dji_image_data[0], exif_data=dji_image_data[1], xmp_data=dji_image_data[2]
+    )
 
     assert gsd1 == pytest.approx(0.00416, rel=0.01)
     assert gsd2 == pytest.approx(0.00416, rel=0.01)
@@ -220,7 +240,9 @@ def test_get_lat_lon_invalid(bad_data):
 def test_get_lat_lon_sentera(sentera_image_data):
     lat1, lon1 = imgparse.get_lat_lon(sentera_image_data[0])
     lat2, lon2 = imgparse.get_lat_lon(exif_data=sentera_image_data[1])
-    lat3, lon3 = imgparse.get_lat_lon(sentera_image_data[0], exif_data=sentera_image_data[1])
+    lat3, lon3 = imgparse.get_lat_lon(
+        sentera_image_data[0], exif_data=sentera_image_data[1]
+    )
 
     assert [lat1, lon1] == pytest.approx([27.564768, -97.657411], abs=1e-06)
     assert [lat2, lon2] == pytest.approx([27.564768, -97.657411], abs=1e-06)
@@ -251,42 +273,74 @@ def test_get_roll_pitch_yaw_invalid(bad_data):
         roll, pitch, yaw = imgparse.get_roll_pitch_yaw(xmp_data=bad_data[1])
 
     with pytest.raises(ValueError):
-        roll, pitch, yaw = imgparse.get_roll_pitch_yaw(bad_data[0], exif_data=bad_data[1])
+        roll, pitch, yaw = imgparse.get_roll_pitch_yaw(
+            bad_data[0], exif_data=bad_data[1]
+        )
 
     with pytest.raises(ValueError):
-        roll, pitch, yaw = imgparse.get_roll_pitch_yaw(bad_data[0], xmp_data=bad_data[1])
+        roll, pitch, yaw = imgparse.get_roll_pitch_yaw(
+            bad_data[0], xmp_data=bad_data[1]
+        )
 
     with pytest.raises(ValueError):
-        roll, pitch, yaw = imgparse.get_roll_pitch_yaw(exif_data=bad_data[1], xmp_data=bad_data[1])
+        roll, pitch, yaw = imgparse.get_roll_pitch_yaw(
+            exif_data=bad_data[1], xmp_data=bad_data[1]
+        )
 
     with pytest.raises(ValueError):
-        roll, pitch, yaw = imgparse.get_roll_pitch_yaw(bad_data[0], exif_data=bad_data[1], xmp_data=bad_data[1])
+        roll, pitch, yaw = imgparse.get_roll_pitch_yaw(
+            bad_data[0], exif_data=bad_data[1], xmp_data=bad_data[1]
+        )
 
 
 def test_get_roll_pitch_yaw_sentera(sentera_image_data):
     roll1, pitch1, yaw1 = imgparse.get_roll_pitch_yaw(sentera_image_data[0])
-    roll2, pitch2, yaw2 = imgparse.get_roll_pitch_yaw(sentera_image_data[0], xmp_data=sentera_image_data[2])
-    roll3, pitch3, yaw3 = imgparse.get_roll_pitch_yaw(sentera_image_data[0], exif_data=sentera_image_data[1])
-    roll4, pitch4, yaw4 = imgparse.get_roll_pitch_yaw(exif_data=sentera_image_data[1], xmp_data=sentera_image_data[2])
-    roll5, pitch5, yaw5 = imgparse.get_roll_pitch_yaw(sentera_image_data[0],
-                                                      exif_data=sentera_image_data[1],
-                                                      xmp_data=sentera_image_data[2])
+    roll2, pitch2, yaw2 = imgparse.get_roll_pitch_yaw(
+        sentera_image_data[0], xmp_data=sentera_image_data[2]
+    )
+    roll3, pitch3, yaw3 = imgparse.get_roll_pitch_yaw(
+        sentera_image_data[0], exif_data=sentera_image_data[1]
+    )
+    roll4, pitch4, yaw4 = imgparse.get_roll_pitch_yaw(
+        exif_data=sentera_image_data[1], xmp_data=sentera_image_data[2]
+    )
+    roll5, pitch5, yaw5 = imgparse.get_roll_pitch_yaw(
+        sentera_image_data[0],
+        exif_data=sentera_image_data[1],
+        xmp_data=sentera_image_data[2],
+    )
 
-    assert [roll1, pitch1, yaw1] == pytest.approx([-2.445596, 1.003452, 29.639198], abs=1e-06)
-    assert [roll2, pitch2, yaw2] == pytest.approx([-2.445596, 1.003452, 29.639198], abs=1e-06)
-    assert [roll3, pitch3, yaw3] == pytest.approx([-2.445596, 1.003452, 29.639198], abs=1e-06)
-    assert [roll4, pitch4, yaw4] == pytest.approx([-2.445596, 1.003452, 29.639198], abs=1e-06)
-    assert [roll5, pitch5, yaw5] == pytest.approx([-2.445596, 1.003452, 29.639198], abs=1e-06)
+    assert [roll1, pitch1, yaw1] == pytest.approx(
+        [-2.445596, 1.003452, 29.639198], abs=1e-06
+    )
+    assert [roll2, pitch2, yaw2] == pytest.approx(
+        [-2.445596, 1.003452, 29.639198], abs=1e-06
+    )
+    assert [roll3, pitch3, yaw3] == pytest.approx(
+        [-2.445596, 1.003452, 29.639198], abs=1e-06
+    )
+    assert [roll4, pitch4, yaw4] == pytest.approx(
+        [-2.445596, 1.003452, 29.639198], abs=1e-06
+    )
+    assert [roll5, pitch5, yaw5] == pytest.approx(
+        [-2.445596, 1.003452, 29.639198], abs=1e-06
+    )
 
 
 def test_get_roll_pitch_yaw_dji(dji_image_data):
     roll1, pitch1, yaw1 = imgparse.get_roll_pitch_yaw(dji_image_data[0])
-    roll2, pitch2, yaw2 = imgparse.get_roll_pitch_yaw(dji_image_data[0], xmp_data=dji_image_data[2])
-    roll3, pitch3, yaw3 = imgparse.get_roll_pitch_yaw(dji_image_data[0], exif_data=dji_image_data[1])
-    roll4, pitch4, yaw4 = imgparse.get_roll_pitch_yaw(exif_data=dji_image_data[1], xmp_data=dji_image_data[2])
-    roll5, pitch5, yaw5 = imgparse.get_roll_pitch_yaw(dji_image_data[0],
-                                                      exif_data=dji_image_data[1],
-                                                      xmp_data=dji_image_data[2])
+    roll2, pitch2, yaw2 = imgparse.get_roll_pitch_yaw(
+        dji_image_data[0], xmp_data=dji_image_data[2]
+    )
+    roll3, pitch3, yaw3 = imgparse.get_roll_pitch_yaw(
+        dji_image_data[0], exif_data=dji_image_data[1]
+    )
+    roll4, pitch4, yaw4 = imgparse.get_roll_pitch_yaw(
+        exif_data=dji_image_data[1], xmp_data=dji_image_data[2]
+    )
+    roll5, pitch5, yaw5 = imgparse.get_roll_pitch_yaw(
+        dji_image_data[0], exif_data=dji_image_data[1], xmp_data=dji_image_data[2]
+    )
 
     assert [roll1, pitch1, yaw1] == pytest.approx([-0.10, -11.30, 89.80], abs=1e-06)
     assert [roll2, pitch2, yaw2] == pytest.approx([-0.10, -11.30, 89.80], abs=1e-06)
@@ -312,7 +366,9 @@ def test_get_dimensions_invalid(bad_data):
 def test_get_dimensions_sentera(sentera_image_data):
     height1, width1 = imgparse.get_dimensions(sentera_image_data[0])
     height2, width2 = imgparse.get_dimensions(exif_data=sentera_image_data[1])
-    height3, width3 = imgparse.get_dimensions(sentera_image_data[0], exif_data=sentera_image_data[1])
+    height3, width3 = imgparse.get_dimensions(
+        sentera_image_data[0], exif_data=sentera_image_data[1]
+    )
 
     assert [height1, width1] == [3000, 4000]
     assert [height2, width2] == [3000, 4000]
@@ -322,7 +378,9 @@ def test_get_dimensions_sentera(sentera_image_data):
 def test_get_dimensions_dji(dji_image_data):
     height1, width1 = imgparse.get_dimensions(dji_image_data[0])
     height2, width2 = imgparse.get_dimensions(exif_data=dji_image_data[1])
-    height3, width3 = imgparse.get_dimensions(dji_image_data[0], exif_data=dji_image_data[1])
+    height3, width3 = imgparse.get_dimensions(
+        dji_image_data[0], exif_data=dji_image_data[1]
+    )
 
     assert [height1, width1] == [3648, 4864]
     assert [height2, width2] == [3648, 4864]

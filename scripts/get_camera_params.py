@@ -11,7 +11,7 @@ def main(image_path):
     # Setup logger
     root_logger = logging.getLogger()
     handler = logging.StreamHandler()
-    log_format = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+    log_format = logging.Formatter("%(name)s - %(levelname)s - %(message)s")
     handler.setFormatter(log_format)
     root_logger.addHandler(handler)
     root_logger.setLevel(logging.INFO)

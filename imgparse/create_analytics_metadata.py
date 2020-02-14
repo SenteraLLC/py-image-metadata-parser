@@ -24,25 +24,41 @@ def create_analytics_metadata(imagery_dir, sample_size=-1):
     logger.info("Creating analytics-metadata file")
 
     if not os.path.isdir(imagery_dir):
-        logger.error("Input imagery directory doesn't exist.  Couldn't construct analytics metadata file")
-        raise ValueError("Input imagery directory doesn't exist.  Couldn't construct analytics metadata file")
+        logger.error(
+            "Input imagery directory doesn't exist.  Couldn't construct analytics metadata file"
+        )
+        raise ValueError(
+            "Input imagery directory doesn't exist.  Couldn't construct analytics metadata file"
+        )
 
-    images = [os.path.join(imagery_dir, image) for image in os.listdir(imagery_dir) if os.path.splitext(image)[1].lower() == ".jpg"]
+    images = [
+        os.path.join(imagery_dir, image)
+        for image in os.listdir(imagery_dir)
+        if os.path.splitext(image)[1].lower() == ".jpg"
+    ]
     if not images:
-        logger.error("No jpegs found in imagery dir. Couldn't construct analytics metadata file")
-        raise ValueError("No jpegs found in imagery dir. Couldn't construct analytics metadata file")
+        logger.error(
+            "No jpegs found in imagery dir. Couldn't construct analytics metadata file"
+        )
+        raise ValueError(
+            "No jpegs found in imagery dir. Couldn't construct analytics metadata file"
+        )
 
     if 0 < sample_size < len(images):
         images = random.sample(images, k=sample_size)
 
-    data_frame = pandas.DataFrame(columns=['File Name',
-                                           'Lat (decimal degrees)',
-                                           'Lon (decimal degrees)',
-                                           'Alt (meters MSL)',
-                                           'Roll (decimal degrees)',
-                                           'Pitch (decimal degrees)',
-                                           'Yaw (decimal degrees)',
-                                           'Relative Altitude'])
+    data_frame = pandas.DataFrame(
+        columns=[
+            "File Name",
+            "Lat (decimal degrees)",
+            "Lon (decimal degrees)",
+            "Alt (meters MSL)",
+            "Roll (decimal degrees)",
+            "Pitch (decimal degrees)",
+            "Yaw (decimal degrees)",
+            "Relative Altitude",
+        ]
+    )
 
     for image_path in images:
         image = os.path.split(image_path)[1]
@@ -70,7 +86,16 @@ def create_analytics_metadata(imagery_dir, sample_size=-1):
             logger.error("Couldn't construct analytics metadata file")
             raise ValueError("Couldn't extract relative altitude from image")
 
-        data_frame.loc[len(data_frame)] = [image, lat, lon, abs_alt, roll, pitch, yaw, relative_alt]
+        data_frame.loc[len(data_frame)] = [
+            image,
+            lat,
+            lon,
+            abs_alt,
+            roll,
+            pitch,
+            yaw,
+            relative_alt,
+        ]
 
     analytics_path = os.path.join(imagery_dir, "analytics-metadata.csv")
     data_frame.to_csv(analytics_path, index=False)
