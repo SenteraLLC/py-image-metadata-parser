@@ -3,11 +3,15 @@ channels:
   - conda-forge
 dependencies:
   - python=3.6
-  - exifread
-  - xmltodict
-  - pylint
+  # dev dependencies
   - sphinx
   - sphinx_rtd_theme
   - m2r
   - pytest
+  - pre_commit
+  - black
+  - flake8
+  # main dependencies
+  - exifread
+  - xmltodict
   - pandas

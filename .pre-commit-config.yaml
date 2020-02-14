@@ -1,0 +1,19 @@
+repos:
+- repo: https://github.com/ambv/black
+  rev: stable
+  hooks:
+    - id: black
+      language: system
+- repo: https://gitlab.com/pycqa/flake8
+  rev: '3.7.9'
+  hooks:
+    - id: flake8
+      exclude: (tests|doc)
+      language: system
+      additional_dependencies: [
+          'flake8-docstrings',
+          'flake8-import-order',
+          'flake8-builtins',
+          'flake8-logging-format',
+          'flake8-rst-docstrings'
+      ]

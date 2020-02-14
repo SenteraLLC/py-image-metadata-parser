@@ -4,3 +4,7 @@ __pycache__/
 *.egg*
 _build/
 tmp/
+analytics-metadata.csv
+.coverage
+empty_dir/
+htmlcov/
