@@ -18,3 +18,4 @@ is shown below.
 
 from imgparse.imgparse import *
 from imgparse.create_analytics_metadata import create_analytics_metadata
+from imgparse._version import __version__
