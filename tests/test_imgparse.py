@@ -30,16 +30,16 @@ def dji_image_data():
 
 def test_get_camera_params_invalid(bad_data):
     with pytest.raises(ValueError):
-        focal, pitch = imgparse.get_camera_params()
+        imgparse.get_camera_params()
 
     with pytest.raises(ValueError):
-        focal, pitch = imgparse.get_camera_params(bad_data[0])
+        imgparse.get_camera_params(bad_data[0])
 
     with pytest.raises(ValueError):
-        focal, pitch = imgparse.get_camera_params(exif_data=bad_data[1])
+        imgparse.get_camera_params(exif_data=bad_data[1])
 
     with pytest.raises(ValueError):
-        focal, pitch = imgparse.get_camera_params(bad_data[0], exif_data=bad_data[1])
+        imgparse.get_camera_params(bad_data[0], exif_data=bad_data[1])
 
 
 def test_get_camera_params_dji(dji_image_data):
@@ -68,16 +68,16 @@ def test_get_camera_params_sentera(sentera_image_data):
 
 def test_get_make_and_model_invalid(bad_data):
     with pytest.raises(ValueError):
-        make, model = imgparse.get_camera_params()
+        imgparse.get_camera_params()
 
     with pytest.raises(ValueError):
-        make, model = imgparse.get_camera_params(bad_data[0])
+        imgparse.get_camera_params(bad_data[0])
 
     with pytest.raises(ValueError):
-        make, model = imgparse.get_camera_params(exif_data=bad_data[1])
+        imgparse.get_camera_params(exif_data=bad_data[1])
 
     with pytest.raises(ValueError):
-        make, model = imgparse.get_camera_params(bad_data[0], exif_data=bad_data[1])
+        imgparse.get_camera_params(bad_data[0], exif_data=bad_data[1])
 
 
 def test_get_make_and_model_dji(dji_image_data):
@@ -106,7 +106,7 @@ def test_get_make_and_model_sentera(sentera_image_data):
 
 def test_parse_session_alt_invalid(bad_data):
     with pytest.raises(ValueError):
-        alt = imgparse.parse_session_alt(bad_data[0])
+        imgparse.parse_session_alt(bad_data[0])
 
 
 def test_parse_session_alt(sentera_image_data):
@@ -117,10 +117,10 @@ def test_parse_session_alt(sentera_image_data):
 
 def test_get_relative_altitude_invalid(bad_data):
     with pytest.raises(ValueError):
-        alt = imgparse.get_relative_altitude(bad_data[0])
+        imgparse.get_relative_altitude(bad_data[0])
 
     with pytest.raises(ValueError):
-        alt = imgparse.get_relative_altitude(bad_data[0], exif_data=bad_data[1])
+        imgparse.get_relative_altitude(bad_data[0], exif_data=bad_data[1])
 
 
 def test_get_relative_altitude_sentera(sentera_image_data):
@@ -145,16 +145,16 @@ def test_get_relative_altitude_dji(dji_image_data):
 
 def test_get_altitude_msl_invalid(bad_data):
     with pytest.raises(ValueError):
-        alt = imgparse.get_altitude_msl()
+        imgparse.get_altitude_msl()
 
     with pytest.raises(ValueError):
-        alt = imgparse.get_altitude_msl(bad_data[0])
+        imgparse.get_altitude_msl(bad_data[0])
 
     with pytest.raises(ValueError):
-        alt = imgparse.get_altitude_msl(exif_data=bad_data[1])
+        imgparse.get_altitude_msl(exif_data=bad_data[1])
 
     with pytest.raises(ValueError):
-        alt = imgparse.get_altitude_msl(bad_data[0], exif_data=bad_data[1])
+        imgparse.get_altitude_msl(bad_data[0], exif_data=bad_data[1])
 
 
 def test_get_altitude_msl_sentera(sentera_image_data):
@@ -181,16 +181,16 @@ def test_get_altitude_msl_dji(dji_image_data):
 
 def test_get_gsd_invalid(bad_data):
     with pytest.raises(ValueError):
-        gsd = imgparse.get_gsd(bad_data[0])
+        imgparse.get_gsd(bad_data[0])
 
     with pytest.raises(ValueError):
-        gsd = imgparse.get_gsd(bad_data[0], exif_data=bad_data[1])
+        imgparse.get_gsd(bad_data[0], exif_data=bad_data[1])
 
     with pytest.raises(ValueError):
-        gsd = imgparse.get_gsd(bad_data[0], xmp_data=bad_data[1])
+        imgparse.get_gsd(bad_data[0], xmp_data=bad_data[1])
 
     with pytest.raises(ValueError):
-        gsd = imgparse.get_gsd(bad_data[0], exif_data=bad_data[1], xmp_data=bad_data[1])
+        imgparse.get_gsd(bad_data[0], exif_data=bad_data[1], xmp_data=bad_data[1])
 
 
 def test_get_gsd_sentera(sentera_image_data):
@@ -225,16 +225,16 @@ def test_get_gsd_dji(dji_image_data):
 
 def test_get_lat_lon_invalid(bad_data):
     with pytest.raises(ValueError):
-        lat, lon = imgparse.get_lat_lon()
+        imgparse.get_lat_lon()
 
     with pytest.raises(ValueError):
-        lat, lon = imgparse.get_lat_lon(bad_data[0])
+        imgparse.get_lat_lon(bad_data[0])
 
     with pytest.raises(ValueError):
-        lat, lon = imgparse.get_lat_lon(exif_data=bad_data[1])
+        imgparse.get_lat_lon(exif_data=bad_data[1])
 
     with pytest.raises(ValueError):
-        lat, lon = imgparse.get_lat_lon(bad_data[0], exif_data=bad_data[1])
+        imgparse.get_lat_lon(bad_data[0], exif_data=bad_data[1])
 
 
 def test_get_lat_lon_sentera(sentera_image_data):
@@ -261,34 +261,28 @@ def test_get_lat_lon_dji(dji_image_data):
 
 def test_get_roll_pitch_yaw_invalid(bad_data):
     with pytest.raises(ValueError):
-        roll, pitch, yaw = imgparse.get_roll_pitch_yaw()
+        imgparse.get_roll_pitch_yaw()
 
     with pytest.raises(ValueError):
-        roll, pitch, yaw = imgparse.get_roll_pitch_yaw(bad_data[0])
+        imgparse.get_roll_pitch_yaw(bad_data[0])
 
     with pytest.raises(ValueError):
-        roll, pitch, yaw = imgparse.get_roll_pitch_yaw(exif_data=bad_data[1])
+        imgparse.get_roll_pitch_yaw(exif_data=bad_data[1])
 
     with pytest.raises(ValueError):
-        roll, pitch, yaw = imgparse.get_roll_pitch_yaw(xmp_data=bad_data[1])
+        imgparse.get_roll_pitch_yaw(xmp_data=bad_data[1])
 
     with pytest.raises(ValueError):
-        roll, pitch, yaw = imgparse.get_roll_pitch_yaw(
-            bad_data[0], exif_data=bad_data[1]
-        )
+        imgparse.get_roll_pitch_yaw(bad_data[0], exif_data=bad_data[1])
 
     with pytest.raises(ValueError):
-        roll, pitch, yaw = imgparse.get_roll_pitch_yaw(
-            bad_data[0], xmp_data=bad_data[1]
-        )
+        imgparse.get_roll_pitch_yaw(bad_data[0], xmp_data=bad_data[1])
 
     with pytest.raises(ValueError):
-        roll, pitch, yaw = imgparse.get_roll_pitch_yaw(
-            exif_data=bad_data[1], xmp_data=bad_data[1]
-        )
+        imgparse.get_roll_pitch_yaw(exif_data=bad_data[1], xmp_data=bad_data[1])
 
     with pytest.raises(ValueError):
-        roll, pitch, yaw = imgparse.get_roll_pitch_yaw(
+        imgparse.get_roll_pitch_yaw(
             bad_data[0], exif_data=bad_data[1], xmp_data=bad_data[1]
         )
 
@@ -351,16 +345,16 @@ def test_get_roll_pitch_yaw_dji(dji_image_data):
 
 def test_get_dimensions_invalid(bad_data):
     with pytest.raises(ValueError):
-        lat, lon = imgparse.get_lat_lon()
+        imgparse.get_lat_lon()
 
     with pytest.raises(ValueError):
-        lat, lon = imgparse.get_lat_lon(bad_data[0])
+        imgparse.get_lat_lon(bad_data[0])
 
     with pytest.raises(ValueError):
-        lat, lon = imgparse.get_lat_lon(exif_data=bad_data[1])
+        imgparse.get_lat_lon(exif_data=bad_data[1])
 
     with pytest.raises(ValueError):
-        lat, lon = imgparse.get_lat_lon(bad_data[0], exif_data=bad_data[1])
+        imgparse.get_lat_lon(bad_data[0], exif_data=bad_data[1])
 
 
 def test_get_dimensions_sentera(sentera_image_data):
