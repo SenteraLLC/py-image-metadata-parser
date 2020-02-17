@@ -6,7 +6,7 @@ Python utilities for extracting exif and xmp data from imagery.
 
 This library has only been built and used on Windows 10 and Ubuntu 18 operating systems, and so those are the
 environments assumed by these installation instructions.  However installing and using this library on a different OS 
-should be a simple extension of these instructions.  The library uses Python3.
+should be a simple extension of these instructions.
 
 #### Windows (Conda)
 
@@ -25,7 +25,13 @@ should be a simple extension of these instructions.  The library uses Python3.
 4) This creates the *image-parsing* environment that all scripts should be run in and installs
    the **imgparse** library for the scripts to reference.
    
-5) To check it is properly installed, open a new Anaconda shell, navigate to **py-image-metadata-parser**, and run
+5) Within the top level of the repo in the *image-parsing* environment, run
+
+        >> pre-commit install
+        
+   This will enforce all commits to adhere to **black** and PEP8 style conventions.
+   
+6) To check it is properly installed, open a new Anaconda shell, navigate to **py-image-metadata-parser**, and run
 
         >> activate image-parsing
         >> pytest
@@ -45,6 +51,12 @@ If no errors appear, the **imgparse** library should be installed correctly.
 3) Navigate to **py-image-metadata-parser** and run
 
         >> pipenv install
+        
+5) Within the top level of the repo, run
+
+        >> pipenv run pre-commit install
+        
+   This will enforce all commits to adhere to **black** and PEP8 style conventions.
    
 4) Everything should be properly installed within a pipenv environment.  To check it is, run
 
