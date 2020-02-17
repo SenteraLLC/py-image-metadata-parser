@@ -59,7 +59,7 @@ def get_xmp_data(image_path):
     Get a dictionary of lookup keys/values for the xmp data of the provided image.
 
     :param image_path: full path to image to parse xmp from
-    :return: **xmp_data** - a dictionary of lookup keys/values for image exif data.
+    :return: **xmp_data** - a dictionary of lookup keys/values for image xmp data.
     :raises: ValueError
     """
     if not image_path or not os.path.isfile(image_path):
@@ -116,7 +116,7 @@ def get_camera_params(image_path=None, exif_data=None):
     Get the focal length and pixel pitch (in meters) of the sensor that took the image.
 
     Non-Sentera cameras don't store the pixel pitch in the exif tags, so that is found in a lookup table.  See
-    `pixel_pitches.py` to check which non-Sentera sensor models are supported and add support for new sensors.
+    `pixel_pitches.py` to check which non-Sentera sensor models are supported and to add support for new sensors.
 
     :param image_path: the full path to the image (optional if `exif_data` provided)
     :param exif_data: the exif dictionary for the image (optional to speed up processing)
@@ -145,9 +145,9 @@ def get_camera_params(image_path=None, exif_data=None):
 
 def get_relative_altitude(image_path, exif_data=None, xmp_data=None):
     """
-    Get the relative altitude of the camera above the ground (in meters).
+    Get the relative altitude of the sensor above the ground (in meters) when the image was taken.
 
-    If image is from a Sentera sensor, `session.txt` must be in the image's directory in order for the relative
+    If the image is from a Sentera sensor, `session.txt` must be in the image's directory in order for the relative
     altitude to be calculated.
 
     .. note::
@@ -187,7 +187,7 @@ def get_relative_altitude(image_path, exif_data=None, xmp_data=None):
 
 def get_lat_lon(image_path=None, exif_data=None):
     """
-    Get the latitude and longitude of where the image was taken, stored in the image's exif tags.
+    Get the latitude and longitude of the sensor when the image was taken.
 
     :param image_path: the full path to the image (optional if `exif_data` provided)
     :param exif_data: the exif dictionary for the image (optional to speed up processing)
@@ -223,7 +223,7 @@ def get_lat_lon(image_path=None, exif_data=None):
 
 def get_altitude_msl(image_path=None, exif_data=None):
     """
-    Get the absolute altitude (in meters) of the image above msl.
+    Get the absolute altitude (meters above msl) of the sensor when the image was taken.
 
     :param image_path: the full path to the image (optional if `exif_data` provided)
     :param exif_data: the exif dictionary for the image (optional to speed up processing)
@@ -243,7 +243,7 @@ def get_altitude_msl(image_path=None, exif_data=None):
 
 def get_roll_pitch_yaw(image_path=None, exif_data=None, xmp_data=None):
     """
-    Get the latitude and longitude of where the image was taken, stored in the image's exif tags.
+    Get the orientation of the sensor (roll, pitch, yaw in degrees) when the image was taken.
 
     :param image_path: the full path to the image (optional if `exif_data` provided)
     :param exif_data: the exif dictionary for the image (optional to speed up processing)
@@ -294,7 +294,7 @@ def get_roll_pitch_yaw(image_path=None, exif_data=None, xmp_data=None):
 
 def get_focal_length(image_path=None, exif_data=None):
     """
-    Get the focal length (in meters) of the camera from the image.
+    Get the focal length (in meters) of the sensor that took the image.
 
     :param image_path: the full path to the image (optional if `exif_data` provided)
     :param exif_data: the exif dictionary for the image (optional to speed up processing)
@@ -314,7 +314,7 @@ def get_focal_length(image_path=None, exif_data=None):
 
 def get_make_and_model(image_path=None, exif_data=None):
     """
-    Get the make and model of the camera from the image.
+    Get the make and model of the sensor that took the image.
 
     :param image_path: the full path to the image (optional if `exif_data` provided)
     :param exif_data: the exif dictionary for the image (optional to speed up processing)
@@ -335,7 +335,7 @@ def get_make_and_model(image_path=None, exif_data=None):
 
 def get_dimensions(image_path=None, exif_data=None):
     """
-    Get the height and width (in pixels) of the image from the exif data.
+    Get the height and width (in pixels) of the image.
 
     :param image_path: the full path to the image (optional if `exif_data` provided)
     :param exif_data: the exif dictionary for the image (optional to speed up processing)
@@ -356,7 +356,7 @@ def get_dimensions(image_path=None, exif_data=None):
 
 def get_sentera_pixel_pitch(image_path=None, exif_data=None):
     """
-    Get the pixel pitch (in meters) from Sentera cameras.
+    Get the pixel pitch (in meters) from Sentera sensors.
 
     Won't parse pixel pitch for non-Sentera cameras.
 
@@ -378,14 +378,14 @@ def get_sentera_pixel_pitch(image_path=None, exif_data=None):
 
 def parse_session_alt(image_path):
     """
-    Get the session ground altitude from `session.txt`.
+    Get the session ground altitude (meters above msl) from a `session.txt` file.
 
     Used for Sentera cameras since relative altitude isn't stored in exif or xmp tags, and instead the session ground
     altitude is written as a text file that needs to be read.  The `session.txt` must be in the same directory as the
     image in order to be read.
 
     :param image_path: the full path to the image
-    :return: **pixel_pitch** - the pixel_pitch of the camera
+    :return: **ground_alt** - the session ground altitude, used to calculate relative altitude.
     :raises: ValueError
     """
     imagery_dir = os.path.dirname(image_path)

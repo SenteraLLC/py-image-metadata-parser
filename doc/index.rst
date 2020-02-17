@@ -1,7 +1,7 @@
-ImageMetadataParser Documentation
-=======================================
+imgparse - An Image Metadata Parsing Library
+============================================
 
-This is a Python library used to extract exif and xmp metadata from imagery.
+A Python library used to extract exif and xmp metadata from imagery.
 Installation instructions are given in the :ref:`readme_ref` section (although to build this documentation, the library should have already been installed), along with an overview of the library.
 For more in depth information on the various modules and functions within the library, see the :ref:`api_ref` section.
 

@@ -1,7 +1,7 @@
 .. _api_ref:
 
-ImageMetadataParser API
-=======================
+Documentation
+=============
 
 .. automodule:: imgparse
   :members:
