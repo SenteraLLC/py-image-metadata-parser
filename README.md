@@ -29,12 +29,12 @@ should be a simple extension of these instructions.
 
         >> pre-commit install
         
-   This will enforce all commits to adhere to **black** and PEP8 style conventions.
+   This will enforce all commits to adhere to **black** and **PEP8** style conventions.
    
 6) To check it is properly installed, open a new Anaconda shell, navigate to **py-image-metadata-parser**, and run
 
         >> activate image-parsing
-        >> pytest
+        >> pytest tests
 
 If no errors appear, the **imgparse** library should be installed correctly.
 
@@ -56,11 +56,11 @@ If no errors appear, the **imgparse** library should be installed correctly.
 
         >> pipenv run pre-commit install
         
-   This will enforce all commits to adhere to **black** and PEP8 style conventions.
+   This will enforce all commits to adhere to **black** and **PEP8** style conventions.
    
 4) Everything should be properly installed within a pipenv environment.  To check it is, run
 
-        >> pipenv run pytest
+        >> pipenv run pytest tests
         
 If no errors appear, the **imgparse** library should be installed correctly
 
