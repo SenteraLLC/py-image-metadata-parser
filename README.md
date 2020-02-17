@@ -66,10 +66,17 @@ If no errors appear, the **imgparse** library should be installed correctly
 
 ### Documentation
 
-This library is documented using sphinx. Generate the documentation with the following commands
+This library is documented using Sphinx. To generate documentation, navigate to the *doc/* subfolder 
+and run the following commands
 
-    >> cd py-image-metadata-parser\doc\
+#### Windows
+
+    >> conda activate image-parsing
     >> make html
+    
+#### Linux
+
+    >> pipenv run make html
 
 The documentation will be generated as an html file located at *py-image-metadata-parser/doc/\_build/html/index.html*.  
 Open with a browser to get more in depth information on the various modules and functions within the 
