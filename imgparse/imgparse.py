@@ -223,7 +223,7 @@ def get_lat_lon(image_path=None, exif_data=None):
 
 def get_altitude_msl(image_path=None, exif_data=None):
     """
-    Get the absolute altitude (in meters) of the image above msl.
+    Get the absolute altitude (in meters) of the image above msl
 
     :param image_path: the full path to the image (optional if `exif_data` provided)
     :param exif_data: the exif dictionary for the image (optional to speed up processing)

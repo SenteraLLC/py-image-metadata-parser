@@ -9,6 +9,8 @@ sphinx-rtd-theme = "*"
 m2r = "*"
 pytest = "*"
 pre_commit = "*"
+black = "==18.9b0"
+flake8 = "*"
 
 [packages]
 imgparse = {editable = true,path = "."}
