@@ -50,7 +50,7 @@ If no errors appear, the **imgparse** library should be installed correctly.
         
 3) Navigate to **py-image-metadata-parser** and run
 
-        >> pipenv install
+        >> pipenv install --dev
         
 5) Within the top level of the repo, run
 
