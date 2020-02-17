@@ -1,8 +1,10 @@
 language: python
-python: 3.6
+python: 3.7
 
 install:
-  - 'pip install pipenv'
-  - 'pipenv sync --dev'
+  - pip install pipenv
+  - pipenv sync --dev
 
-script: pipenv run pytest
+script:
+  - pipenv run pre-commit run --all-files
+  - pipenv run pytest tests

@@ -9,8 +9,6 @@ dependencies:
   - m2r
   - pytest
   - pre_commit
-  - black
-  - flake8
   # main dependencies
   - exifread
   - xmltodict
