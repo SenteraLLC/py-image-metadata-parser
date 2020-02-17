@@ -1,11 +1,15 @@
 repos:
-- repo: local
+- repo: https://github.com/ambv/black
+  rev: stable
+  hooks:
+    - id: black
+      language: system
+- repo: https://gitlab.com/pycqa/flake8
+  rev: '3.7.9'
   hooks:
     - id: flake8
-      name: flake8
-      exclude: (tests|doc|Pipfile|Pipfile.lock|pre-commit-config.yaml)
+      exclude: (tests|doc)
       language: system
-      entry: flake8
       additional_dependencies: [
           'flake8-docstrings',
           'flake8-import-order',
