@@ -15,7 +15,7 @@ processing.  Example code for using this functionality is shown below.
     make, model = imgparse.get_make_and_model(exif_data=exif_data)
     lat, lon = imgparse.get_lat_lon(exif_data=exif_data)
     focal_length, pixel_pitch = imgparse.get_camera_params(exif_data=exif_data)
-    roll, pitch, yaw = imgparse.get_roll_pitch_yaw(exif_data, xmp_data)
+    roll, pitch, yaw = imgparse.get_roll_pitch_yaw(exif_data=exif_data, xmp_data=xmp_data)
 
 """
 

@@ -258,6 +258,10 @@ def get_roll_pitch_yaw(image_path=None, exif_data=None, xmp_data=None):
     """
     Get the orientation of the sensor (roll, pitch, yaw in degrees) when the image was taken.
 
+    .. note::
+
+        Only Sentera and DJI sensors are supported for this function right now.
+
     :param image_path: the full path to the image (optional if `exif_data` provided)
     :param exif_data: the exif dictionary for the image (optional to speed up processing)
     :param xmp_data: the xmp dictionary for the image (optional to speed up processing)
@@ -279,7 +283,7 @@ def get_roll_pitch_yaw(image_path=None, exif_data=None, xmp_data=None):
         pitch = float(pitch_str)
         yaw_str = xmp_data["rdf:RDF"]["rdf:Description"]["@Camera:Yaw"]
         yaw = float(yaw_str)
-    else:
+    elif make == "DJI":
         try:
             roll_str = xmp_data["rdf:RDF"]["rdf:Description"][
                 "@drone-dji:FlightRollDegree"
@@ -294,13 +298,16 @@ def get_roll_pitch_yaw(image_path=None, exif_data=None, xmp_data=None):
             ]
             yaw = float(yaw_str)
         except KeyError:
-            raise ValueError(
-                "Couldn't parse euler angles from xmp data.  Camera type may not be supported."
-            )
+            logger.error("Couldn't correctly parse DJI xmp tags")
+            pass
 
     if roll is None or pitch is None or yaw is None:
-        logger.error("Couldn't extract roll/pitch/yaw")
-        raise ValueError("Couldn't extract roll/pitch/yaw")
+        logger.error(
+            "Couldn't extract roll/pitch/yaw.  Only Sentera and DJI sensors are supported right now"
+        )
+        raise ValueError(
+            "Couldn't extract roll/pitch/yaw.  Only Sentera and DJI sensors are supported right now"
+        )
 
     return roll, pitch, yaw
 
