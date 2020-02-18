@@ -10,7 +10,7 @@ should be a simple extension of these instructions.
 
 #### Windows (Conda)
 
-1) If not installed, install [Miniconda](https://docs.conda.io/en/latest/miniconda.html) for Python 3.6
+1) If not installed, install [Miniconda](https://docs.conda.io/en/latest/miniconda.html) for Python 3.7
 
 2) Open Anaconda Prompt and clone **py-image-metadata-parser** with
 
@@ -23,7 +23,7 @@ should be a simple extension of these instructions.
         >> pip install -e .
         
 4) This creates the *image-parsing* environment that all scripts should be run in and installs
-   the **imgparse** library for the scripts to reference.
+   the ``imgparse`` library for the scripts to reference.
    
 5) Within the top level of the repo in the *image-parsing* environment, run
 
@@ -36,7 +36,7 @@ should be a simple extension of these instructions.
         >> activate image-parsing
         >> pytest tests
 
-If no errors appear, the **imgparse** library should be installed correctly.
+If no errors appear, the ``imgparse`` library should be installed correctly.
 
 #### Linux (Pipenv)
 
@@ -62,7 +62,7 @@ If no errors appear, the **imgparse** library should be installed correctly.
 
         >> pipenv run pytest tests
         
-If no errors appear, the **imgparse** library should be installed correctly
+If no errors appear, the ``imgparse`` library should be installed correctly
 
 ### Documentation
 
@@ -80,4 +80,4 @@ and run the following commands
 
 The documentation will be generated as an html file located at *py-image-metadata-parser/doc/\_build/html/index.html*.  
 Open with a browser to get more in depth information on the various modules and functions within the 
-**imgparse** library.
+``imgparse`` library.
