@@ -121,6 +121,7 @@ def get_pixel_pitch(image_path=None, exif_data=None):
     :param image_path: the full path to the image (optional if `exif_data` provided)
     :param exif_data: the exif dictionary for the image (optional to speed up processing)
     :return: **pixel_pitch** - the pixel pitch of the camera in meters
+    :raises: ValueError
     """
     pixel_pitch = None
     make, model = get_make_and_model(image_path, exif_data)
