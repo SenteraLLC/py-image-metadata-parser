@@ -111,36 +111,48 @@ def get_exif_data(image_path):
     return exif_data
 
 
-def get_camera_params(image_path=None, exif_data=None):
+def get_pixel_pitch(image_path=None, exif_data=None):
     """
-    Get the focal length and pixel pitch (in meters) of the sensor that took the image.
+    Get pixel pitch (in meters) of the sensor that took the image.
 
     Non-Sentera cameras don't store the pixel pitch in the exif tags, so that is found in a lookup table.  See
     `pixel_pitches.py` to check which non-Sentera sensor models are supported and to add support for new sensors.
 
     :param image_path: the full path to the image (optional if `exif_data` provided)
     :param exif_data: the exif dictionary for the image (optional to speed up processing)
-    :return: **focal_length, pixel_pitch** - the camera parameters in meters
-    :raises: ValueError
+    :return: **pixel_pitch** - the pixel pitch of the camera in meters
     """
-    make, model = get_make_and_model(image_path, exif_data)
-    focal_length = get_focal_length(image_path, exif_data)
     pixel_pitch = None
-
+    make, model = get_make_and_model(image_path, exif_data)
     if make == "Sentera":
-        pixel_pitch = get_sentera_pixel_pitch(image_path, exif_data)
+        pixel_pitch = _get_sentera_pixel_pitch(image_path, exif_data)
     else:
         pixel_pitch_dict = _get_if_exist(PIXEL_PITCHES, make)
         if pixel_pitch_dict:
             pixel_pitch = _get_if_exist(pixel_pitch_dict, model)
 
-    if focal_length and pixel_pitch:
-        return focal_length, pixel_pitch
+    if pixel_pitch:
+        return pixel_pitch
 
-    logger.error("Couldn't parse camera parameters")
+    logger.error("Couldn't determine pixel pitch")
     raise ValueError(
-        "Couldn't parse camera parameters.\nCamera make/model may not exist in pixel_pitches.py"
+        "Couldn't determine pixel pitch.\nCamera make/model may not exist in pixel_pitches.py"
     )
+
+
+def get_camera_params(image_path=None, exif_data=None):
+    """
+    Get the focal length and pixel pitch (in meters) of the sensor that took the image.
+
+    :param image_path: the full path to the image (optional if `exif_data` provided)
+    :param exif_data: the exif dictionary for the image (optional to speed up processing)
+    :return: **focal_length, pixel_pitch** - the camera parameters in meters
+    :raises: ValueError
+    """
+    focal_length = get_focal_length(image_path, exif_data)
+    pixel_pitch = get_pixel_pitch(image_path, exif_data)
+
+    return focal_length, pixel_pitch
 
 
 def get_relative_altitude(image_path, exif_data=None, xmp_data=None):
@@ -354,7 +366,7 @@ def get_dimensions(image_path=None, exif_data=None):
     raise ValueError("Couldn't parse the height and width of the image")
 
 
-def get_sentera_pixel_pitch(image_path=None, exif_data=None):
+def _get_sentera_pixel_pitch(image_path=None, exif_data=None):
     """
     Get the pixel pitch (in meters) from Sentera sensors.
 
