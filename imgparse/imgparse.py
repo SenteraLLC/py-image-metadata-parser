@@ -59,7 +59,7 @@ def get_xmp_data(image_path):
     Get a dictionary of lookup keys/values for the xmp data of the provided image.
 
     :param image_path: full path to image to parse xmp from
-    :return: **xmp_data** - a dictionary of lookup keys/values for image exif data.
+    :return: **xmp_data** - a dictionary of lookup keys/values for image xmp data.
     :raises: ValueError
     """
     if not image_path or not os.path.isfile(image_path):
@@ -111,43 +111,56 @@ def get_exif_data(image_path):
     return exif_data
 
 
+def get_pixel_pitch(image_path=None, exif_data=None):
+    """
+    Get pixel pitch (in meters) of the sensor that took the image.
+
+    Non-Sentera cameras don't store the pixel pitch in the exif tags, so that is found in a lookup table.  See
+    `pixel_pitches.py` to check which non-Sentera sensor models are supported and to add support for new sensors.
+
+    :param image_path: the full path to the image (optional if `exif_data` provided)
+    :param exif_data: the exif dictionary for the image (optional to speed up processing)
+    :return: **pixel_pitch** - the pixel pitch of the camera in meters
+    :raises: ValueError
+    """
+    pixel_pitch = None
+    make, model = get_make_and_model(image_path, exif_data)
+    if make == "Sentera":
+        pixel_pitch = _get_sentera_pixel_pitch(image_path, exif_data)
+    else:
+        pixel_pitch_dict = _get_if_exist(PIXEL_PITCHES, make)
+        if pixel_pitch_dict:
+            pixel_pitch = _get_if_exist(pixel_pitch_dict, model)
+
+    if pixel_pitch:
+        return pixel_pitch
+
+    logger.error("Couldn't determine pixel pitch")
+    raise ValueError(
+        "Couldn't determine pixel pitch.\nCamera make/model may not exist in pixel_pitches.py"
+    )
+
+
 def get_camera_params(image_path=None, exif_data=None):
     """
     Get the focal length and pixel pitch (in meters) of the sensor that took the image.
-
-    Non-Sentera cameras don't store the pixel pitch in the exif tags, so that is found in a lookup table.  See
-    `pixel_pitches.py` to check which non-Sentera sensor models are supported and add support for new sensors.
 
     :param image_path: the full path to the image (optional if `exif_data` provided)
     :param exif_data: the exif dictionary for the image (optional to speed up processing)
     :return: **focal_length, pixel_pitch** - the camera parameters in meters
     :raises: ValueError
     """
-    make, model = get_make_and_model(image_path, exif_data)
     focal_length = get_focal_length(image_path, exif_data)
-    pixel_pitch = None
+    pixel_pitch = get_pixel_pitch(image_path, exif_data)
 
-    if make == "Sentera":
-        pixel_pitch = get_sentera_pixel_pitch(image_path, exif_data)
-    else:
-        pixel_pitch_dict = _get_if_exist(PIXEL_PITCHES, make)
-        if pixel_pitch_dict:
-            pixel_pitch = _get_if_exist(pixel_pitch_dict, model)
-
-    if focal_length and pixel_pitch:
-        return focal_length, pixel_pitch
-
-    logger.error("Couldn't parse camera parameters")
-    raise ValueError(
-        "Couldn't parse camera parameters.\nCamera make/model may not exist in pixel_pitches.py"
-    )
+    return focal_length, pixel_pitch
 
 
 def get_relative_altitude(image_path, exif_data=None, xmp_data=None):
     """
-    Get the relative altitude of the camera above the ground (in meters).
+    Get the relative altitude of the sensor above the ground (in meters) when the image was taken.
 
-    If image is from a Sentera sensor, `session.txt` must be in the image's directory in order for the relative
+    If the image is from a Sentera sensor, `session.txt` must be in the image's directory in order for the relative
     altitude to be calculated.
 
     .. note::
@@ -187,7 +200,7 @@ def get_relative_altitude(image_path, exif_data=None, xmp_data=None):
 
 def get_lat_lon(image_path=None, exif_data=None):
     """
-    Get the latitude and longitude of where the image was taken, stored in the image's exif tags.
+    Get the latitude and longitude of the sensor when the image was taken.
 
     :param image_path: the full path to the image (optional if `exif_data` provided)
     :param exif_data: the exif dictionary for the image (optional to speed up processing)
@@ -223,7 +236,7 @@ def get_lat_lon(image_path=None, exif_data=None):
 
 def get_altitude_msl(image_path=None, exif_data=None):
     """
-    Get the absolute altitude (in meters) of the image above msl.
+    Get the absolute altitude (meters above msl) of the sensor when the image was taken.
 
     :param image_path: the full path to the image (optional if `exif_data` provided)
     :param exif_data: the exif dictionary for the image (optional to speed up processing)
@@ -243,7 +256,11 @@ def get_altitude_msl(image_path=None, exif_data=None):
 
 def get_roll_pitch_yaw(image_path=None, exif_data=None, xmp_data=None):
     """
-    Get the latitude and longitude of where the image was taken, stored in the image's exif tags.
+    Get the orientation of the sensor (roll, pitch, yaw in degrees) when the image was taken.
+
+    .. note::
+
+        Only Sentera and DJI sensors are supported for this function right now.
 
     :param image_path: the full path to the image (optional if `exif_data` provided)
     :param exif_data: the exif dictionary for the image (optional to speed up processing)
@@ -266,7 +283,7 @@ def get_roll_pitch_yaw(image_path=None, exif_data=None, xmp_data=None):
         pitch = float(pitch_str)
         yaw_str = xmp_data["rdf:RDF"]["rdf:Description"]["@Camera:Yaw"]
         yaw = float(yaw_str)
-    else:
+    elif make == "DJI":
         try:
             roll_str = xmp_data["rdf:RDF"]["rdf:Description"][
                 "@drone-dji:FlightRollDegree"
@@ -281,20 +298,23 @@ def get_roll_pitch_yaw(image_path=None, exif_data=None, xmp_data=None):
             ]
             yaw = float(yaw_str)
         except KeyError:
-            raise ValueError(
-                "Couldn't parse euler angles from xmp data.  Camera type may not be supported."
-            )
+            logger.error("Couldn't correctly parse DJI xmp tags")
+            pass
 
     if roll is None or pitch is None or yaw is None:
-        logger.error("Couldn't extract roll/pitch/yaw")
-        raise ValueError("Couldn't extract roll/pitch/yaw")
+        logger.error(
+            "Couldn't extract roll/pitch/yaw.  Only Sentera and DJI sensors are supported right now"
+        )
+        raise ValueError(
+            "Couldn't extract roll/pitch/yaw.  Only Sentera and DJI sensors are supported right now"
+        )
 
     return roll, pitch, yaw
 
 
 def get_focal_length(image_path=None, exif_data=None):
     """
-    Get the focal length (in meters) of the camera from the image.
+    Get the focal length (in meters) of the sensor that took the image.
 
     :param image_path: the full path to the image (optional if `exif_data` provided)
     :param exif_data: the exif dictionary for the image (optional to speed up processing)
@@ -314,7 +334,7 @@ def get_focal_length(image_path=None, exif_data=None):
 
 def get_make_and_model(image_path=None, exif_data=None):
     """
-    Get the make and model of the camera from the image.
+    Get the make and model of the sensor that took the image.
 
     :param image_path: the full path to the image (optional if `exif_data` provided)
     :param exif_data: the exif dictionary for the image (optional to speed up processing)
@@ -335,7 +355,7 @@ def get_make_and_model(image_path=None, exif_data=None):
 
 def get_dimensions(image_path=None, exif_data=None):
     """
-    Get the height and width (in pixels) of the image from the exif data.
+    Get the height and width (in pixels) of the image.
 
     :param image_path: the full path to the image (optional if `exif_data` provided)
     :param exif_data: the exif dictionary for the image (optional to speed up processing)
@@ -354,9 +374,9 @@ def get_dimensions(image_path=None, exif_data=None):
     raise ValueError("Couldn't parse the height and width of the image")
 
 
-def get_sentera_pixel_pitch(image_path=None, exif_data=None):
+def _get_sentera_pixel_pitch(image_path=None, exif_data=None):
     """
-    Get the pixel pitch (in meters) from Sentera cameras.
+    Get the pixel pitch (in meters) from Sentera sensors.
 
     Won't parse pixel pitch for non-Sentera cameras.
 
@@ -378,14 +398,14 @@ def get_sentera_pixel_pitch(image_path=None, exif_data=None):
 
 def parse_session_alt(image_path):
     """
-    Get the session ground altitude from `session.txt`.
+    Get the session ground altitude (meters above msl) from a `session.txt` file.
 
     Used for Sentera cameras since relative altitude isn't stored in exif or xmp tags, and instead the session ground
     altitude is written as a text file that needs to be read.  The `session.txt` must be in the same directory as the
     image in order to be read.
 
     :param image_path: the full path to the image
-    :return: **pixel_pitch** - the pixel_pitch of the camera
+    :return: **ground_alt** - the session ground altitude, used to calculate relative altitude.
     :raises: ValueError
     """
     imagery_dir = os.path.dirname(image_path)
