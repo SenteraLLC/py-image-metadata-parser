@@ -1,83 +1,91 @@
 ## py-image-metadata-parser
 
-Python utilities for extracting exif and xmp data from imagery.
+**imgparse:** Python utilities for extracting exif and xmp data from imagery.
 
-### Installation
+### Installation 
+    
+#### 1) Set Up Package Manager
 
-This library has only been built and used on Windows 10 and Ubuntu 18 operating systems, and so those are the
-environments assumed by these installation instructions.  However installing and using this library on a different OS 
-should be a simple extension of these instructions.
+##### Windows (Conda)
+    
+1) Download [Miniconda](https://docs.conda.io/en/latest/miniconda.html) for Python3.7
+   
+##### Linux (Pipenv)
 
-#### Windows (Conda)
+1) If not installed, install pipenv.
 
-1) If not installed, install [Miniconda](https://docs.conda.io/en/latest/miniconda.html) for Python 3.7
+        >> pip install --user pipenv
+        
+2) Set your PATH to point to the pipenv executable by adding the following to ~/.profile
 
-2) Open Anaconda Prompt and clone **py-image-metadata-parser** with
+        export PATH="$PATH:~/.local/bin"
 
-        >> git clone https://github.com/SenteraLLC/py-image-metadata-parser.git
+3) Check installation:
 
-3) Open Anaconda Prompt and navigate to **py-image-metadata-parser**.  Run
+        >> source ~/.profile
+        >> pipenv -h
+        
+#### 2) Clone and Install Package
 
+##### Windows (Conda)
+
+1) Open Anaconda Prompt and clone **py-image-metadata-parser** with
+
+        >> git clone git@github.com:SenteraLLC/py-image-metadata-parser.git
+
+2) Install package with
+
+        >> cd py-image-metadata-parser
+        >> start-ssh-agent
         >> conda env create -f environment.yml
         >> conda activate image-parsing
         >> pip install -e .
         
-4) This creates the *image-parsing* environment that all scripts should be run in and installs
-   the ``imgparse`` library for the scripts to reference.
+3) This creates a *image-parsing* environment that all scripts should be run in and installs the ``imgparse``
+   library for the scripts to reference.
    
-5) Within the top level of the repo in the *image-parsing* environment, run
+4) To enforce all commits to adhere to **black** and **PEP8** style conventions, within the top level 
+   of the repo in the *image-parsing* environment, run
 
         >> pre-commit install
-        
-   This will enforce all commits to adhere to **black** and **PEP8** style conventions.
    
-6) To check it is properly installed, open a new Anaconda shell, navigate to **py-image-metadata-parser**, and run
+##### Linux (Pipenv)
 
-        >> activate image-parsing
-        >> pytest tests
+1) Open terminal and clone **py-image-metadata-parser** with
 
-If no errors appear, the ``imgparse`` library should be installed correctly.
+        >> git clone git@github.com:SenteraLLC/py-image-metadata-parser.git
 
-#### Linux (Pipenv)
+2) Install package with
 
-1) If not installed, install **pipenv** with the command
-
-        >> pip install pipenv
-        
-2) Open a terminal and clone **py-image-metadata-parser** with
-
-        >> git clone https://github.com/SenteraLLC/py-image-metadata-parser.git        
-        
-3) Navigate to **py-image-metadata-parser** and run
-
+        >> cd py-image-metadata-parser
         >> pipenv install --dev
         
-5) Within the top level of the repo, run
+4) To enforce all commits to adhere to **black** and **PEP8** style conventions, within the top level 
+   of the repo, run
 
         >> pipenv run pre-commit install
         
-   This will enforce all commits to adhere to **black** and **PEP8** style conventions.
+3) Run all scripts with:
+
+        >> pipenv run python scripts/<script.py> [--args]
    
-4) Everything should be properly installed within a pipenv environment.  To check it is, run
-
-        >> pipenv run pytest tests
-        
-If no errors appear, the ``imgparse`` library should be installed correctly
-
 ### Documentation
 
-This library is documented using Sphinx. To generate documentation, navigate to the *doc/* subfolder 
-and run the following commands
+This library is documented using Sphinx. To generate documentation, within the top level of
+the repo, run
 
 #### Windows
 
     >> conda activate image-parsing
+    >> sphinx-apidoc -o doc/_modules -M imgparse
+    >> cd doc
     >> make html
     
 #### Linux
 
+    >> pipenv run sphinx-apidoc -o doc/_modules -M imgparse
+    >> cd doc
     >> pipenv run make html
 
-The documentation will be generated as an html file located at *py-image-metadata-parser/doc/\_build/html/index.html*.  
-Open with a browser to get more in depth information on the various modules and functions within the 
-``imgparse`` library.
+The documentation will be generated as an html file located at *py-image-metadata-parser/doc/\_build/html/index.html*. 
+Open with a browser to get more in depth information on the various modules and functions within the library.

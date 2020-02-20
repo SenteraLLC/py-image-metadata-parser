@@ -5,7 +5,6 @@ import logging
 
 import imgparse
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("image_path", help="Image path to get camera params of")
