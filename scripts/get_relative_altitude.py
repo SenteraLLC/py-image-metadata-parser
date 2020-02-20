@@ -1,4 +1,4 @@
-"""CLI wrapper for get_camera_params() function."""
+"""CLI wrapper for get_relative_altitude() function."""
 
 import argparse
 import logging
@@ -18,5 +18,5 @@ if __name__ == "__main__":
     root_logger.addHandler(handler)
     root_logger.setLevel(logging.INFO)
 
-    focal_length, pixel_pitch = imgparse.get_camera_params(args.image_path)
-    print(f"Focal Length: {focal_length}, Pixel Pitch: {pixel_pitch}")
+    altitude = imgparse.get_relative_altitude(args.image_path)
+    print(f"Relative Altitude: {altitude}")

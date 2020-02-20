@@ -1,5 +1,7 @@
 import os
+
 import pytest
+
 import imgparse
 
 base_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))

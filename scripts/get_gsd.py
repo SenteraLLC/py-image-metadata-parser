@@ -1,4 +1,4 @@
-"""CLI wrapper for get_camera_params() function."""
+"""CLI wrapper for get_gsd() function."""
 
 import argparse
 import logging
@@ -7,7 +7,7 @@ import imgparse
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("image_path", help="Image path to get camera params of")
+    parser.add_argument("image_path", help="Image path to get gsd of")
     args = parser.parse_args()
 
     # Setup logger
@@ -18,5 +18,5 @@ if __name__ == "__main__":
     root_logger.addHandler(handler)
     root_logger.setLevel(logging.INFO)
 
-    focal_length, pixel_pitch = imgparse.get_camera_params(args.image_path)
-    print(f"Focal Length: {focal_length}, Pixel Pitch: {pixel_pitch}")
+    gsd = imgparse.get_gsd(args.image_path)
+    print(f"GSD: {gsd}")

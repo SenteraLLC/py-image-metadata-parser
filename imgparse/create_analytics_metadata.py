@@ -4,9 +4,9 @@ import logging
 import os
 import random
 
-import imgparse
-
 import pandas
+
+import imgparse
 
 logger = logging.getLogger(__name__)
 
