@@ -71,20 +71,16 @@
    
 ### Documentation
 
-This library is documented using Sphinx. To generate documentation, within the top level of
-the repo, run
+This library is documented using Sphinx. To generate documentation, navigate to the *doc/* subfolder,
+and run
 
 #### Windows
 
     >> conda activate image-parsing
-    >> sphinx-apidoc -o doc/_modules -M imgparse
-    >> cd doc
     >> make html
     
 #### Linux
 
-    >> pipenv run sphinx-apidoc -o doc/_modules -M imgparse
-    >> cd doc
     >> pipenv run make html
 
 The documentation will be generated as an html file located at *py-image-metadata-parser/doc/\_build/html/index.html*. 
