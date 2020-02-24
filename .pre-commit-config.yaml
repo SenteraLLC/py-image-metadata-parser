@@ -18,7 +18,6 @@ repos:
       exclude: (tests|doc)
       additional_dependencies: [
           'flake8-docstrings',
-          'flake8-import-order',
           'flake8-builtins',
           'flake8-logging-format',
           'flake8-rst-docstrings',
