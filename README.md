@@ -1,6 +1,6 @@
 ## py-image-metadata-parser
 
-``imgparse``: Python utilities for extracting exif and xmp data from imagery.
+**``imgparse``**: Python utilities for extracting exif and xmp data from imagery.
 
 ### Installation 
     
