@@ -1,6 +1,6 @@
 ## py-image-metadata-parser
 
-**``imgparse``**: Python utilities for extracting exif and xmp data from imagery.
+``imgparse``: Python utilities for extracting exif and xmp data from imagery.
 
 ### Installation 
     
@@ -71,7 +71,7 @@
    
 ### Documentation
 
-This library is documented using Sphinx. To generate documentation, navigate to the *doc/* subfolder,
+This library is documented using Sphinx. To generate documentation, navigate to the *docs/* subfolder,
 and run
 
 #### Windows
@@ -83,5 +83,5 @@ and run
 
     >> pipenv run make html
 
-The documentation will be generated as an html file located at *py-image-metadata-parser/doc/\_build/html/index.html*. 
+The documentation will be generated as an html file located at *py-image-metadata-parser/docs/\_build/html/index.html*. 
 Open with a browser to get more in depth information on the various modules and functions within the library.
