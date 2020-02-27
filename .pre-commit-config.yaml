@@ -21,7 +21,8 @@ repos:
           'flake8-builtins',
           'flake8-logging-format',
           'flake8-rst-docstrings',
-          'pygments'
+          'pygments',
+          'pep8-naming'
       ]
 default_language_version:
     python: python3.7
