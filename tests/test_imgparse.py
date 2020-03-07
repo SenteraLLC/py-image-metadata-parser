@@ -338,11 +338,11 @@ def test_get_roll_pitch_yaw_dji(dji_image_data):
         dji_image_data[0], exif_data=dji_image_data[1], xmp_data=dji_image_data[2]
     )
 
-    assert [roll1, pitch1, yaw1] == pytest.approx([-0.10, -11.30, 89.80], abs=1e-06)
-    assert [roll2, pitch2, yaw2] == pytest.approx([-0.10, -11.30, 89.80], abs=1e-06)
-    assert [roll3, pitch3, yaw3] == pytest.approx([-0.10, -11.30, 89.80], abs=1e-06)
-    assert [roll4, pitch4, yaw4] == pytest.approx([-0.10, -11.30, 89.80], abs=1e-06)
-    assert [roll5, pitch5, yaw5] == pytest.approx([-0.10, -11.30, 89.80], abs=1e-06)
+    assert [roll1, pitch1, yaw1] == pytest.approx([0, 0.1, 90.2], abs=1e-06)
+    assert [roll2, pitch2, yaw2] == pytest.approx([0, 0.1, 90.2], abs=1e-06)
+    assert [roll3, pitch3, yaw3] == pytest.approx([0, 0.1, 90.2], abs=1e-06)
+    assert [roll4, pitch4, yaw4] == pytest.approx([0, 0.1, 90.2], abs=1e-06)
+    assert [roll5, pitch5, yaw5] == pytest.approx([0, 0.1, 90.2], abs=1e-06)
 
 
 def test_get_dimensions_invalid(bad_data):

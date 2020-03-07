@@ -285,15 +285,16 @@ def get_roll_pitch_yaw(image_path=None, exif_data=None, xmp_data=None):
     elif make == "DJI":
         try:
             roll_str = xmp_data["rdf:RDF"]["rdf:Description"][
-                "@drone-dji:FlightRollDegree"
+                "@drone-dji:GimbalRollDegree"
             ]
             roll = float(roll_str)
             pitch_str = xmp_data["rdf:RDF"]["rdf:Description"][
-                "@drone-dji:FlightPitchDegree"
+                "@drone-dji:GimbalPitchDegree"
             ]
-            pitch = float(pitch_str)
+            # Bring pitch into aircraft pov
+            pitch = float(pitch_str) + 90
             yaw_str = xmp_data["rdf:RDF"]["rdf:Description"][
-                "@drone-dji:FlightYawDegree"
+                "@drone-dji:GimbalYawDegree"
             ]
             yaw = float(yaw_str)
         except KeyError:
