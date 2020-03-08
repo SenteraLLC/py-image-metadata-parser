@@ -2,13 +2,15 @@ name: image-parsing
 channels:
   - conda-forge
 dependencies:
-  - python=3.6
+  - python=3.7
   # dev dependencies
   - sphinx
   - sphinx_rtd_theme
   - m2r
   - pytest
   - pre_commit
+  - pip
+  - pipenv
   # main dependencies
   - exifread
   - xmltodict
