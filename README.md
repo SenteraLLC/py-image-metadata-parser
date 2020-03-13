@@ -15,7 +15,7 @@ Git SSH Setup Instructions: https://help.github.com/en/articles/generating-a-new
 
 Test your SSH setup with:
 
-    >> ssh -T git@github.com
+    ssh -T git@github.com
     
 #### 2) Set Up Package Manager
 
