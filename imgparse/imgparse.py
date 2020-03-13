@@ -428,7 +428,7 @@ def parse_session_alt(image_path):
     raise ValueError("Couldn't parse session altitude from session.txt")
 
 
-def get_gsd(image_path, exif_data=None, xmp_data=None):
+def get_gsd(image_path, exif_data=None, xmp_data=None, corrected_alt=None):
     """
     Get the gsd of the image (in meters/pixel).
 
@@ -439,10 +439,15 @@ def get_gsd(image_path, exif_data=None, xmp_data=None):
     :param image_path: the full path to the image
     :param exif_data: the exif dictionary for the image (optional to speed up processing)
     :param xmp_data: the xmp dictionary for the image (optional to speed up processing)
+    :param corrected_alt: corrected relative altitude (optional, and only available
+                                                        if supplied from an analytics metadata CSV)
     :return: **gsd** - the ground sample distance of the image in meters
     :raises: ValueError
     """
     focal, pitch = get_camera_params(image_path, exif_data)
-    alt = get_relative_altitude(image_path, exif_data, xmp_data)
+    if corrected_alt:
+        alt = corrected_alt
+    else:
+        alt = get_relative_altitude(image_path, exif_data, xmp_data)
 
     return pitch * alt / focal
