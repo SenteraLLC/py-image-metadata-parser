@@ -155,12 +155,14 @@ def get_camera_params(image_path=None, exif_data=None):
     return focal_length, pixel_pitch
 
 
-def get_relative_altitude(image_path, exif_data=None, xmp_data=None):
+def get_relative_altitude(image_path, exif_data=None, xmp_data=None, session_alt=False):
     """
     Get the relative altitude of the sensor above the ground (in meters) when the image was taken.
 
-    If the image is from a Sentera sensor, `session.txt` must be in the image's directory in order for the relative
-    altitude to be calculated.
+    If the image is from a Sentera sensor, will try to read the agl altitude from the xmp tags by default.  If
+    image is from an older firmware version, this xmp tag will not exist, and will fall back to using the `session.txt`
+    file associated with the image instead.  This `session.txt` must be in the image's directory for older firmware
+    versions, or if the ``session_alt`` flag is enabled to specifically use the session altitude.
 
     .. note::
 
@@ -169,17 +171,27 @@ def get_relative_altitude(image_path, exif_data=None, xmp_data=None):
     :param image_path: the full path to the image
     :param exif_data: the exif dictionary for the image (optional to speed up processing)
     :param xmp_data: the xmp dictionary for the image (optional to speed up processing)
+    :param session_alt: enable to extract the session agl altitude instead of xmp agl altitude for Sentera imagery
     :return: **relative_alt** - the relative altitude of the camera above the ground
     :raises: ValueError
     """
     make, model = get_make_and_model(image_path, exif_data)
+    if not xmp_data:
+        xmp_data = get_xmp_data(image_path)
     if make == "Sentera":
-        abs_alt = get_altitude_msl(image_path)
-        session_alt = parse_session_alt(image_path)
-        rel_alt = abs_alt - session_alt
+        try:
+            if not session_alt:
+                alt_str = xmp_data["rdf:RDF"]["rdf:Description"][
+                    "@Camera:AboveGroundAltitude"
+                ]
+                rel_alt = float(alt_str)
+            else:
+                raise KeyError
+        except KeyError:
+            abs_alt = get_altitude_msl(image_path)
+            session_alt = parse_session_alt(image_path)
+            rel_alt = abs_alt - session_alt
     else:
-        if not xmp_data:
-            xmp_data = get_xmp_data(image_path)
         try:
             alt_str = xmp_data["rdf:RDF"]["rdf:Description"][
                 "@drone-dji:RelativeAltitude"
