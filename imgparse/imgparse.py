@@ -59,8 +59,12 @@ def get_xmp_data(image_path):
     xmp_end = img.find("</x:xmpmeta")
     if xmp_start != xmp_end:
         xmp = img[xmp_start : xmp_end + 12].replace("\\n", "\n")
-        xmp_dict = xmltodict.parse(xmp)
-        return {k: v for d in xmp_dict["x:xmpmeta"]["rdf:RDF"]["rdf:Description"] for k, v in d.items()}
+        xmp_data = xmltodict.parse(xmp)["x:xmpmeta"]["rdf:RDF"]["rdf:Description"]
+
+        if isinstance(xmp_data, list):
+            return {k: v for d in xmp_data for k, v in d.items()}
+        else:
+            return xmp_data
 
     logger.error("Couldn't read xmp data for image: %s", image_path)
     raise ValueError("Couldn't read xmp data from image.")
