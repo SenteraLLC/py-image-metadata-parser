@@ -11,22 +11,6 @@ from imgparse.pixel_pitches import PIXEL_PITCHES
 logger = logging.getLogger(__name__)
 
 
-def _get_if_exist(dictionary, key):
-    """
-    Look up a key in a Python dictionary.
-
-    If key doesn't exist, returns None.  Helps avoid key not found error handling.
-
-    :param dictionary: dictionary of key/value pairs
-    :param key: key to look up in provided dictionary
-    :return: **value** - value associated with key, else None
-    """
-    if key in dictionary:
-        return dictionary[key]
-
-    return None
-
-
 def _convert_to_degrees(tag):
     """
     Convert the `exifread` GPS coordinate IfdTag object to degrees in float format.
@@ -122,22 +106,19 @@ def get_pixel_pitch(image_path=None, exif_data=None):
     :return: **pixel_pitch** - the pixel pitch of the camera in meters
     :raises: ValueError
     """
-    pixel_pitch = None
     make, model = get_make_and_model(image_path, exif_data)
     if make == "Sentera":
         pixel_pitch = _get_sentera_pixel_pitch(image_path, exif_data)
     else:
-        pixel_pitch_dict = _get_if_exist(PIXEL_PITCHES, make)
-        if pixel_pitch_dict:
-            pixel_pitch = _get_if_exist(pixel_pitch_dict, model)
+        try:
+            pixel_pitch = PIXEL_PITCHES[make][model]
+        except KeyError:
+            logger.error("Couldn't determine pixel pitch")
+            raise ValueError(
+                "Couldn't determine pixel pitch.\nCamera make/model may not exist in pixel_pitches.py"
+            )
 
-    if pixel_pitch:
-        return pixel_pitch
-
-    logger.error("Couldn't determine pixel pitch")
-    raise ValueError(
-        "Couldn't determine pixel pitch.\nCamera make/model may not exist in pixel_pitches.py"
-    )
+    return pixel_pitch
 
 
 def get_camera_params(image_path=None, exif_data=None):
@@ -175,9 +156,10 @@ def get_relative_altitude(image_path, exif_data=None, xmp_data=None, session_alt
     :return: **relative_alt** - the relative altitude of the camera above the ground
     :raises: ValueError
     """
-    make, model = get_make_and_model(image_path, exif_data)
     if not xmp_data:
         xmp_data = get_xmp_data(image_path)
+
+    make, model = get_make_and_model(image_path, exif_data)
     if make == "Sentera":
         try:
             if not session_alt:
@@ -196,10 +178,6 @@ def get_relative_altitude(image_path, exif_data=None, xmp_data=None, session_alt
                 "Couldn't parse relative altitude from xmp data.  Camera type may not be supported."
             )
 
-    if not rel_alt:
-        logger.error("Couldn't parse relative altitude")
-        raise ValueError("Couldn't parse relative altitude")
-
     return rel_alt
 
 
@@ -215,26 +193,22 @@ def get_lat_lon(image_path=None, exif_data=None):
     if not exif_data:
         exif_data = get_exif_data(image_path)
 
-    lat = None
-    lon = None
-
-    gps_latitude = _get_if_exist(exif_data, "GPS GPSLatitude")
-    gps_latitude_ref = _get_if_exist(exif_data, "GPS GPSLatitudeRef")
-    gps_longitude = _get_if_exist(exif_data, "GPS GPSLongitude")
-    gps_longitude_ref = _get_if_exist(exif_data, "GPS GPSLongitudeRef")
-
-    if gps_latitude and gps_latitude_ref and gps_longitude and gps_longitude_ref:
-        lat = _convert_to_degrees(gps_latitude)
-        if gps_latitude_ref.values[0] != "N":
-            lat = 0 - lat
-
-        lon = _convert_to_degrees(gps_longitude)
-        if gps_longitude_ref.values[0] != "E":
-            lon = 0 - lon
-
-    if lat is None or lon is None:
+    try:
+        gps_latitude = exif_data["GPS GPSLatitude"]
+        gps_latitude_ref = exif_data["GPS GPSLatitudeRef"]
+        gps_longitude = exif_data["GPS GPSLongitude"]
+        gps_longitude_ref = exif_data["GPS GPSLongitudeRef"]
+    except KeyError:
         logger.error("Couldn't extract lat/lon")
         raise ValueError("Couldn't extract lat/lon")
+
+    lat = _convert_to_degrees(gps_latitude)
+    if gps_latitude_ref.values[0] != "N":
+        lat = 0 - lat
+
+    lon = _convert_to_degrees(gps_longitude)
+    if gps_longitude_ref.values[0] != "E":
+        lon = 0 - lon
 
     return lat, lon
 
@@ -251,12 +225,11 @@ def get_altitude_msl(image_path=None, exif_data=None):
     if not exif_data:
         exif_data = get_exif_data(image_path)
 
-    alt_tag = _get_if_exist(exif_data, "GPS GPSAltitude")
-    if alt_tag:
-        return _convert_to_float(alt_tag)
-
-    logger.error("Couldn't extract altitude msl")
-    raise ValueError("Couldn't extract altitude msl")
+    try:
+        return _convert_to_float(exif_data["GPS GPSAltitude"])
+    except KeyError:
+        logger.error("Couldn't extract altitude msl")
+        raise ValueError("Couldn't extract altitude msl")
 
 
 def get_roll_pitch_yaw(image_path=None, exif_data=None, xmp_data=None):
@@ -273,35 +246,25 @@ def get_roll_pitch_yaw(image_path=None, exif_data=None, xmp_data=None):
     :return: **roll, pitch, yaw** - the orientation (degrees) of the camera with respect to the NED frame
     :raises: ValueError
     """
-    roll = None
-    pitch = None
-    yaw = None
-
     if not xmp_data:
         xmp_data = get_xmp_data(image_path)
 
     make, model = get_make_and_model(image_path, exif_data)
-    if make == "Sentera":
-        roll_str = xmp_data["@Camera:Roll"]
-        roll = float(roll_str)
-        pitch_str = xmp_data["@Camera:Pitch"]
-        pitch = float(pitch_str)
-        yaw_str = xmp_data["@Camera:Yaw"]
-        yaw = float(yaw_str)
-    elif make == "DJI":
-        try:
-            roll_str = xmp_data["@drone-dji:GimbalRollDegree"]
-            roll = float(roll_str)
-            pitch_str = xmp_data["@drone-dji:GimbalPitchDegree"]
-            # Bring pitch into aircraft pov
-            pitch = float(pitch_str) + 90
-            yaw_str = xmp_data["@drone-dji:GimbalYawDegree"]
-            yaw = float(yaw_str)
-        except KeyError:
-            logger.error("Couldn't correctly parse DJI xmp tags")
-            pass
 
-    if roll is None or pitch is None or yaw is None:
+    try:
+        if make == "Sentera":
+            roll = float(xmp_data["@Camera:Roll"])
+            pitch = float(xmp_data["@Camera:Pitch"])
+            yaw = float(xmp_data["@Camera:Yaw"])
+        elif make == "DJI":
+            roll = float(xmp_data["@drone-dji:GimbalRollDegree"])
+            pitch = float(xmp_data["@drone-dji:GimbalPitchDegree"])
+            # Bring pitch into aircraft pov
+            pitch += 90
+            yaw = float(xmp_data["@drone-dji:GimbalYawDegree"])
+        else:
+            raise KeyError
+    except KeyError:
         logger.error(
             "Couldn't extract roll/pitch/yaw.  Only Sentera and DJI sensors are supported right now"
         )
@@ -324,12 +287,11 @@ def get_focal_length(image_path=None, exif_data=None):
     if not exif_data:
         exif_data = get_exif_data(image_path)
 
-    fl_tag = _get_if_exist(exif_data, "EXIF FocalLength")
-    if fl_tag:
-        return _convert_to_float(fl_tag) / 1000
-
-    logger.error("Couldn't parse the focal length")
-    raise ValueError("Couldn't parse the focal length")
+    try:
+        return _convert_to_float(exif_data["EXIF FocalLength"]) / 1000
+    except KeyError:
+        logger.error("Couldn't parse the focal length")
+        raise ValueError("Couldn't parse the focal length")
 
 
 def get_make_and_model(image_path=None, exif_data=None):
@@ -344,13 +306,11 @@ def get_make_and_model(image_path=None, exif_data=None):
     if not exif_data:
         exif_data = get_exif_data(image_path)
 
-    make_tag = _get_if_exist(exif_data, "Image Make")
-    model_tag = _get_if_exist(exif_data, "Image Model")
-    if make_tag and model_tag:
-        return make_tag.values, model_tag.values
-
-    logger.error("Couldn't parse the make and model of the camera")
-    raise ValueError("Couldn't parse the make and model of the camera")
+    try:
+        return exif_data["Image Make"].values, exif_data["Image Model"].values
+    except KeyError:
+        logger.error("Couldn't parse the make and model of the camera")
+        raise ValueError("Couldn't parse the make and model of the camera")
 
 
 def get_dimensions(image_path=None, exif_data=None):
@@ -365,13 +325,14 @@ def get_dimensions(image_path=None, exif_data=None):
     if not exif_data:
         exif_data = get_exif_data(image_path)
 
-    height_tag = _get_if_exist(exif_data, "EXIF ExifImageLength")
-    width_tag = _get_if_exist(exif_data, "EXIF ExifImageWidth")
-    if width_tag and height_tag:
-        return height_tag.values[0], width_tag.values[0]
-
-    logger.error("Couldn't parse the height and width of the image")
-    raise ValueError("Couldn't parse the height and width of the image")
+    try:
+        return (
+            exif_data["EXIF ExifImageLength"].values[0],
+            exif_data["EXIF ExifImageWidth"].values[0],
+        )
+    except KeyError:
+        logger.error("Couldn't parse the height and width of the image")
+        raise ValueError("Couldn't parse the height and width of the image")
 
 
 def _get_sentera_pixel_pitch(image_path=None, exif_data=None):
@@ -388,12 +349,11 @@ def _get_sentera_pixel_pitch(image_path=None, exif_data=None):
     if not exif_data:
         exif_data = get_exif_data(image_path)
 
-    focal_res_tag = _get_if_exist(exif_data, "EXIF FocalPlaneXResolution")
-    if focal_res_tag:
-        return 1 / _convert_to_float(focal_res_tag) / 100
-
-    logger.error("Couldn't parse the pixel pitch")
-    raise ValueError("Couldn't parse the pixel pitch")
+    try:
+        return 1 / _convert_to_float(exif_data["EXIF FocalPlaneXResolution"]) / 100
+    except KeyError:
+        logger.error("Couldn't parse the pixel pitch")
+        raise ValueError("Couldn't parse the pixel pitch")
 
 
 def parse_session_alt(image_path):
