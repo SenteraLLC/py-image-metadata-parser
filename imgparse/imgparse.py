@@ -59,8 +59,12 @@ def get_xmp_data(image_path):
     xmp_end = img.find("</x:xmpmeta")
     if xmp_start != xmp_end:
         xmp = img[xmp_start : xmp_end + 12].replace("\\n", "\n")
-        xmp_dict = xmltodict.parse(xmp)
-        return xmp_dict["x:xmpmeta"]
+        xmp_data = xmltodict.parse(xmp)["x:xmpmeta"]["rdf:RDF"]["rdf:Description"]
+
+        if isinstance(xmp_data, list):
+            return {k: v for d in xmp_data for k, v in d.items()}
+        else:
+            return xmp_data
 
     logger.error("Couldn't read xmp data for image: %s", image_path)
     raise ValueError("Couldn't read xmp data from image.")
@@ -163,11 +167,7 @@ def get_relative_altitude(image_path, exif_data=None, xmp_data=None, session_alt
     if make == "Sentera":
         try:
             if not session_alt:
-                rel_alt = float(
-                    xmp_data["rdf:RDF"]["rdf:Description"][
-                        "@Camera:AboveGroundAltitude"
-                    ]
-                )
+                rel_alt = float(xmp_data["@Camera:AboveGroundAltitude"])
             else:
                 raise KeyError
         except KeyError:
@@ -176,9 +176,7 @@ def get_relative_altitude(image_path, exif_data=None, xmp_data=None, session_alt
             rel_alt = abs_alt - session_alt
     else:
         try:
-            rel_alt = float(
-                xmp_data["rdf:RDF"]["rdf:Description"]["@drone-dji:RelativeAltitude"]
-            )
+            rel_alt = float(xmp_data["@drone-dji:RelativeAltitude"])
         except KeyError:
             raise ValueError(
                 "Couldn't parse relative altitude from xmp data.  Camera type may not be supported."
@@ -256,23 +254,18 @@ def get_roll_pitch_yaw(image_path=None, exif_data=None, xmp_data=None):
         xmp_data = get_xmp_data(image_path)
 
     make, model = get_make_and_model(image_path, exif_data)
+
     try:
         if make == "Sentera":
-            roll = float(xmp_data["rdf:RDF"]["rdf:Description"]["@Camera:Roll"])
-            pitch = float(xmp_data["rdf:RDF"]["rdf:Description"]["@Camera:Pitch"])
-            yaw = float(xmp_data["rdf:RDF"]["rdf:Description"]["@Camera:Yaw"])
+            roll = float(xmp_data["@Camera:Roll"])
+            pitch = float(xmp_data["@Camera:Pitch"])
+            yaw = float(xmp_data["@Camera:Yaw"])
         elif make == "DJI":
-            roll = float(
-                xmp_data["rdf:RDF"]["rdf:Description"]["@drone-dji:GimbalRollDegree"]
-            )
-            pitch = float(
-                xmp_data["rdf:RDF"]["rdf:Description"]["@drone-dji:GimbalPitchDegree"]
-            )
+            roll = float(xmp_data["@drone-dji:GimbalRollDegree"])
+            pitch = float(xmp_data["@drone-dji:GimbalPitchDegree"])
             # Bring pitch into aircraft pov
             pitch += 90
-            yaw = float(
-                xmp_data["rdf:RDF"]["rdf:Description"]["@drone-dji:GimbalYawDegree"]
-            )
+            yaw = float(xmp_data["@drone-dji:GimbalYawDegree"])
         else:
             raise KeyError
     except KeyError:
