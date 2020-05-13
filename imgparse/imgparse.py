@@ -39,7 +39,7 @@ def _convert_to_float(tag, index=0):
 
 def get_xmp_data(image_path):
     """
-    Get a dictionary of lookup keys/values for the xmp data of the provided image.
+    Extract the xmp data of the provided image as a continuous string.
 
     :param image_path: full path to image to parse xmp from
     :return: **xmp_data** - a dictionary of lookup keys/values for image xmp data.
