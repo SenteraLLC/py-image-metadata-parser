@@ -112,8 +112,8 @@ def get_autoexposure(image_path=None, exif_data=None):
     if not exif_data:
         exif_data = get_exif_data(image_path)
 
-    iso = exif_data['EXIF ISOSpeedRatings'].values[0] / 100
-    integration_time = _convert_to_float(exif_data['EXIF ExposureTime'])
+    iso = exif_data["EXIF ISOSpeedRatings"].values[0] / 100
+    integration_time = _convert_to_float(exif_data["EXIF ExposureTime"])
 
     autoexposure = iso * integration_time
     return autoexposure
