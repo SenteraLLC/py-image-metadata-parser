@@ -99,7 +99,7 @@ def get_ils(image_path=None, xmp_data=None):
     an included ILS module.
 
     :param image_path: the full path to the image (optional if `xmp_data` provided)
-    :param xmp_data: XMP data of image, as a string dump of the original XML
+    :param xmp_data: the XMP data of image, as a string dump of the original XML (optional to speed up processing)
     :return: **ils** -- ILS value of image, as a floating point number
     :raises: ValueError
     """
@@ -175,7 +175,7 @@ def get_relative_altitude(image_path, exif_data=None, xmp_data=None, session_alt
 
     :param image_path: the full path to the image
     :param exif_data: the exif dictionary for the image (optional to speed up processing)
-    :param xmp_data: the xmp dictionary for the image (optional to speed up processing)
+    :param xmp_data: the XMP data of image, as a string dump of the original XML (optional to speed up processing)
     :param session_alt: enable to extract the session agl altitude instead of xmp agl altitude for Sentera imagery
     :return: **relative_alt** - the relative altitude of the camera above the ground
     :raises: ValueError
@@ -183,21 +183,27 @@ def get_relative_altitude(image_path, exif_data=None, xmp_data=None, session_alt
     if not xmp_data:
         xmp_data = get_xmp_data(image_path)
 
+    def _fallback_to_session(image_path):
+        abs_alt = get_altitude_msl(image_path)
+        session_alt = parse_session_alt(image_path)
+        return abs_alt - session_alt
+
     make, model = get_make_and_model(image_path, exif_data)
     if make == "Sentera":
-        try:
-            if not session_alt:
+        if not session_alt:
+            try:
                 rel_alt = float(xmp.find(xmp_data, [xmp.Sentera.RELATIVE_ALT]))
-            else:
-                raise KeyError
-        except KeyError:
-            abs_alt = get_altitude_msl(image_path)
-            session_alt = parse_session_alt(image_path)
-            rel_alt = abs_alt - session_alt
+            except TypeError:
+                logger.error(
+                    "Relative altitude not found in XMP. Attempting to parse from session.txt file."
+                )
+                rel_alt = _fallback_to_session(image_path)
+        else:
+            rel_alt = _fallback_to_session(image_path)
     else:
         try:
             rel_alt = float(xmp.find(xmp_data, [xmp.DJI.RELATIVE_ALT]))
-        except KeyError:
+        except TypeError:
             raise ValueError(
                 "Couldn't parse relative altitude from xmp data.  Camera type may not be supported."
             )
@@ -266,7 +272,7 @@ def get_roll_pitch_yaw(image_path=None, exif_data=None, xmp_data=None):
 
     :param image_path: the full path to the image (optional if `exif_data` provided)
     :param exif_data: the exif dictionary for the image (optional to speed up processing)
-    :param xmp_data: the xmp dictionary for the image (optional to speed up processing)
+    :param xmp_data: the XMP data of image, as a string dump of the original XML (optional to speed up processing)
     :return: **roll, pitch, yaw** - the orientation (degrees) of the camera with respect to the NED frame
     :raises: ValueError
     """
@@ -287,8 +293,8 @@ def get_roll_pitch_yaw(image_path=None, exif_data=None, xmp_data=None):
             pitch += 90
             yaw = float(xmp.find(xmp_data, [xmp.DJI.YAW]))
         else:
-            raise KeyError
-    except KeyError:
+            raise TypeError()
+    except TypeError:
         logger.error(
             "Couldn't extract roll/pitch/yaw.  Only Sentera and DJI sensors are supported right now"
         )
@@ -422,7 +428,7 @@ def get_gsd(image_path, exif_data=None, xmp_data=None, corrected_alt=None):
 
     :param image_path: the full path to the image
     :param exif_data: the exif dictionary for the image (optional to speed up processing)
-    :param xmp_data: the xmp dictionary for the image (optional to speed up processing)
+    :param xmp_data: the XMP data of image, as a string dump of the original XML (optional to speed up processing)
     :param corrected_alt: corrected relative altitude (optional, and only available
                                                         if supplied from an analytics metadata CSV)
     :return: **gsd** - the ground sample distance of the image in meters
