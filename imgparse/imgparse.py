@@ -4,8 +4,8 @@ import logging
 import os
 
 import exifread
-import xmltodict
 
+import imgparse.xmp as xmp
 from imgparse.pixel_pitches import PIXEL_PITCHES
 
 logger = logging.getLogger(__name__)
@@ -42,7 +42,7 @@ def get_xmp_data(image_path):
     Extract the xmp data of the provided image as a continuous string.
 
     :param image_path: full path to image to parse xmp from
-    :return: **xmp_data** - a dictionary of lookup keys/values for image xmp data.
+    :return: **xmp_data** - XMP data of image, as a string dump of the original XML
     :raises: ValueError
     """
     if not image_path or not os.path.isfile(image_path):
@@ -51,23 +51,15 @@ def get_xmp_data(image_path):
         )
         raise ValueError("Image doesn't exist. Couldn't read xmp data")
 
-    with open(image_path, "rb") as file:
-        img = str(file.read())
-        file.close()
+    try:
+        with open(image_path, encoding="mbcs") as file:
+            img_str = file.read()
 
-    xmp_start = img.find("<x:xmpmeta")
-    xmp_end = img.find("</x:xmpmeta")
-    if xmp_start != xmp_end:
-        xmp = img[xmp_start : xmp_end + 12].replace("\\n", "\n")
-        xmp_data = xmltodict.parse(xmp)["x:xmpmeta"]["rdf:RDF"]["rdf:Description"]
+        return xmp.find(img_str, [xmp.FULL_XMP])
 
-        if isinstance(xmp_data, list):
-            return {k: v for d in xmp_data for k, v in d.items()}
-        else:
-            return xmp_data
-
-    logger.error("Couldn't read xmp data for image: %s", image_path)
-    raise ValueError("Couldn't read xmp data from image.")
+    except FileNotFoundError:
+        logger.error("Couldn't read xmp data for image: %s", image_path)
+        raise ValueError("Couldn't read xmp data from image.")
 
 
 def get_exif_data(image_path):
@@ -93,9 +85,37 @@ def get_exif_data(image_path):
     file.close()
 
     if not exif_data:
+        logger.error("Couldn't read exif data for image: %s", image_path)
         raise ValueError("Couldn't read exif data for image.")
 
     return exif_data
+
+
+def get_ils(image_path=None, xmp_data=None):
+    """
+    Get the ILS value of an image taken with a Sentera 6X sensor with an ILS module.
+
+    This function will always raise an exception if called on XMP data from any sensor other than a 6X with
+    an included ILS module.
+
+    :param image_path: the full path to the image (optional if `xmp_data` provided)
+    :param xmp_data: XMP data of image, as a string dump of the original XML
+    :return: **ils** -- ILS value of image, as a floating point number
+    :raises: ValueError
+    """
+    if not xmp_data:
+        xmp_data = get_xmp_data(image_path)
+
+    ils = float(xmp.find(xmp_data, [xmp.ILS, xmp.SEQ]))
+
+    if not ils:
+        logger.error("Couldn't parse ILS value")
+        raise ValueError(
+            "Couldn't parse ILS value. ILS will only be present if the sensor is a Sentera 6X "
+            "with an ILS module."
+        )
+
+    return ils
 
 
 def get_pixel_pitch(image_path=None, exif_data=None):
@@ -167,7 +187,7 @@ def get_relative_altitude(image_path, exif_data=None, xmp_data=None, session_alt
     if make == "Sentera":
         try:
             if not session_alt:
-                rel_alt = float(xmp_data["@Camera:AboveGroundAltitude"])
+                rel_alt = float(xmp.find(xmp_data, [xmp.Sentera.RELATIVE_ALT]))
             else:
                 raise KeyError
         except KeyError:
@@ -176,7 +196,7 @@ def get_relative_altitude(image_path, exif_data=None, xmp_data=None, session_alt
             rel_alt = abs_alt - session_alt
     else:
         try:
-            rel_alt = float(xmp_data["@drone-dji:RelativeAltitude"])
+            rel_alt = float(xmp.find(xmp_data, [xmp.DJI.RELATIVE_ALT]))
         except KeyError:
             raise ValueError(
                 "Couldn't parse relative altitude from xmp data.  Camera type may not be supported."
@@ -257,15 +277,15 @@ def get_roll_pitch_yaw(image_path=None, exif_data=None, xmp_data=None):
 
     try:
         if make == "Sentera":
-            roll = float(xmp_data["@Camera:Roll"])
-            pitch = float(xmp_data["@Camera:Pitch"])
-            yaw = float(xmp_data["@Camera:Yaw"])
+            roll = float(xmp.find(xmp_data, [xmp.Sentera.ROLL]))
+            pitch = float(xmp.find(xmp_data, [xmp.Sentera.PITCH]))
+            yaw = float(xmp.find(xmp_data, [xmp.Sentera.YAW]))
         elif make == "DJI":
-            roll = float(xmp_data["@drone-dji:GimbalRollDegree"])
-            pitch = float(xmp_data["@drone-dji:GimbalPitchDegree"])
+            roll = float(xmp.find(xmp_data, [xmp.DJI.ROLL]))
+            pitch = float(xmp.find(xmp_data, [xmp.DJI.PITCH]))
             # Bring pitch into aircraft pov
             pitch += 90
-            yaw = float(xmp_data["@drone-dji:GimbalYawDegree"])
+            yaw = float(xmp.find(xmp_data, [xmp.DJI.YAW]))
         else:
             raise KeyError
     except KeyError:
