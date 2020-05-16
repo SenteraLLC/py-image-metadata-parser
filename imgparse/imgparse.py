@@ -53,7 +53,7 @@ def get_xmp_data(image_path):
 
     try:
         with open(image_path, encoding="mbcs") as file:
-            img_str = file.read()
+            img_str = file.read(xmp.MAX_FILE_READ_LENGTH)
 
         return xmp.find(img_str, [xmp.FULL_XMP])
 
