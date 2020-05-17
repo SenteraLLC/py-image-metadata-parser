@@ -25,7 +25,7 @@ def get_xmp_data(image_path):
         raise ValueError("Image doesn't exist. Couldn't read xmp data")
 
     try:
-        with open(image_path, encoding="mbcs") as file:
+        with open(image_path, encoding="latin_1") as file:
             img_str = file.read(xmp.MAX_FILE_READ_LENGTH)
 
         return xmp.find_first(img_str, xmp.FULL_XMP)
