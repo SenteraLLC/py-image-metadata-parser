@@ -106,21 +106,23 @@ def get_if_needed(*args_to_get, using):
             args = list(args)
 
             def _get_from_args_or_kwargs(param_name):
-                func_arg_list = inspect.getfullargspec(func).args
                 if kwargs.get(param_name, None):
                     return kwargs[param_name]
                 else:
                     try:
-                        return args[func_arg_list.index(param_name)]
+                        return args[
+                            wrapper_get_if_needed.func_arg_list.index(param_name)
+                        ]
                     except IndexError:
                         return None
 
             def _set_in_args_or_kwargs(param_name, param_value):
-                func_arg_list = inspect.getfullargspec(func).args
                 if kwargs.get(param_name, None):
                     kwargs[param_name] = param_value
                 try:
-                    args[func_arg_list.index(param_name)] = param_value
+                    args[
+                        wrapper_get_if_needed.func_arg_list.index(param_name)
+                    ] = param_value
                 except IndexError:
                     kwargs[param_name] = param_value
 
@@ -133,6 +135,7 @@ def get_if_needed(*args_to_get, using):
 
             return func(*args, **kwargs)
 
+        wrapper_get_if_needed.func_arg_list = inspect.getfullargspec(func).args
         return wrapper_get_if_needed
 
     return inner_get_if_needed
