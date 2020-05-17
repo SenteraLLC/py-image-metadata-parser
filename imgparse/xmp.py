@@ -5,7 +5,7 @@ from functools import reduce
 from typing import List, NamedTuple, Optional
 
 # Define misc constants:
-MAX_FILE_READ_LENGTH = 15000
+MAX_FILE_READ_LENGTH = 25000
 
 # Define patterns:
 FULL_XMP = re.compile(r"<x:xmpmeta.*</x:xmpmeta>", re.DOTALL)
