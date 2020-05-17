@@ -6,6 +6,7 @@ import os
 import imgparse.xmp as xmp
 from imgparse.decorators import get_if_needed
 from imgparse.pixel_pitches import PIXEL_PITCHES
+from imgparse.xmp import XMPTagNotFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -49,11 +50,12 @@ def get_ils(image_path=None, xmp_data=None):
     :return: **ils** -- ILS value of image, as a floating point number
     :raises: ValueError
     """
-    ils = float(xmp.find(xmp_data, [xmp.ILS, xmp.SEQ]))
+    try:
+        ils = float(xmp.find(xmp_data, [xmp.ILS, xmp.SEQ]))
 
-    if not ils:
+    except XMPTagNotFoundError:
         logger.error("Couldn't parse ILS value")
-        raise ValueError(
+        raise XMPTagNotFoundError(
             "Couldn't parse ILS value. ILS will only be present if the sensor is a Sentera 6X "
             "with an ILS module."
         )
@@ -137,7 +139,7 @@ def get_relative_altitude(image_path, exif_data=None, xmp_data=None, session_alt
         if not session_alt:
             try:
                 rel_alt = float(xmp.find(xmp_data, [xmp.Sentera.RELATIVE_ALT]))
-            except TypeError:
+            except XMPTagNotFoundError:
                 logger.error(
                     "Relative altitude not found in XMP. Attempting to parse from session.txt file."
                 )
@@ -147,8 +149,8 @@ def get_relative_altitude(image_path, exif_data=None, xmp_data=None, session_alt
     else:
         try:
             rel_alt = float(xmp.find(xmp_data, [xmp.DJI.RELATIVE_ALT]))
-        except TypeError:
-            raise ValueError(
+        except XMPTagNotFoundError:
+            raise XMPTagNotFoundError(
                 "Couldn't parse relative altitude from xmp data.  Camera type may not be supported."
             )
 
@@ -231,12 +233,12 @@ def get_roll_pitch_yaw(image_path=None, exif_data=None, xmp_data=None):
             pitch += 90
             yaw = float(xmp.find(xmp_data, [xmp.DJI.YAW]))
         else:
-            raise TypeError()
-    except TypeError:
+            raise XMPTagNotFoundError()
+    except XMPTagNotFoundError:
         logger.error(
             "Couldn't extract roll/pitch/yaw.  Only Sentera and DJI sensors are supported right now"
         )
-        raise ValueError(
+        raise XMPTagNotFoundError(
             "Couldn't extract roll/pitch/yaw.  Only Sentera and DJI sensors are supported right now"
         )
 

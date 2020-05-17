@@ -15,6 +15,12 @@ SEQ = re.compile(r"(?: *|\t)<rdf:li>(.*)</rdf:li>\n")
 ILS = re.compile(r"<Camera:SunSensor>.*</Camera:SunSensor>", re.DOTALL)
 
 
+class XMPTagNotFoundError(Exception):
+    """Custom exception for when a match on a specific XMP tag fails."""
+
+    pass
+
+
 class SensorMake(NamedTuple):
     """
     Named tuple storing the regex patterns to match against for various XMP values of different sensors.
@@ -77,17 +83,17 @@ def find(xmp_data: str, patterns: List[re.Pattern]) -> Optional[str]:
     :return: **match** -- Matched string (if all matches are successful), or None if a match fails
     """
 
-    def _find_inner(partial_xmp: Optional[str], pattern: re.Pattern) -> Optional[str]:
-        # The try block catches exceptions from trying to match on a None returned by a previous match:
-        try:
-            match = pattern.findall(partial_xmp)
-            # If called on a string but no match was found, findall() returns an empty list:
-            if match:
-                # Returns the whole match
-                return match[0]
-            else:
-                return None
-        except TypeError:
-            return None
+    def _find_inner(partial_xmp: str, pattern: re.Pattern) -> str:
+        match = pattern.findall(partial_xmp)
+
+        # If called on a string but no match was found, findall() returns an empty list:
+        if match:
+            # Returns the whole match
+            return match[0]
+        else:
+            raise XMPTagNotFoundError(
+                f"A tag pattern did not match with the XMP string. The tag "
+                f"may not exist, or the pattern may be invalid."
+            )
 
     return reduce(_find_inner, patterns, xmp_data)
