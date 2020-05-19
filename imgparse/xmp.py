@@ -2,7 +2,7 @@
 
 import re
 from functools import reduce
-from typing import List, NamedTuple, Optional
+from typing import List, NamedTuple
 
 # Define misc constants:
 MAX_FILE_READ_LENGTH = 25000
@@ -50,7 +50,7 @@ DJI = SensorMake(
 )
 
 
-def find_first(xmp_data: str, pattern: re.Pattern) -> Optional[str]:
+def find_first(xmp_data: str, pattern: re.Pattern) -> str:
     """
     Apply a single pattern to the xmp data, and return the first match.
 
@@ -74,17 +74,16 @@ def find_first(xmp_data: str, pattern: re.Pattern) -> Optional[str]:
         )
 
 
-def find(xmp_data: str, patterns: List[re.Pattern]) -> Optional[str]:
+def find(xmp_data: str, patterns: List[re.Pattern]) -> str:
     """
     Sequentially apply a list of patterns to the xmp data to parse a value of interest.
 
     This function recurses over the list of patterns, applying each one to the remaining matching XMP string
     and passing the subsequent matching string to the next iteration.
 
-    Instead of raising an exception if a match fails, this function explicitly returns None so that functions
-    that wrap this function to parse specific values can handle errors themselves and output more helpful messages.
-    This is denoted by the Optional[str] return type, but unfortunately returning this type does not enforce a
-    None-check on the part of the caller.
+    If multiple capture groups are in a passed pattern, that pattern must be the last pattern in the list --
+    in this situation, a tuple will be returned with each matched group. This can be useful when matching tags
+    in a "<rdf:Seq>".
 
     :param xmp_data: XMP string to be parsed
     :param patterns: List of patterns to be applied to the XMP string

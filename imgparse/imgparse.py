@@ -48,7 +48,7 @@ def get_ils(image_path=None, xmp_data=None):
     :param image_path: the full path to the image (optional if `xmp_data` provided)
     :param xmp_data: the XMP data of image, as a string dump of the original XML (optional to speed up processing)
     :return: **ils** -- ILS value of image, as a floating point number
-    :raises: ValueError
+    :raises: XMPTagNotFoundError
     """
     try:
         ils = float(xmp.find(xmp_data, [xmp.ILS, xmp.SEQ]))
@@ -145,7 +145,7 @@ def get_relative_altitude(image_path, exif_data=None, xmp_data=None, session_alt
     :param xmp_data: the XMP data of image, as a string dump of the original XML (optional to speed up processing)
     :param session_alt: enable to extract the session agl altitude instead of xmp agl altitude for Sentera imagery
     :return: **relative_alt** - the relative altitude of the camera above the ground
-    :raises: ValueError
+    :raises: XMPTagNotFoundError
     """
 
     def _fallback_to_session(image_path):
@@ -236,7 +236,7 @@ def get_roll_pitch_yaw(image_path=None, exif_data=None, xmp_data=None):
     :param exif_data: the exif dictionary for the image (optional to speed up processing)
     :param xmp_data: the XMP data of image, as a string dump of the original XML (optional to speed up processing)
     :return: **roll, pitch, yaw** - the orientation (degrees) of the camera with respect to the NED frame
-    :raises: ValueError
+    :raises: XMPTagNotFoundError
     """
     make, model = get_make_and_model(image_path, exif_data)
 
