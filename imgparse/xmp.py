@@ -55,15 +55,23 @@ def find_first(xmp_data: str, pattern: re.Pattern) -> Optional[str]:
     Apply a single pattern to the xmp data, and return the first match.
 
     This function has an advantage over the more general "find" function
-    in very limited circumstances. It is faster, is only useful if you
+    in very limited circumstances. It is faster, but is only useful if you
     want to match on only one pattern, return the whole match (no ignored
     capture groups), and only want the first match found.
 
     :param xmp_data: XMP string to be parsed
     :param pattern: pattern to be applied to the XMP string
-    :return: **match** -- matched string (if match is successful), or None if the match fails
+    :return: **match** -- matched string (if match is successful)
+    :raises: XMPTagNotFoundError
     """
-    return pattern.search(xmp_data).group(0)
+    match = pattern.search(xmp_data).group(0)
+    if match:
+        return match
+    else:
+        raise XMPTagNotFoundError(
+            "A tag pattern did not match with the XMP string. The tag "
+            "may not exist, or the pattern may be invalid."
+        )
 
 
 def find(xmp_data: str, patterns: List[re.Pattern]) -> Optional[str]:
@@ -80,7 +88,8 @@ def find(xmp_data: str, patterns: List[re.Pattern]) -> Optional[str]:
 
     :param xmp_data: XMP string to be parsed
     :param patterns: List of patterns to be applied to the XMP string
-    :return: **match** -- Matched string (if all matches are successful), or None if a match fails
+    :return: **match** -- Matched string (if all matches are successful)
+    :raises: XMPTagNotFoundError
     """
 
     def _find_inner(partial_xmp: str, pattern: re.Pattern) -> str:
@@ -92,8 +101,8 @@ def find(xmp_data: str, patterns: List[re.Pattern]) -> Optional[str]:
             return match[0]
         else:
             raise XMPTagNotFoundError(
-                f"A tag pattern did not match with the XMP string. The tag "
-                f"may not exist, or the pattern may be invalid."
+                "A tag pattern did not match with the XMP string. The tag "
+                "may not exist, or the pattern may be invalid."
             )
 
     return reduce(_find_inner, patterns, xmp_data)
