@@ -98,6 +98,27 @@ def get_exif_data(image_path):
     return exif_data
 
 
+def get_autoexposure(image_path=None, exif_data=None):
+    """
+    Get the autoexposure value of the sensor when the image was taken.
+
+    Autoexposure is derived from the integration time and gain of the sensor, which are stored in
+    separate tags. This function retrieves those values and performs the calculation.
+
+    :param image_path: the full path to the image (optional if `exif_data` provided)
+    :param exif_data: the exif dictionary for the image (optional to speed up processing)
+    :return: **autoexposure** - image autoexposure value
+    """
+    if not exif_data:
+        exif_data = get_exif_data(image_path)
+
+    iso = exif_data["EXIF ISOSpeedRatings"].values[0] / 100
+    integration_time = _convert_to_float(exif_data["EXIF ExposureTime"])
+
+    autoexposure = iso * integration_time
+    return autoexposure
+
+
 def get_pixel_pitch(image_path=None, exif_data=None):
     """
     Get pixel pitch (in meters) of the sensor that took the image.
