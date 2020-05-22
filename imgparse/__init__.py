@@ -21,11 +21,11 @@ processing.  Example code for using this functionality is shown below.
 
 from imgparse._version import __version__
 from imgparse.create_analytics_metadata import create_analytics_metadata
+from imgparse.getters import get_exif_data, get_xmp_data
 from imgparse.imgparse import (
     get_altitude_msl,
     get_camera_params,
     get_dimensions,
-    get_exif_data,
     get_focal_length,
     get_gsd,
     get_lat_lon,
@@ -33,7 +33,6 @@ from imgparse.imgparse import (
     get_pixel_pitch,
     get_relative_altitude,
     get_roll_pitch_yaw,
-    get_xmp_data,
     parse_session_alt,
 )
 

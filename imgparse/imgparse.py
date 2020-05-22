@@ -3,10 +3,10 @@
 import logging
 import os
 
-import exifread
-import xmltodict
-
+import imgparse.xmp as xmp
+from imgparse.decorators import get_if_needed
 from imgparse.pixel_pitches import PIXEL_PITCHES
+from imgparse.xmp import XMPTagNotFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -37,67 +37,33 @@ def _convert_to_float(tag, index=0):
     return float(tag.values[index].num) / float(tag.values[index].den)
 
 
-def get_xmp_data(image_path):
+@get_if_needed("xmp_data", using="image_path")
+def get_ils(image_path=None, xmp_data=None):
     """
-    Get a dictionary of lookup keys/values for the xmp data of the provided image.
+    Get the ILS value of an image taken with a Sentera 6X sensor with an ILS module.
 
-    :param image_path: full path to image to parse xmp from
-    :return: **xmp_data** - a dictionary of lookup keys/values for image xmp data.
-    :raises: ValueError
+    This function will always raise an exception if called on XMP data from any sensor other than a 6X with
+    an included ILS module.
+
+    :param image_path: the full path to the image (optional if `xmp_data` provided)
+    :param xmp_data: the XMP data of image, as a string dump of the original XML (optional to speed up processing)
+    :return: **ils** -- ILS value of image, as a floating point number
+    :raises: XMPTagNotFoundError
     """
-    if not image_path or not os.path.isfile(image_path):
-        logger.error(
-            "Image doesn't exist.  Couldn't read xmp data for image: %s", image_path
+    try:
+        ils = float(xmp.find(xmp_data, [xmp.ILS, xmp.SEQ]))
+
+    except XMPTagNotFoundError:
+        logger.error("Couldn't parse ILS value")
+        raise XMPTagNotFoundError(
+            "Couldn't parse ILS value. ILS will only be present if the sensor is a Sentera 6X "
+            "with an ILS module."
         )
-        raise ValueError("Image doesn't exist. Couldn't read xmp data")
 
-    with open(image_path, "rb") as file:
-        img = str(file.read())
-        file.close()
-
-    xmp_start = img.find("<x:xmpmeta")
-    xmp_end = img.find("</x:xmpmeta")
-    if xmp_start != xmp_end:
-        xmp = img[xmp_start : xmp_end + 12].replace("\\n", "\n")
-        xmp_data = xmltodict.parse(xmp)["x:xmpmeta"]["rdf:RDF"]["rdf:Description"]
-
-        if isinstance(xmp_data, list):
-            return {k: v for d in xmp_data for k, v in d.items()}
-        else:
-            return xmp_data
-
-    logger.error("Couldn't read xmp data for image: %s", image_path)
-    raise ValueError("Couldn't read xmp data from image.")
+    return ils
 
 
-def get_exif_data(image_path):
-    """
-    Get a dictionary of lookup keys/values for the exif data of the provided image.
-
-    This dictionary is an optional argument for the various ``imgparse`` functions to speed up processing by only
-    reading the exif data once per image.  Otherwise this function is used internally for ``imgparse`` functions to
-    extract the needed exif data.
-
-    :param image_path: full path to image to parse exif from
-    :return: **exif_data** - a dictionary of lookup keys/values for image exif data.
-    :raises: ValueError
-    """
-    if not image_path or not os.path.isfile(image_path):
-        logger.error(
-            "Image doesn't exist.  Can't read exif data for image: %s", image_path
-        )
-        raise ValueError("Image doesn't exist. Couldn't read exif data.")
-
-    file = open(image_path, "rb")
-    exif_data = exifread.process_file(file)
-    file.close()
-
-    if not exif_data:
-        raise ValueError("Couldn't read exif data for image.")
-
-    return exif_data
-
-
+@get_if_needed("exif_data", using="image_path")
 def get_autoexposure(image_path=None, exif_data=None):
     """
     Get the autoexposure value of the sensor when the image was taken.
@@ -109,9 +75,6 @@ def get_autoexposure(image_path=None, exif_data=None):
     :param exif_data: the exif dictionary for the image (optional to speed up processing)
     :return: **autoexposure** - image autoexposure value
     """
-    if not exif_data:
-        exif_data = get_exif_data(image_path)
-
     iso = exif_data["EXIF ISOSpeedRatings"].values[0] / 100
     integration_time = _convert_to_float(exif_data["EXIF ExposureTime"])
 
@@ -119,6 +82,7 @@ def get_autoexposure(image_path=None, exif_data=None):
     return autoexposure
 
 
+@get_if_needed("exif_data", using="image_path")
 def get_pixel_pitch(image_path=None, exif_data=None):
     """
     Get pixel pitch (in meters) of the sensor that took the image.
@@ -146,6 +110,7 @@ def get_pixel_pitch(image_path=None, exif_data=None):
     return pixel_pitch
 
 
+@get_if_needed("exif_data", using="image_path")
 def get_camera_params(image_path=None, exif_data=None):
     """
     Get the focal length and pixel pitch (in meters) of the sensor that took the image.
@@ -161,6 +126,7 @@ def get_camera_params(image_path=None, exif_data=None):
     return focal_length, pixel_pitch
 
 
+@get_if_needed("exif_data", "xmp_data", using="image_path")
 def get_relative_altitude(image_path, exif_data=None, xmp_data=None, session_alt=False):
     """
     Get the relative altitude of the sensor above the ground (in meters) when the image was taken.
@@ -176,36 +142,41 @@ def get_relative_altitude(image_path, exif_data=None, xmp_data=None, session_alt
 
     :param image_path: the full path to the image
     :param exif_data: the exif dictionary for the image (optional to speed up processing)
-    :param xmp_data: the xmp dictionary for the image (optional to speed up processing)
+    :param xmp_data: the XMP data of image, as a string dump of the original XML (optional to speed up processing)
     :param session_alt: enable to extract the session agl altitude instead of xmp agl altitude for Sentera imagery
     :return: **relative_alt** - the relative altitude of the camera above the ground
-    :raises: ValueError
+    :raises: XMPTagNotFoundError
     """
-    if not xmp_data:
-        xmp_data = get_xmp_data(image_path)
+
+    def _fallback_to_session(image_path):
+        abs_alt = get_altitude_msl(image_path)
+        session_alt = parse_session_alt(image_path)
+        return abs_alt - session_alt
 
     make, model = get_make_and_model(image_path, exif_data)
     if make == "Sentera":
-        try:
-            if not session_alt:
-                rel_alt = float(xmp_data["@Camera:AboveGroundAltitude"])
-            else:
-                raise KeyError
-        except KeyError:
-            abs_alt = get_altitude_msl(image_path)
-            session_alt = parse_session_alt(image_path)
-            rel_alt = abs_alt - session_alt
+        if not session_alt:
+            try:
+                rel_alt = float(xmp.find(xmp_data, [xmp.Sentera.RELATIVE_ALT]))
+            except XMPTagNotFoundError:
+                logger.error(
+                    "Relative altitude not found in XMP. Attempting to parse from session.txt file."
+                )
+                rel_alt = _fallback_to_session(image_path)
+        else:
+            rel_alt = _fallback_to_session(image_path)
     else:
         try:
-            rel_alt = float(xmp_data["@drone-dji:RelativeAltitude"])
-        except KeyError:
-            raise ValueError(
+            rel_alt = float(xmp.find(xmp_data, [xmp.DJI.RELATIVE_ALT]))
+        except XMPTagNotFoundError:
+            raise XMPTagNotFoundError(
                 "Couldn't parse relative altitude from xmp data.  Camera type may not be supported."
             )
 
     return rel_alt
 
 
+@get_if_needed("exif_data", using="image_path")
 def get_lat_lon(image_path=None, exif_data=None):
     """
     Get the latitude and longitude of the sensor when the image was taken.
@@ -215,9 +186,6 @@ def get_lat_lon(image_path=None, exif_data=None):
     :return: **latitude, longitude** - the location of where the image was taken
     :raises: ValueError
     """
-    if not exif_data:
-        exif_data = get_exif_data(image_path)
-
     try:
         gps_latitude = exif_data["GPS GPSLatitude"]
         gps_latitude_ref = exif_data["GPS GPSLatitudeRef"]
@@ -238,6 +206,7 @@ def get_lat_lon(image_path=None, exif_data=None):
     return lat, lon
 
 
+@get_if_needed("exif_data", using="image_path")
 def get_altitude_msl(image_path=None, exif_data=None):
     """
     Get the absolute altitude (meters above msl) of the sensor when the image was taken.
@@ -247,9 +216,6 @@ def get_altitude_msl(image_path=None, exif_data=None):
     :return: **altitude_msl** - the absolute altitude of the image in meters.
     :raises: ValueError
     """
-    if not exif_data:
-        exif_data = get_exif_data(image_path)
-
     try:
         return _convert_to_float(exif_data["GPS GPSAltitude"])
     except KeyError:
@@ -257,6 +223,7 @@ def get_altitude_msl(image_path=None, exif_data=None):
         raise ValueError("Couldn't extract altitude msl")
 
 
+@get_if_needed("exif_data", "xmp_data", using="image_path")
 def get_roll_pitch_yaw(image_path=None, exif_data=None, xmp_data=None):
     """
     Get the orientation of the sensor (roll, pitch, yaw in degrees) when the image was taken.
@@ -267,39 +234,37 @@ def get_roll_pitch_yaw(image_path=None, exif_data=None, xmp_data=None):
 
     :param image_path: the full path to the image (optional if `exif_data` provided)
     :param exif_data: the exif dictionary for the image (optional to speed up processing)
-    :param xmp_data: the xmp dictionary for the image (optional to speed up processing)
+    :param xmp_data: the XMP data of image, as a string dump of the original XML (optional to speed up processing)
     :return: **roll, pitch, yaw** - the orientation (degrees) of the camera with respect to the NED frame
-    :raises: ValueError
+    :raises: XMPTagNotFoundError
     """
-    if not xmp_data:
-        xmp_data = get_xmp_data(image_path)
-
     make, model = get_make_and_model(image_path, exif_data)
 
     try:
         if make == "Sentera":
-            roll = float(xmp_data["@Camera:Roll"])
-            pitch = float(xmp_data["@Camera:Pitch"])
-            yaw = float(xmp_data["@Camera:Yaw"])
+            roll = float(xmp.find(xmp_data, [xmp.Sentera.ROLL]))
+            pitch = float(xmp.find(xmp_data, [xmp.Sentera.PITCH]))
+            yaw = float(xmp.find(xmp_data, [xmp.Sentera.YAW]))
         elif make == "DJI":
-            roll = float(xmp_data["@drone-dji:GimbalRollDegree"])
-            pitch = float(xmp_data["@drone-dji:GimbalPitchDegree"])
+            roll = float(xmp.find(xmp_data, [xmp.DJI.ROLL]))
+            pitch = float(xmp.find(xmp_data, [xmp.DJI.PITCH]))
             # Bring pitch into aircraft pov
             pitch += 90
-            yaw = float(xmp_data["@drone-dji:GimbalYawDegree"])
+            yaw = float(xmp.find(xmp_data, [xmp.DJI.YAW]))
         else:
-            raise KeyError
-    except KeyError:
+            raise XMPTagNotFoundError()
+    except XMPTagNotFoundError:
         logger.error(
             "Couldn't extract roll/pitch/yaw.  Only Sentera and DJI sensors are supported right now"
         )
-        raise ValueError(
+        raise XMPTagNotFoundError(
             "Couldn't extract roll/pitch/yaw.  Only Sentera and DJI sensors are supported right now"
         )
 
     return roll, pitch, yaw
 
 
+@get_if_needed("exif_data", using="image_path")
 def get_focal_length(image_path=None, exif_data=None):
     """
     Get the focal length (in meters) of the sensor that took the image.
@@ -309,9 +274,6 @@ def get_focal_length(image_path=None, exif_data=None):
     :return: **focal_length** - the focal length of the camera in meters
     :raises: ValueError
     """
-    if not exif_data:
-        exif_data = get_exif_data(image_path)
-
     try:
         return _convert_to_float(exif_data["EXIF FocalLength"]) / 1000
     except KeyError:
@@ -319,6 +281,7 @@ def get_focal_length(image_path=None, exif_data=None):
         raise ValueError("Couldn't parse the focal length")
 
 
+@get_if_needed("exif_data", using="image_path")
 def get_make_and_model(image_path=None, exif_data=None):
     """
     Get the make and model of the sensor that took the image.
@@ -328,9 +291,6 @@ def get_make_and_model(image_path=None, exif_data=None):
     :return: **make**, **model** - the make and model of the camera
     :raises: ValueError
     """
-    if not exif_data:
-        exif_data = get_exif_data(image_path)
-
     try:
         return exif_data["Image Make"].values, exif_data["Image Model"].values
     except KeyError:
@@ -338,6 +298,7 @@ def get_make_and_model(image_path=None, exif_data=None):
         raise ValueError("Couldn't parse the make and model of the camera")
 
 
+@get_if_needed("exif_data", using="image_path")
 def get_dimensions(image_path=None, exif_data=None):
     """
     Get the height and width (in pixels) of the image.
@@ -347,9 +308,6 @@ def get_dimensions(image_path=None, exif_data=None):
     :return: **height**, **width** - the height and width of the image
     :raises: ValueError
     """
-    if not exif_data:
-        exif_data = get_exif_data(image_path)
-
     try:
         return (
             exif_data["EXIF ExifImageLength"].values[0],
@@ -360,6 +318,7 @@ def get_dimensions(image_path=None, exif_data=None):
         raise ValueError("Couldn't parse the height and width of the image")
 
 
+@get_if_needed("exif_data", using="image_path")
 def _get_sentera_pixel_pitch(image_path=None, exif_data=None):
     """
     Get the pixel pitch (in meters) from Sentera sensors.
@@ -371,9 +330,6 @@ def _get_sentera_pixel_pitch(image_path=None, exif_data=None):
     :return: **pixel_pitch** - the pixel_pitch of the camera
     :raises: ValueError
     """
-    if not exif_data:
-        exif_data = get_exif_data(image_path)
-
     try:
         return 1 / _convert_to_float(exif_data["EXIF FocalPlaneXResolution"]) / 100
     except KeyError:
@@ -413,6 +369,7 @@ def parse_session_alt(image_path):
     raise ValueError("Couldn't parse session altitude from session.txt")
 
 
+@get_if_needed("exif_data", "xmp_data", using="image_path")
 def get_gsd(image_path, exif_data=None, xmp_data=None, corrected_alt=None):
     """
     Get the gsd of the image (in meters/pixel).
@@ -423,7 +380,7 @@ def get_gsd(image_path, exif_data=None, xmp_data=None, corrected_alt=None):
 
     :param image_path: the full path to the image
     :param exif_data: the exif dictionary for the image (optional to speed up processing)
-    :param xmp_data: the xmp dictionary for the image (optional to speed up processing)
+    :param xmp_data: the XMP data of image, as a string dump of the original XML (optional to speed up processing)
     :param corrected_alt: corrected relative altitude (optional, and only available
                                                         if supplied from an analytics metadata CSV)
     :return: **gsd** - the ground sample distance of the image in meters
