@@ -5,7 +5,7 @@ from functools import reduce
 from typing import List, NamedTuple
 
 # Define misc constants:
-MAX_FILE_READ_LENGTH = 25000
+MAX_FILE_READ_LENGTH = 30000
 
 # Define patterns:
 FULL_XMP = re.compile(r"<x:xmpmeta.*</x:xmpmeta>", re.DOTALL)
@@ -64,10 +64,14 @@ def find_first(xmp_data: str, pattern: re.Pattern) -> str:
     :return: **match** -- matched string (if match is successful)
     :raises: XMPTagNotFoundError
     """
-    match = pattern.search(xmp_data).group(0)
-    if match:
+    try:
+        match = pattern.search(xmp_data).group(0)
+
+        if not match:
+            raise AttributeError()
+
         return match
-    else:
+    except AttributeError:
         raise XMPTagNotFoundError(
             "A tag pattern did not match with the XMP string. The tag "
             "may not exist, or the pattern may be invalid."
@@ -101,7 +105,7 @@ def find(xmp_data: str, patterns: List[re.Pattern]) -> str:
         else:
             raise XMPTagNotFoundError(
                 "A tag pattern did not match with the XMP string. The tag "
-                "may not exist, or the pattern may be invalid."
+                "may not exist, the pattern may be invalid, or MAX_FILE_READ_LENGTH is too small."
             )
 
     return reduce(_find_inner, patterns, xmp_data)

@@ -159,7 +159,7 @@ def get_relative_altitude(image_path, exif_data=None, xmp_data=None, session_alt
             try:
                 rel_alt = float(xmp.find(xmp_data, [xmp.Sentera.RELATIVE_ALT]))
             except XMPTagNotFoundError:
-                logger.error(
+                logger.warning(
                     "Relative altitude not found in XMP. Attempting to parse from session.txt file."
                 )
                 rel_alt = _fallback_to_session(image_path)
