@@ -64,18 +64,15 @@ def find_first(xmp_data: str, pattern: re.Pattern) -> str:
     :return: **match** -- matched string (if match is successful)
     :raises: XMPTagNotFoundError
     """
-    try:
-        match = pattern.search(xmp_data).group(0)
+    match = pattern.search(xmp_data)
 
-        if not match:
-            raise AttributeError()
+    if match:
+        return match.group(0)
 
-        return match
-    except AttributeError:
-        raise XMPTagNotFoundError(
-            "A tag pattern did not match with the XMP string. The tag "
-            "may not exist, or the pattern may be invalid."
-        )
+    raise XMPTagNotFoundError(
+        "A tag pattern did not match with the XMP string. The tag "
+        "may not exist, or the pattern may be invalid."
+    )
 
 
 def find(xmp_data: str, patterns: List[re.Pattern]) -> str:
