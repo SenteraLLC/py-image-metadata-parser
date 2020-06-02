@@ -2,6 +2,7 @@
 
 import logging
 import os
+from datetime import datetime
 
 import imgparse.xmp as xmp
 from imgparse.decorators import get_if_needed
@@ -75,11 +76,39 @@ def get_autoexposure(image_path=None, exif_data=None):
     :param exif_data: the exif dictionary for the image (optional to speed up processing)
     :return: **autoexposure** - image autoexposure value
     """
-    iso = exif_data["EXIF ISOSpeedRatings"].values[0] / 100
-    integration_time = _convert_to_float(exif_data["EXIF ExposureTime"])
+    try:
+        iso = exif_data["EXIF ISOSpeedRatings"].values[0] / 100
+        integration_time = _convert_to_float(exif_data["EXIF ExposureTime"])
+    except KeyError:
+        logger.error("Couldn't parse either ISO or exposure time.")
+        raise ValueError("Couldn't parse either ISO or exposure time.")
 
     autoexposure = iso * integration_time
     return autoexposure
+
+
+@get_if_needed("exif_data", using="image_path")
+def get_timestamp(image_path=None, exif_data=None, format_string="%Y%m%d %H%M%S%f"):
+    """
+    Get the time stamp of an image and parse it into a `datetime` object with the given format string.
+
+    :param image_path: the full path to the image (optional if `exif_data` provided)
+    :param exif_data: the exif dictionary for the image (optional to speed up processing)
+    :param format_string: Format code, as a string, to be used to parse the image timestamp.
+    :return: **datetime_obj**: Parsed timestamp, in the format specified by the input format string.
+    """
+    try:
+        datetime_obj = datetime.strptime(
+            exif_data["EXIF DateTimeOriginal"].values, format_string
+        )
+    except KeyError:
+        logger.error("Couldn't determine image timestamp.")
+        raise ValueError("Couldn't determine image timestamp.")
+    except ValueError:
+        logger.error("Couldn't parse found timestamp with given format string.")
+        raise ValueError("Couldn't parse found timestamp with given format string.")
+
+    return datetime_obj
 
 
 @get_if_needed("exif_data", using="image_path")
