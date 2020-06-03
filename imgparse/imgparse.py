@@ -88,9 +88,12 @@ def get_autoexposure(image_path=None, exif_data=None):
 
 
 @get_if_needed("exif_data", using="image_path")
-def get_timestamp(image_path=None, exif_data=None, format_string="%Y%m%d %H%M%S%f"):
+def get_timestamp(image_path=None, exif_data=None, format_string="%Y:%m:%d %H:%M:%S"):
     """
     Get the time stamp of an image and parse it into a `datetime` object with the given format string.
+
+    If originating from a Sentera or DJI sensor, the format of the tag will likely be that of the default input.
+    However, other sensors may store timestamps in other formats.
 
     :param image_path: the full path to the image (optional if `exif_data` provided)
     :param exif_data: the exif dictionary for the image (optional to speed up processing)
