@@ -1,11 +1,12 @@
 """Extract XMP data from images."""
 
+import io
 import re
 from functools import reduce
 from typing import List, NamedTuple
 
 # Define misc constants:
-MAX_FILE_READ_LENGTH = 30000
+CHUNK_SIZE = 10000
 
 # Define patterns:
 FULL_XMP = re.compile(r"<x:xmpmeta.*</x:xmpmeta>", re.DOTALL)
@@ -48,6 +49,30 @@ DJI = SensorMake(
     PITCH=re.compile(r'drone-dji:GimbalPitchDegree="(-?\+?[0-9]+.[0-9]+)"'),
     YAW=re.compile(r'drone-dji:GimbalYawDegree="(-?\+?[0-9]+.[0-9]+)"'),
 )
+
+
+def find_xmp_string(file: io.TextIOWrapper):
+    """
+    Recursively load chunks of an input image and search for the XMP data.
+
+    On each iteration, a new chunk of the file (of size specified by xmp.CHUNK_SIZE) is read and
+    appended to the already read portion of the file. The XMP regex is then matched against this string,
+    and if the XMP data is found, returns the match. If no match is found, the function continues.
+
+    :param file:
+    :return:
+    """
+    file_so_far = ""
+    while True:
+        chunk = file.read(CHUNK_SIZE)
+        # If at end of file, chunk will be None
+        if not chunk:
+            raise XMPTagNotFoundError
+
+        file_so_far += chunk
+        xmp_string_match = re.search(FULL_XMP, file_so_far)
+        if xmp_string_match:
+            return xmp_string_match.group(0)
 
 
 def find_first(xmp_data: str, pattern: re.Pattern) -> str:
@@ -101,8 +126,7 @@ def find(xmp_data: str, patterns: List[re.Pattern]) -> str:
             return match[0]
         else:
             raise XMPTagNotFoundError(
-                "A tag pattern did not match with the XMP string. The tag "
-                "may not exist, the pattern may be invalid, or MAX_FILE_READ_LENGTH is too small."
+                "A tag pattern did not match with the XMP string. The tag may not exist."
             )
 
     return reduce(_find_inner, patterns, xmp_data)

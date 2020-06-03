@@ -27,9 +27,7 @@ def get_xmp_data(image_path):
 
     try:
         with open(image_path, encoding="latin_1") as file:
-            img_str = file.read(xmp.MAX_FILE_READ_LENGTH)
-
-        return xmp.find_first(img_str, xmp.FULL_XMP)
+            return xmp.find_xmp_string(file)
 
     except FileNotFoundError:
         logger.error("Image file at path %s could not be found.", image_path)
@@ -37,9 +35,7 @@ def get_xmp_data(image_path):
 
     except XMPTagNotFoundError:
         logger.error(
-            "Couldn't parse XMP string from the image file. Either the image "
-            "does not have XMP information, or xmp.MAX_FILE_READ_LENGTH is set "
-            "too low."
+            "Couldn't parse XMP string from the image file. The image may not have XMP information."
         )
         raise XMPTagNotFoundError("Couldn't parse XMP string from the image file.")
 

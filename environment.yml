@@ -13,5 +13,4 @@ dependencies:
   - pipenv
   # main dependencies
   - exifread
-  - xmltodict
   - pandas
