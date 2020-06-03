@@ -59,8 +59,8 @@ def find_xmp_string(file: io.TextIOWrapper):
     appended to the already read portion of the file. The XMP regex is then matched against this string,
     and if the XMP data is found, returns the match. If no match is found, the function continues.
 
-    :param file:
-    :return:
+    :param file: Handler to file open for reading
+    :return: **xmp_data**: XMP data of image, as string dump
     """
     file_so_far = ""
     while True:
