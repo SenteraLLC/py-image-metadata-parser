@@ -53,7 +53,7 @@ DJI = SensorMake(
 
 def find_xmp_string(file: io.TextIOWrapper):
     """
-    Recursively load chunks of an input image and search for the XMP data.
+    Load chunks of an input image iteratively and search for the XMP data.
 
     On each iteration, a new chunk of the file (of size specified by xmp.CHUNK_SIZE) is read and
     appended to the already read portion of the file. The XMP regex is then matched against this string,
