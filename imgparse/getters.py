@@ -6,7 +6,6 @@ import os
 import exifread
 
 import imgparse.xmp as xmp
-from imgparse.xmp import XMPTagNotFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -32,12 +31,6 @@ def get_xmp_data(image_path):
     except FileNotFoundError:
         logger.error("Image file at path %s could not be found.", image_path)
         raise ValueError("Image file could not be found.")
-
-    except XMPTagNotFoundError:
-        logger.error(
-            "Couldn't parse XMP string from the image file. The image may not have XMP information."
-        )
-        raise XMPTagNotFoundError("Couldn't parse XMP string from the image file.")
 
 
 def get_exif_data(image_path):

@@ -1,15 +1,19 @@
 """Extract XMP data from images."""
 
 import io
+import logging
 import re
 from functools import reduce
 from typing import List, NamedTuple
+
+logger = logging.getLogger(__name__)
 
 # Define misc constants:
 CHUNK_SIZE = 10000
 
 # Define patterns:
 FULL_XMP = re.compile(r"<x:xmpmeta.*</x:xmpmeta>", re.DOTALL)
+XMP_END = re.compile(r"</x:xmpmeta>")
 SEQ = re.compile(r"(?: *|\t)<rdf:li>(.*)</rdf:li>\n")
 
 # Sentera-exclusive patterns:
@@ -65,14 +69,20 @@ def find_xmp_string(file: io.TextIOWrapper):
     file_so_far = ""
     while True:
         chunk = file.read(CHUNK_SIZE)
+
         # If at end of file, chunk will be None
         if not chunk:
-            raise XMPTagNotFoundError
+            logger.error(
+                "Couldn't parse XMP string from the image file. The image may not have XMP information."
+            )
+            raise XMPTagNotFoundError("Couldn't parse XMP string from the image file.")
 
         file_so_far += chunk
-        xmp_string_match = re.search(FULL_XMP, file_so_far)
-        if xmp_string_match:
-            return xmp_string_match.group(0)
+
+        end_match = re.search(XMP_END, chunk)
+        # If we matched the end, we know `file_so_far` contains the whole XMP string
+        if end_match:
+            return re.search(FULL_XMP, file_so_far).group(0)
 
 
 def find_first(xmp_data: str, pattern: re.Pattern) -> str:
