@@ -1,15 +1,19 @@
 """Extract XMP data from images."""
 
 import io
+import logging
 import re
 from functools import reduce
 from typing import List, NamedTuple
+
+logger = logging.getLogger(__name__)
 
 # Define misc constants:
 CHUNK_SIZE = 10000
 
 # Define patterns:
 FULL_XMP = re.compile(r"<x:xmpmeta.*</x:xmpmeta>", re.DOTALL)
+XMP_END = re.compile(r"</x:xmpmeta>")
 SEQ = re.compile(r"(?: *|\t)<rdf:li>(.*)</rdf:li>\n")
 
 # Sentera-exclusive patterns:
@@ -65,39 +69,23 @@ def find_xmp_string(file: io.TextIOWrapper):
     file_so_far = ""
     while True:
         chunk = file.read(CHUNK_SIZE)
+
         # If at end of file, chunk will be None
         if not chunk:
-            raise XMPTagNotFoundError
+            logger.error(
+                "Couldn't parse XMP string from the image file. The image may not have XMP information."
+            )
+            raise XMPTagNotFoundError("Couldn't parse XMP string from the image file.")
 
+        start_search_at = max(
+            0, len(file_so_far) - 12
+        )  # 12 is the length of the ending XMP tag
         file_so_far += chunk
-        xmp_string_match = re.search(FULL_XMP, file_so_far)
-        if xmp_string_match:
-            return xmp_string_match.group(0)
 
-
-def find_first(xmp_data: str, pattern: re.Pattern) -> str:
-    """
-    Apply a single pattern to the xmp data, and return the first match.
-
-    This function has an advantage over the more general "find" function
-    in very limited circumstances. It is faster, but is only useful if you
-    want to match on only one pattern, return the whole match (no ignored
-    capture groups), and only want the first match found.
-
-    :param xmp_data: XMP string to be parsed
-    :param pattern: pattern to be applied to the XMP string
-    :return: **match** -- matched string (if match is successful)
-    :raises: XMPTagNotFoundError
-    """
-    match = pattern.search(xmp_data)
-
-    if match:
-        return match.group(0)
-
-    raise XMPTagNotFoundError(
-        "A tag pattern did not match with the XMP string. The tag "
-        "may not exist, or the pattern may be invalid."
-    )
+        end_match = re.search(XMP_END, file_so_far[start_search_at:])
+        # If we matched the end, we know `file_so_far` contains the whole XMP string
+        if end_match:
+            return re.search(FULL_XMP, file_so_far).group(0)
 
 
 def find(xmp_data: str, patterns: List[re.Pattern]) -> str:
