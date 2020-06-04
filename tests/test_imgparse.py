@@ -1,8 +1,10 @@
 import os
+from datetime import datetime, timedelta
 
 import pytest
 
 import imgparse
+from imgparse.xmp import XMPTagNotFoundError
 
 base_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
@@ -28,6 +30,14 @@ def dji_image_data():
     dji_exif_data = imgparse.get_exif_data(dji_image_path)
     dji_xmp_data = imgparse.get_xmp_data(dji_image_path)
     return [dji_image_path, dji_exif_data, dji_xmp_data]
+
+
+@pytest.fixture
+def sentera_6x_image_data():
+    sentera_6x_image_path = os.path.join(base_path, "data", "IMG_0001_475_30.tif")
+    sentera_6x_exif_data = imgparse.get_exif_data(sentera_6x_image_path)
+    sentera_6x_xmp_data = imgparse.get_xmp_data(sentera_6x_image_path)
+    return [sentera_6x_image_path, sentera_6x_exif_data, sentera_6x_xmp_data]
 
 
 def test_get_camera_params_invalid(bad_data):
@@ -381,6 +391,86 @@ def test_get_dimensions_dji(dji_image_data):
     assert [height1, width1] == [3648, 4864]
     assert [height2, width2] == [3648, 4864]
     assert [height3, width3] == [3648, 4864]
+
+
+def test_get_autoexposure_sentera(sentera_image_data):
+    autoexposure1 = imgparse.get_autoexposure(sentera_image_data[0])
+    autoexposure2 = imgparse.get_autoexposure(exif_data=sentera_image_data[1])
+    autoexposure3 = imgparse.get_autoexposure(
+        sentera_image_data[0], exif_data=sentera_image_data[1]
+    )
+
+    assert autoexposure1 == pytest.approx(0.4105, rel=0.001)
+    assert autoexposure2 == pytest.approx(0.4105, rel=0.001)
+    assert autoexposure3 == pytest.approx(0.4105, rel=0.001)
+
+
+def test_get_autoexposure_dji(dji_image_data):
+    autoexposure1 = imgparse.get_autoexposure(dji_image_data[0])
+    autoexposure2 = imgparse.get_autoexposure(exif_data=dji_image_data[1])
+    autoexposure3 = imgparse.get_autoexposure(
+        dji_image_data[0], exif_data=dji_image_data[1]
+    )
+
+    assert autoexposure1 == pytest.approx(0.0800, rel=0.001)
+    assert autoexposure2 == pytest.approx(0.0800, rel=0.001)
+    assert autoexposure3 == pytest.approx(0.0800, rel=0.001)
+
+
+def test_get_timestamp_sentera(sentera_image_data):
+    timestamp1 = imgparse.get_timestamp(sentera_image_data[0])
+    timestamp2 = imgparse.get_timestamp(exif_data=sentera_image_data[1])
+    timestamp3 = imgparse.get_timestamp(
+        sentera_image_data[0], exif_data=sentera_image_data[1]
+    )
+
+    assert abs(
+        timestamp1 - datetime.strptime("2019:03:02 22:44:46", "%Y:%m:%d %H:%M:%S")
+    ) < timedelta(seconds=1)
+    assert abs(
+        timestamp2 - datetime.strptime("2019:03:02 22:44:46", "%Y:%m:%d %H:%M:%S")
+    ) < timedelta(seconds=1)
+    assert abs(
+        timestamp3 - datetime.strptime("2019:03:02 22:44:46", "%Y:%m:%d %H:%M:%S")
+    ) < timedelta(seconds=1)
+
+
+def test_get_timestamp_dji(dji_image_data):
+    timestamp1 = imgparse.get_timestamp(dji_image_data[0])
+    timestamp2 = imgparse.get_timestamp(exif_data=dji_image_data[1])
+    timestamp3 = imgparse.get_timestamp(dji_image_data[0], exif_data=dji_image_data[1])
+
+    assert abs(
+        timestamp1 - datetime.strptime("2018:05:22 12:03:27", "%Y:%m:%d %H:%M:%S")
+    ) < timedelta(seconds=1)
+    assert abs(
+        timestamp2 - datetime.strptime("2018:05:22 12:03:27", "%Y:%m:%d %H:%M:%S")
+    ) < timedelta(seconds=1)
+    assert abs(
+        timestamp3 - datetime.strptime("2018:05:22 12:03:27", "%Y:%m:%d %H:%M:%S")
+    ) < timedelta(seconds=1)
+
+
+def test_get_ils_6x(sentera_6x_image_data):
+    ils1 = imgparse.get_ils(sentera_6x_image_data[0])
+    ils2 = imgparse.get_ils(xmp_data=sentera_6x_image_data[2])
+    ils3 = imgparse.get_ils(sentera_6x_image_data[0], xmp_data=sentera_6x_image_data[2])
+
+    assert ils1 == 10532.165
+    assert ils2 == 10532.165
+    assert ils3 == 10532.165
+
+
+def test_get_ils_non6x(dji_image_data):
+
+    with pytest.raises(XMPTagNotFoundError):
+        imgparse.get_ils(dji_image_data[0])
+
+    with pytest.raises(XMPTagNotFoundError):
+        imgparse.get_ils(xmp_data=dji_image_data[2])
+
+    with pytest.raises(XMPTagNotFoundError):
+        imgparse.get_ils(dji_image_data[0], xmp_data=dji_image_data[2])
 
 
 def test_create_analytics_metadata():

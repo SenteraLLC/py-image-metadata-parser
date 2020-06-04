@@ -77,7 +77,7 @@ def get_autoexposure(image_path=None, exif_data=None):
     :return: **autoexposure** - image autoexposure value
     """
     try:
-        iso = exif_data["EXIF ISOSpeedRatings"].values[0] / 100
+        iso = exif_data["EXIF ISOSpeedRatings"].values[0]
         integration_time = _convert_to_float(exif_data["EXIF ExposureTime"])
     except KeyError:
         logger.error("Couldn't parse either ISO or exposure time.")
