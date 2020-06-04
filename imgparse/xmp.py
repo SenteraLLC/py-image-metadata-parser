@@ -76,8 +76,10 @@ def find_xmp_string(file: io.TextIOWrapper):
                 "Couldn't parse XMP string from the image file. The image may not have XMP information."
             )
             raise XMPTagNotFoundError("Couldn't parse XMP string from the image file.")
-        
-        start_search_at = max(0, len(file_so_far) - 12) #12 is the length of the ending XMP tag
+
+        start_search_at = max(
+            0, len(file_so_far) - 12
+        )  # 12 is the length of the ending XMP tag
         file_so_far += chunk
 
         end_match = re.search(XMP_END, file_so_far[start_search_at:])
