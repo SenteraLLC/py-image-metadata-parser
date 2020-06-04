@@ -127,7 +127,6 @@ def cache(*args_to_cache, using):
 
             using_value = get_from_args_or_kwargs(using, func_arg_list, args, kwargs)
             if cache_decorator.using == using_value:
-                print(f"Using cached value(s) for {cache_decorator.cache.keys()}!")
                 for cache_arg in args_to_cache:
                     if cache_arg in cache_decorator.cache:
                         set_in_args_or_kwargs(
