@@ -17,7 +17,7 @@ processing.  Example code for using this functionality is shown below.
     focal_length, pixel_pitch = imgparse.get_camera_params(exif_data=exif_data)
     roll, pitch, yaw = imgparse.get_roll_pitch_yaw(exif_data=exif_data, xmp_data=xmp_data)
 
-Includes easy CLI usage.  Run ``imgparse --help`` on the command line to see all available CLI commands.
+Run ``imgparse --help`` on the command line to see all available CLI commands that are installed with the package.
 """
 
 from imgparse._version import __version__
