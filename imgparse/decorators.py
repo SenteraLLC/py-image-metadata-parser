@@ -5,10 +5,6 @@ import logging
 
 from decorator import decorator
 
-from imgparse.getters import get_exif_data, get_xmp_data
-
-GETTER_FUNCTIONS = {"exif_data": get_exif_data, "xmp_data": get_xmp_data}
-
 logger = logging.getLogger(__name__)
 
 
