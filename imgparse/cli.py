@@ -1,10 +1,14 @@
 """CLI wrappers for metadata parsing functions."""
 
 import logging
+import os
 
 import click
+import pandas
 
 from . import imgparse
+
+logger = logging.getLogger(__name__)
 
 
 @click.group()
@@ -16,7 +20,9 @@ from . import imgparse
 )
 def cli(log_level):
     """CLI wrappers for metadata parsing functions."""
-    logging.basicConfig(level=log_level)
+    logging.basicConfig(
+        level=log_level, format="%(name)s - %(levelname)s - %(message)s"
+    )
 
 
 @cli.command()
@@ -117,3 +123,73 @@ def get_dimensions(image_path):
 def get_gsd(image_path):
     """Parse gsd from metadata."""
     print("Gsd (m):", imgparse.get_gsd(image_path))
+
+
+@cli.command()
+@click.argument("imagery_dir", required=True)
+def create_metadata_csv(imagery_dir):  # noqa: D301
+    """
+    Construct a metadata csv file within the provided imagery directory.
+
+    \b
+    The output metadata csv contains a row for each image in the input directory specifying:
+    File Name
+    Lat/Lon
+    Altitude MSL
+    Roll/Pitch/Yaw
+    Altitude AGL
+    """
+    logger.info("Creating metadata csv")
+
+    if not os.path.isdir(imagery_dir):
+        logger.error("Imagery directory doesn't exist: %s", imagery_dir)
+        raise ValueError("Imagery directory doesn't exist")
+
+    images = [
+        os.path.join(imagery_dir, image)
+        for image in os.listdir(imagery_dir)
+        if os.path.splitext(image)[1].lower() == ".jpg"
+    ]
+
+    if not images:
+        logger.error("No jpgs found in imagery dir.")
+        raise ValueError("No jpgs found in imagery dir")
+
+    data_frame = pandas.DataFrame(
+        columns=[
+            "File Name",
+            "Lat (decimal degrees)",
+            "Lon (decimal degrees)",
+            "Alt (meters MSL)",
+            "Roll (decimal degrees)",
+            "Pitch (decimal degrees)",
+            "Yaw (decimal degrees)",
+            "Relative Altitude",
+        ]
+    )
+
+    for image_path in images:
+        image = os.path.split(image_path)[1]
+        exif_data = imgparse.get_exif_data(image_path)
+        xmp_data = imgparse.get_xmp_data(image_path)
+
+        lat, lon = imgparse.get_lat_lon(image_path, exif_data)
+        abs_alt = imgparse.get_altitude_msl(image_path, exif_data)
+        roll, pitch, yaw = imgparse.get_roll_pitch_yaw(image_path, exif_data, xmp_data)
+        relative_alt = imgparse.get_relative_altitude(image_path, exif_data, xmp_data)
+
+        data_frame.loc[len(data_frame)] = [
+            image,
+            lat,
+            lon,
+            abs_alt,
+            roll,
+            pitch,
+            yaw,
+            relative_alt,
+        ]
+
+    metadata_csv = os.path.join(imagery_dir, "analytics-metadata.csv")
+    data_frame.to_csv(metadata_csv, index=False)
+
+    logger.info("Metadata csv saved at: %s", metadata_csv)

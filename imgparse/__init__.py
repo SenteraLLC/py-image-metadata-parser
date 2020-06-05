@@ -20,7 +20,6 @@ processing.  Example code for using this functionality is shown below.
 """
 
 from imgparse._version import __version__
-from imgparse.create_analytics_metadata import create_analytics_metadata
 from imgparse.getters import get_exif_data, get_xmp_data
 from imgparse.imgparse import (
     get_altitude_msl,
@@ -41,7 +40,6 @@ from imgparse.imgparse import (
 
 __all__ = [
     "__version__",
-    "create_analytics_metadata",
     "get_xmp_data",
     "get_exif_data",
     "get_camera_params",
