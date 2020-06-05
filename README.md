@@ -1,10 +1,10 @@
-## py-image-metadata-parser
+# py-image-metadata-parser
 
-``imgparse``: Python utilities for extracting exif and xmp data from imagery.
+``imgparse``: Python utilities for extracting exif and xmp metadata from imagery.
 
-### Installation 
+## Installation 
 
-#### 1) SSH Setup
+### 1) SSH Setup
 
 Some Python libraries depend on private Github repositories, and the setup tools use ssh to access them.  You must link 
 ssh keys on your computer with your Github account when using Sentera Python
@@ -17,13 +17,13 @@ Test your SSH setup with:
 
     ssh -T git@github.com
     
-#### 2) Set Up Package Manager
+### 2) Set Up Package Manager
 
-##### Windows (Conda)
+#### Windows (Conda)
     
 1) Download [Miniconda](https://docs.conda.io/en/latest/miniconda.html) for Python3.7
    
-##### Linux (Pipenv)
+#### Linux (Pipenv)
 
 1) If not installed, install pipenv.
 
@@ -38,9 +38,9 @@ Test your SSH setup with:
         source ~/.profile
         pipenv -h
         
-#### 3) Clone and Install Package
+### 3) Clone and Install Package
 
-##### Windows (Conda)
+#### Windows (Conda)
 
 1) Open Anaconda Prompt and clone **py-image-metadata-parser** with
 
@@ -53,16 +53,13 @@ Test your SSH setup with:
         conda env create -f environment.yml
         conda activate image-parsing
         pip install -e .
-        
-3) This creates a *image-parsing* environment that all scripts should be run in and installs the ``imgparse``
-   library for the scripts to reference.
    
-4) To enforce all commits to adhere to **black** and **PEP8** style conventions, within the top level 
+3) To enforce all commits to adhere to **black** and **PEP8** style conventions, within the top level 
    of the repo in the *image-parsing* environment, run
 
         pre-commit install
    
-##### Linux (Pipenv)
+#### Linux (Pipenv)
 
 1) Open terminal and clone **py-image-metadata-parser** with
 
@@ -73,28 +70,19 @@ Test your SSH setup with:
         cd py-image-metadata-parser
         pipenv install --dev
         
-4) To enforce all commits to adhere to **black** and **PEP8** style conventions, within the top level 
+3) To enforce all commits to adhere to **black** and **PEP8** style conventions, within the top level 
    of the repo, run
 
         pipenv run pre-commit install
         
-3) Run all scripts with:
+## CLI Usage
 
-        pipenv run python scripts/<script.py> [--args]
+Run ``imgparse --help`` **from any directory** to see a list of all CLI commands available.  Make sure you are in the
+correct conda environment/pipenv shell.
    
-### Documentation
+## Documentation
 
 This library is documented using Sphinx. To generate documentation, navigate to the *docs/* subfolder,
-and run
-
-#### Windows
-
-    conda activate image-parsing
-    make html
-    
-#### Linux
-
-    pipenv run make html
-
-The documentation will be generated as an html file located at *py-image-metadata-parser/docs/\_build/html/index.html*. 
-Open with a browser to get more in depth information on the various modules and functions within the library.
+and run ``make html``.  Make sure you are in the correct conda environment/pipenv shell.  Open 
+*docs/\_build/html/index.html* with a browser to get more in depth information on the various modules 
+and functions within the library.
