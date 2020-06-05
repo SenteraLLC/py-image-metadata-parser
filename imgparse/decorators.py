@@ -1,8 +1,9 @@
 """Decorators for imgparse functions that allow for memoization of EXIF/XMP data on subsequent calls."""
 
-import functools
 import inspect
 import logging
+
+from decorator import decorator
 
 from imgparse.getters import get_exif_data, get_xmp_data
 
@@ -39,7 +40,7 @@ def set_in_args_or_kwargs(param_name, param_value, arg_list, args, kwargs):
     Set the value of a given input parameter of a function object to a given value.
 
     Takes as input a function argument list, along with the
-    cooresponding positional and keyword argument collections
+    corresponding positional and keyword argument collections
     of the function, and places the input parameter value in the
     correct structure.
 
@@ -81,80 +82,20 @@ def get_if_needed(arg_to_get, getter, getter_args=None):
     if getter_args is None:
         getter_args = []
 
-    def inner_get_if_needed(func):
-        @functools.wraps(func)
-        def wrapper_get_if_needed(*args, **kwargs):
-            args = list(args)
-            func_arg_list = inspect.getfullargspec(func).args or func.func_arg_list
+    @decorator
+    def inner_get_if_needed(func, *args, **kwargs):
+        args = list(args)
+        func_arg_list = inspect.getfullargspec(func).args
 
-            if get_from_args_or_kwargs(arg_to_get, func_arg_list, args, kwargs) is None:
-                arg_value = getter(
-                    *[
-                        get_from_args_or_kwargs(arg, func_arg_list, args, kwargs)
-                        for arg in getter_args
-                    ]
-                )
-                set_in_args_or_kwargs(
-                    arg_to_get, arg_value, func_arg_list, args, kwargs
-                )
+        if get_from_args_or_kwargs(arg_to_get, func_arg_list, args, kwargs) is None:
+            arg_value = getter(
+                **{
+                    arg: get_from_args_or_kwargs(arg, func_arg_list, args, kwargs)
+                    for arg in getter_args
+                }
+            )
+            set_in_args_or_kwargs(arg_to_get, arg_value, func_arg_list, args, kwargs)
 
-            return func(*args, **kwargs)
-
-        return wrapper_get_if_needed
+        return func(*args, **kwargs)
 
     return inner_get_if_needed
-
-
-def cache(*args_to_cache, using):
-    """
-    Decorate a function to cache one or more of its input values for subsequent calls.
-
-    If placed as a decorator to a function while "unapplied" (with passed-in arguments), it will
-    only cache the given arguments for subsequent calls to that function only. However,
-    if "applied" (passed arguments) separately and placed on a function in its applied form, the cached
-    arguments will serve as persistent state that can be shared between any function that
-    is decorated in this manner. Functions can be decorated with the applied form even if
-    they do not take all the arguments that are in the cache, as these values will simply be skipped.
-
-    :param args_to_cache: Names of arguments to cache, as strings
-    :param using: Name of argument that, when its value matches that of the cache's value, indicates that the cache
-                 may be applied.
-    :return:
-    """
-
-    def cache_decorator(func):
-        @functools.wraps(func)
-        def cache_inner(*args, **kwargs):
-            args = list(args)
-            func_arg_list = inspect.getfullargspec(func).args or func.func_arg_list
-
-            using_value = get_from_args_or_kwargs(using, func_arg_list, args, kwargs)
-            if cache_decorator.using == using_value:
-                for cache_arg in args_to_cache:
-                    if cache_arg in cache_decorator.cache:
-                        set_in_args_or_kwargs(
-                            cache_arg,
-                            cache_decorator.cache[cache_arg],
-                            func_arg_list,
-                            args,
-                            kwargs,
-                        )
-            else:
-                cache_decorator.cache = {}
-                cache_decorator.using = using_value
-
-            for cache_arg in args_to_cache:
-                cache_arg_value = get_from_args_or_kwargs(
-                    cache_arg, func_arg_list, args, kwargs
-                )
-                if cache_arg_value:
-                    cache_decorator.cache[cache_arg] = cache_arg_value
-
-            return func(*args, **kwargs)
-
-        cache_inner.func_arg_list = inspect.getfullargspec(func).args
-        return cache_inner
-
-    cache_decorator.using = None
-    cache_decorator.cache = {}
-    return cache_decorator

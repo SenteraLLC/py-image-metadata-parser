@@ -334,7 +334,7 @@ def test_get_roll_pitch_yaw_sentera(sentera_image_data):
 
 
 def test_get_roll_pitch_yaw_dji(dji_image_data):
-    roll1, pitch1, yaw1 = imgparse.get_roll_pitch_yaw(dji_image_data[0])
+    roll1, pitch1, yaw1 = imgparse.get_roll_pitch_yaw(image_path=dji_image_data[0])
     roll2, pitch2, yaw2 = imgparse.get_roll_pitch_yaw(
         dji_image_data[0], xmp_data=dji_image_data[2]
     )
