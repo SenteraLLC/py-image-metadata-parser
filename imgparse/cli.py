@@ -169,24 +169,15 @@ def create_metadata_csv(imagery_dir):  # noqa: D301
     )
 
     for image_path in images:
-        image = os.path.split(image_path)[1]
         exif_data = imgparse.get_exif_data(image_path)
         xmp_data = imgparse.get_xmp_data(image_path)
 
-        lat, lon = imgparse.get_lat_lon(image_path, exif_data)
-        abs_alt = imgparse.get_altitude_msl(image_path, exif_data)
-        roll, pitch, yaw = imgparse.get_roll_pitch_yaw(image_path, exif_data, xmp_data)
-        relative_alt = imgparse.get_relative_altitude(image_path, exif_data, xmp_data)
-
         data_frame.loc[len(data_frame)] = [
-            image,
-            lat,
-            lon,
-            abs_alt,
-            roll,
-            pitch,
-            yaw,
-            relative_alt,
+            os.path.split(image_path)[1],
+            *imgparse.get_lat_lon(image_path, exif_data),
+            imgparse.get_altitude_msl(image_path, exif_data),
+            *imgparse.get_roll_pitch_yaw(image_path, exif_data, xmp_data),
+            imgparse.get_relative_altitude(image_path, exif_data, xmp_data),
         ]
 
     metadata_csv = os.path.join(imagery_dir, "analytics-metadata.csv")
