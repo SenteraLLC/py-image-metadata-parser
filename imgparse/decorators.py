@@ -60,25 +60,26 @@ def set_in_args_or_kwargs(param_name, param_value, arg_list, args, kwargs):
             pass
 
 
-def get_if_needed(*args_to_get, using):
+def get_if_needed(arg_to_get, getter, getter_args=None):
     """
-    Decorate a function to fetch one or more of its arguments if not passed.
+    Decorate a function to fetch one of its arguments, if not passed.
 
     Throughout the library, nearly all public functions check to see if an exif_data and/or an xmp_data
-    argument was passed, and if not, fetch it using the cooresponding get_*_data function. This decorator
+    argument was passed, and if not, fetch it using the corresponding get_*_data function. This decorator
     takes the place of that boilerplate, and is used by passing the parameters to fetch as arguments, like so:
 
-    @get_if_needed('exif_data', 'xmp_data', using='image_path')
+    @get_if_needed('exif_data', get_exif_data, getter_args=['image_path'])
     def foo(image_path, exif_data=None):
     ...
 
-    Currently, fetching 'exif_data' and 'xmp_data' is supported, but theoretically support for other
-    arguments could be added by adding a "getter function" to the "GETTER_FUNCTIONS" constant dictionary.
-
-    :param args_to_get: Arguments of the decorated function to fetch if not present, as strings
-    :param using: Argument to pass to each of the arguments to fetch's getter function
+    :param arg_to_get: Argument of the decorated function to fetch if not present, as a string
+    :param getter: The getter function that populates the ``arg_to_get`` within the passed in args/kwargs
+    :param getter_args: Arguments to pass from the args/kwargs into the getter function, as a list of strings
     :return:
     """
+    # Can't have an empty list as a default param
+    if getter_args is None:
+        getter_args = []
 
     def inner_get_if_needed(func):
         @functools.wraps(func)
@@ -86,14 +87,16 @@ def get_if_needed(*args_to_get, using):
             args = list(args)
             func_arg_list = inspect.getfullargspec(func).args or func.func_arg_list
 
-            for arg_name in args_to_get:
-                if not get_from_args_or_kwargs(arg_name, func_arg_list, args, kwargs):
-                    arg_value = GETTER_FUNCTIONS[arg_name](
-                        get_from_args_or_kwargs(using, func_arg_list, args, kwargs)
-                    )
-                    set_in_args_or_kwargs(
-                        arg_name, arg_value, func_arg_list, args, kwargs
-                    )
+            if get_from_args_or_kwargs(arg_to_get, func_arg_list, args, kwargs) is None:
+                arg_value = getter(
+                    *[
+                        get_from_args_or_kwargs(arg, func_arg_list, args, kwargs)
+                        for arg in getter_args
+                    ]
+                )
+                set_in_args_or_kwargs(
+                    arg_to_get, arg_value, func_arg_list, args, kwargs
+                )
 
             return func(*args, **kwargs)
 

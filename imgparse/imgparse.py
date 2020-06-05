@@ -6,6 +6,7 @@ from datetime import datetime
 
 import imgparse.xmp as xmp
 from imgparse.decorators import cache, get_if_needed
+from imgparse.getters import get_exif_data, get_xmp_data
 from imgparse.pixel_pitches import PIXEL_PITCHES
 from imgparse.xmp import XMPTagNotFoundError
 
@@ -40,7 +41,7 @@ def _convert_to_float(tag, index=0):
     return float(tag.values[index].num) / float(tag.values[index].den)
 
 
-@get_if_needed("xmp_data", using="image_path")
+@get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
 @cache_exif_and_xmp
 def get_ils(image_path=None, xmp_data=None):
     """
@@ -67,7 +68,7 @@ def get_ils(image_path=None, xmp_data=None):
     return ils
 
 
-@get_if_needed("exif_data", using="image_path")
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
 @cache_exif_and_xmp
 def get_autoexposure(image_path=None, exif_data=None):
     """
@@ -91,7 +92,7 @@ def get_autoexposure(image_path=None, exif_data=None):
     return autoexposure
 
 
-@get_if_needed("exif_data", using="image_path")
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
 @cache_exif_and_xmp
 def get_timestamp(image_path=None, exif_data=None, format_string="%Y:%m:%d %H:%M:%S"):
     """
@@ -119,7 +120,7 @@ def get_timestamp(image_path=None, exif_data=None, format_string="%Y:%m:%d %H:%M
     return datetime_obj
 
 
-@get_if_needed("exif_data", using="image_path")
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
 @cache_exif_and_xmp
 def get_pixel_pitch(image_path=None, exif_data=None):
     """
@@ -148,7 +149,7 @@ def get_pixel_pitch(image_path=None, exif_data=None):
     return pixel_pitch
 
 
-@get_if_needed("exif_data", using="image_path")
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
 @cache_exif_and_xmp
 def get_camera_params(image_path=None, exif_data=None):
     """
@@ -165,7 +166,8 @@ def get_camera_params(image_path=None, exif_data=None):
     return focal_length, pixel_pitch
 
 
-@get_if_needed("exif_data", "xmp_data", using="image_path")
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
+@get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
 @cache_exif_and_xmp
 def get_relative_altitude(image_path, exif_data=None, xmp_data=None, session_alt=False):
     """
@@ -216,7 +218,7 @@ def get_relative_altitude(image_path, exif_data=None, xmp_data=None, session_alt
     return rel_alt
 
 
-@get_if_needed("exif_data", using="image_path")
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
 @cache_exif_and_xmp
 def get_lat_lon(image_path=None, exif_data=None):
     """
@@ -247,7 +249,7 @@ def get_lat_lon(image_path=None, exif_data=None):
     return lat, lon
 
 
-@get_if_needed("exif_data", using="image_path")
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
 @cache_exif_and_xmp
 def get_altitude_msl(image_path=None, exif_data=None):
     """
@@ -265,7 +267,8 @@ def get_altitude_msl(image_path=None, exif_data=None):
         raise ValueError("Couldn't extract altitude msl")
 
 
-@get_if_needed("exif_data", "xmp_data", using="image_path")
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
+@get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
 @cache_exif_and_xmp
 def get_roll_pitch_yaw(image_path=None, exif_data=None, xmp_data=None):
     """
@@ -307,7 +310,7 @@ def get_roll_pitch_yaw(image_path=None, exif_data=None, xmp_data=None):
     return roll, pitch, yaw
 
 
-@get_if_needed("exif_data", using="image_path")
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
 @cache_exif_and_xmp
 def get_focal_length(image_path=None, exif_data=None):
     """
@@ -325,7 +328,7 @@ def get_focal_length(image_path=None, exif_data=None):
         raise ValueError("Couldn't parse the focal length")
 
 
-@get_if_needed("exif_data", using="image_path")
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
 @cache_exif_and_xmp
 def get_make_and_model(image_path=None, exif_data=None):
     """
@@ -343,7 +346,7 @@ def get_make_and_model(image_path=None, exif_data=None):
         raise ValueError("Couldn't parse the make and model of the camera")
 
 
-@get_if_needed("exif_data", using="image_path")
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
 @cache_exif_and_xmp
 def get_dimensions(image_path=None, exif_data=None):
     """
@@ -364,7 +367,7 @@ def get_dimensions(image_path=None, exif_data=None):
         raise ValueError("Couldn't parse the height and width of the image")
 
 
-@get_if_needed("exif_data", using="image_path")
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
 @cache_exif_and_xmp
 def _get_sentera_pixel_pitch(image_path=None, exif_data=None):
     """
@@ -416,7 +419,8 @@ def parse_session_alt(image_path):
     raise ValueError("Couldn't parse session altitude from session.txt")
 
 
-@get_if_needed("exif_data", "xmp_data", using="image_path")
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
+@get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
 @cache_exif_and_xmp
 def get_gsd(image_path, exif_data=None, xmp_data=None, corrected_alt=None):
     """
