@@ -14,3 +14,4 @@ dependencies:
   # main dependencies
   - exifread
   - pandas
+  - click

@@ -24,8 +24,9 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/SenteraLLC/py-image-metadata-parser",
     packages=setuptools.find_packages(),
-    install_requires=["exifread", "pandas"],
+    install_requires=["exifread", "pandas", "click"],
     extras_require={
         "dev": ["pytest", "sphinx_rtd_theme", "m2r", "sphinx", "pre_commit"]
     },
+    entry_points={"console_scripts": ["imgparse = imgparse.cli:cli"]},
 )

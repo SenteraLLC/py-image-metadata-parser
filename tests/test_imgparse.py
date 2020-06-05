@@ -6,7 +6,7 @@ import pytest
 import imgparse
 from imgparse.xmp import XMPTagNotFoundError
 
-base_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+base_path = os.path.dirname(os.path.realpath(__file__))
 
 
 @pytest.fixture
