@@ -6,6 +6,7 @@ from datetime import datetime
 
 import imgparse.xmp as xmp
 from imgparse.decorators import get_if_needed
+from imgparse.getters import get_exif_data, get_xmp_data
 from imgparse.pixel_pitches import PIXEL_PITCHES
 from imgparse.xmp import XMPTagNotFoundError
 
@@ -38,7 +39,7 @@ def _convert_to_float(tag, index=0):
     return float(tag.values[index].num) / float(tag.values[index].den)
 
 
-@get_if_needed("xmp_data", using="image_path")
+@get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
 def get_ils(image_path=None, xmp_data=None):
     """
     Get the ILS value of an image taken with a Sentera 6X sensor with an ILS module.
@@ -64,7 +65,7 @@ def get_ils(image_path=None, xmp_data=None):
     return ils
 
 
-@get_if_needed("exif_data", using="image_path")
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
 def get_autoexposure(image_path=None, exif_data=None):
     """
     Get the autoexposure value of the sensor when the image was taken.
@@ -87,7 +88,7 @@ def get_autoexposure(image_path=None, exif_data=None):
     return autoexposure
 
 
-@get_if_needed("exif_data", using="image_path")
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
 def get_timestamp(image_path=None, exif_data=None, format_string="%Y:%m:%d %H:%M:%S"):
     """
     Get the time stamp of an image and parse it into a `datetime` object with the given format string.
@@ -114,7 +115,7 @@ def get_timestamp(image_path=None, exif_data=None, format_string="%Y:%m:%d %H:%M
     return datetime_obj
 
 
-@get_if_needed("exif_data", using="image_path")
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
 def get_pixel_pitch(image_path=None, exif_data=None):
     """
     Get pixel pitch (in meters) of the sensor that took the image.
@@ -142,7 +143,7 @@ def get_pixel_pitch(image_path=None, exif_data=None):
     return pixel_pitch
 
 
-@get_if_needed("exif_data", using="image_path")
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
 def get_camera_params(image_path=None, exif_data=None):
     """
     Get the focal length and pixel pitch (in meters) of the sensor that took the image.
@@ -158,7 +159,8 @@ def get_camera_params(image_path=None, exif_data=None):
     return focal_length, pixel_pitch
 
 
-@get_if_needed("exif_data", "xmp_data", using="image_path")
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
+@get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
 def get_relative_altitude(image_path, exif_data=None, xmp_data=None, session_alt=False):
     """
     Get the relative altitude of the sensor above the ground (in meters) when the image was taken.
@@ -208,7 +210,7 @@ def get_relative_altitude(image_path, exif_data=None, xmp_data=None, session_alt
     return rel_alt
 
 
-@get_if_needed("exif_data", using="image_path")
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
 def get_lat_lon(image_path=None, exif_data=None):
     """
     Get the latitude and longitude of the sensor when the image was taken.
@@ -238,7 +240,7 @@ def get_lat_lon(image_path=None, exif_data=None):
     return lat, lon
 
 
-@get_if_needed("exif_data", using="image_path")
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
 def get_altitude_msl(image_path=None, exif_data=None):
     """
     Get the absolute altitude (meters above msl) of the sensor when the image was taken.
@@ -255,7 +257,8 @@ def get_altitude_msl(image_path=None, exif_data=None):
         raise ValueError("Couldn't extract altitude msl")
 
 
-@get_if_needed("exif_data", "xmp_data", using="image_path")
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
+@get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
 def get_roll_pitch_yaw(image_path=None, exif_data=None, xmp_data=None):
     """
     Get the orientation of the sensor (roll, pitch, yaw in degrees) when the image was taken.
@@ -296,7 +299,7 @@ def get_roll_pitch_yaw(image_path=None, exif_data=None, xmp_data=None):
     return roll, pitch, yaw
 
 
-@get_if_needed("exif_data", using="image_path")
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
 def get_focal_length(image_path=None, exif_data=None):
     """
     Get the focal length (in meters) of the sensor that took the image.
@@ -313,7 +316,7 @@ def get_focal_length(image_path=None, exif_data=None):
         raise ValueError("Couldn't parse the focal length")
 
 
-@get_if_needed("exif_data", using="image_path")
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
 def get_make_and_model(image_path=None, exif_data=None):
     """
     Get the make and model of the sensor that took the image.
@@ -330,7 +333,7 @@ def get_make_and_model(image_path=None, exif_data=None):
         raise ValueError("Couldn't parse the make and model of the camera")
 
 
-@get_if_needed("exif_data", using="image_path")
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
 def get_dimensions(image_path=None, exif_data=None):
     """
     Get the height and width (in pixels) of the image.
@@ -350,7 +353,7 @@ def get_dimensions(image_path=None, exif_data=None):
         raise ValueError("Couldn't parse the height and width of the image")
 
 
-@get_if_needed("exif_data", using="image_path")
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
 def _get_sentera_pixel_pitch(image_path=None, exif_data=None):
     """
     Get the pixel pitch (in meters) from Sentera sensors.
@@ -401,7 +404,8 @@ def parse_session_alt(image_path):
     raise ValueError("Couldn't parse session altitude from session.txt")
 
 
-@get_if_needed("exif_data", "xmp_data", using="image_path")
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
+@get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
 def get_gsd(image_path, exif_data=None, xmp_data=None, corrected_alt=None):
     """
     Get the gsd of the image (in meters/pixel).

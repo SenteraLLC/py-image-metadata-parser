@@ -3,8 +3,8 @@ This package contains functions to extract imagery metadata from their exif and 
 
 Supports some DJI, some Hasselblad, some Sony, and all Sentera sensors.
 
-All functions take an image path as an argument for easy use, but optionally can take the dictionary of exif and/or xmp
-key/value pairs returned by ``imgparse.get_exif_data()`` and ``imgparse.get_xmp_data()``.  This allows the user to
+All functions take an image path as an argument for easy use, but optionally can take the dictionary of exif and/or the
+extracted xmp string returned by ``imgparse.get_exif_data()`` and ``imgparse.get_xmp_data()``.  This allows the user to
 avoid rereading the exif/xmp data for an image when extracting multiple kinds of metadata in order to speed up
 processing.  Example code for using this functionality is shown below.
 
@@ -17,10 +17,10 @@ processing.  Example code for using this functionality is shown below.
     focal_length, pixel_pitch = imgparse.get_camera_params(exif_data=exif_data)
     roll, pitch, yaw = imgparse.get_roll_pitch_yaw(exif_data=exif_data, xmp_data=xmp_data)
 
+Run ``imgparse --help`` on the command line to see all available CLI commands that are installed with the package.
 """
 
 from imgparse._version import __version__
-from imgparse.create_analytics_metadata import create_analytics_metadata
 from imgparse.getters import get_exif_data, get_xmp_data
 from imgparse.imgparse import (
     get_altitude_msl,
@@ -41,7 +41,6 @@ from imgparse.imgparse import (
 
 __all__ = [
     "__version__",
-    "create_analytics_metadata",
     "get_xmp_data",
     "get_exif_data",
     "get_camera_params",

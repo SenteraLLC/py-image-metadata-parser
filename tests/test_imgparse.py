@@ -6,7 +6,7 @@ import pytest
 import imgparse
 from imgparse.xmp import XMPTagNotFoundError
 
-base_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+base_path = os.path.dirname(os.path.realpath(__file__))
 
 
 @pytest.fixture
@@ -334,7 +334,7 @@ def test_get_roll_pitch_yaw_sentera(sentera_image_data):
 
 
 def test_get_roll_pitch_yaw_dji(dji_image_data):
-    roll1, pitch1, yaw1 = imgparse.get_roll_pitch_yaw(dji_image_data[0])
+    roll1, pitch1, yaw1 = imgparse.get_roll_pitch_yaw(image_path=dji_image_data[0])
     roll2, pitch2, yaw2 = imgparse.get_roll_pitch_yaw(
         dji_image_data[0], xmp_data=dji_image_data[2]
     )
@@ -471,33 +471,3 @@ def test_get_ils_non6x(dji_image_data):
 
     with pytest.raises(XMPTagNotFoundError):
         imgparse.get_ils(dji_image_data[0], xmp_data=dji_image_data[2])
-
-
-def test_create_analytics_metadata():
-    data_dir = os.path.join(base_path, "data")
-    imgparse.create_analytics_metadata(data_dir)
-    analytics_metadata_file = os.path.join(data_dir, "analytics-metadata.csv")
-    assert os.path.isfile(analytics_metadata_file)
-    os.remove(analytics_metadata_file)
-
-
-def test_create_analytics_metadata_sample():
-    data_dir = os.path.join(base_path, "data")
-    imgparse.create_analytics_metadata(data_dir, 1)
-    analytics_metadata_file = os.path.join(data_dir, "analytics-metadata.csv")
-    assert os.path.isfile(analytics_metadata_file)
-    os.remove(analytics_metadata_file)
-
-
-def test_create_analytics_metadata_no_dir():
-    bad_data_dir = os.path.join(base_path, "bad_data")
-    with pytest.raises(ValueError):
-        imgparse.create_analytics_metadata(bad_data_dir)
-
-
-def test_create_analytics_metadata_empty_dir():
-    empty_dir = os.path.join(base_path, "empty_dir")
-    os.makedirs(empty_dir, exist_ok=True)
-    with pytest.raises(ValueError):
-        imgparse.create_analytics_metadata(empty_dir)
-    os.removedirs(empty_dir)

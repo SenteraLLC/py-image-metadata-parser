@@ -6,7 +6,6 @@ dependencies:
   # dev dependencies
   - sphinx
   - sphinx_rtd_theme
-  - m2r
   - pytest
   - pre_commit=2.3.0
   - pip
@@ -14,3 +13,5 @@ dependencies:
   # main dependencies
   - exifread
   - pandas
+  - click
+  - decorator
