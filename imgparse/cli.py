@@ -169,6 +169,7 @@ def create_metadata_csv(imagery_dir):  # noqa: D301
     )
 
     for image_path in images:
+        logger.info("Parsing image: %s", image_path)
         exif_data = imgparse.get_exif_data(image_path)
         xmp_data = imgparse.get_xmp_data(image_path)
 
