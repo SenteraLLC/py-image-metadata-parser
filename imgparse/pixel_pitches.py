@@ -20,6 +20,7 @@ DJI_PIXEL_PITCH = {
     "FC6510": 2.42e-06,
     "FC350": 1.57937e-06,
     "FC350Z": 1.52958e-06,
+    "FC550": 3.28e-06,
 }
 
 HASSELBLAD_PIXEL_PITCH = {"L1D-20c": 2.4e-06}
