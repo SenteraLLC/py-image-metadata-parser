@@ -280,7 +280,7 @@ def get_roll_pitch_yaw(image_path=None, exif_data=None, xmp_data=None):
             roll = float(xmp.find(xmp_data, [xmp.Sentera.ROLL]))
             pitch = float(xmp.find(xmp_data, [xmp.Sentera.PITCH]))
             yaw = float(xmp.find(xmp_data, [xmp.Sentera.YAW]))
-        elif make == "DJI":
+        elif make == "DJI" or make == "Hasselblad":
             roll = float(xmp.find(xmp_data, [xmp.DJI.ROLL]))
             pitch = float(xmp.find(xmp_data, [xmp.DJI.PITCH]))
             # Bring pitch into aircraft pov
