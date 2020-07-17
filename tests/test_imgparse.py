@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import pytest
 
 import imgparse
-from imgparse.xmp import XMPTagNotFoundError
+from imgparse import ParsingError
 
 base_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -13,7 +13,8 @@ base_path = os.path.dirname(os.path.realpath(__file__))
 def bad_data():
     bad_path = os.path.join(base_path, "bad_data", "BAD_IMG.jpg")
     bad_dict = {"BadKey1": "BadValue1", "BadKey2": 0}
-    return [bad_path, bad_dict]
+    bad_xmp = "Bad XMP string"
+    return [bad_path, bad_dict, bad_xmp]
 
 
 @pytest.fixture
@@ -47,10 +48,10 @@ def test_get_camera_params_invalid(bad_data):
     with pytest.raises(ValueError):
         imgparse.get_camera_params(bad_data[0])
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ParsingError):
         imgparse.get_camera_params(exif_data=bad_data[1])
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ParsingError):
         imgparse.get_camera_params(bad_data[0], exif_data=bad_data[1])
 
 
@@ -85,10 +86,10 @@ def test_get_make_and_model_invalid(bad_data):
     with pytest.raises(ValueError):
         imgparse.get_camera_params(bad_data[0])
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ParsingError):
         imgparse.get_camera_params(exif_data=bad_data[1])
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ParsingError):
         imgparse.get_camera_params(bad_data[0], exif_data=bad_data[1])
 
 
@@ -117,7 +118,7 @@ def test_get_make_and_model_sentera(sentera_image_data):
 
 
 def test_parse_session_alt_invalid(bad_data):
-    with pytest.raises(ValueError):
+    with pytest.raises(ParsingError):
         imgparse.parse_session_alt(bad_data[0])
 
 
@@ -127,12 +128,25 @@ def test_parse_session_alt(sentera_image_data):
     assert alt == -0.4500
 
 
-def test_get_relative_altitude_invalid(bad_data):
+def test_get_relative_altitude_invalid(bad_data, dji_image_data):
     with pytest.raises(ValueError):
         imgparse.get_relative_altitude(bad_data[0])
 
     with pytest.raises(ValueError):
         imgparse.get_relative_altitude(bad_data[0], exif_data=bad_data[1])
+
+    with pytest.raises(ValueError):
+        imgparse.get_relative_altitude(bad_data[0], xmp_data=bad_data[2])
+
+    with pytest.raises(ParsingError):
+        imgparse.get_relative_altitude(
+            bad_data[0], exif_data=bad_data[1], xmp_data=bad_data[2]
+        )
+
+    with pytest.raises(ParsingError):
+        imgparse.get_relative_altitude(
+            dji_image_data[0], exif_data=dji_image_data[1], xmp_data="Bad xmp"
+        )
 
 
 def test_get_relative_altitude_sentera(sentera_image_data):
@@ -141,8 +155,12 @@ def test_get_relative_altitude_sentera(sentera_image_data):
         sentera_image_data[0], exif_data=sentera_image_data[1]
     )
 
+    sentera_image_path = os.path.join(base_path, "data", "IMG_00003.jpg")
+    alt3 = imgparse.get_relative_altitude(sentera_image_path)
+
     assert alt1 == 51.042
     assert alt2 == 51.042
+    assert alt3 == pytest.approx(41.55, abs=1e-03)
 
 
 def test_get_relative_altitude_dji(dji_image_data):
@@ -162,10 +180,10 @@ def test_get_altitude_msl_invalid(bad_data):
     with pytest.raises(ValueError):
         imgparse.get_altitude_msl(bad_data[0])
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ParsingError):
         imgparse.get_altitude_msl(exif_data=bad_data[1])
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ParsingError):
         imgparse.get_altitude_msl(bad_data[0], exif_data=bad_data[1])
 
 
@@ -201,8 +219,8 @@ def test_get_gsd_invalid(bad_data):
     with pytest.raises(ValueError):
         imgparse.get_gsd(bad_data[0], xmp_data=bad_data[1])
 
-    with pytest.raises(ValueError):
-        imgparse.get_gsd(bad_data[0], exif_data=bad_data[1], xmp_data=bad_data[1])
+    with pytest.raises(ParsingError):
+        imgparse.get_gsd(bad_data[0], exif_data=bad_data[1], xmp_data=bad_data[2])
 
 
 def test_get_gsd_sentera(sentera_image_data):
@@ -242,10 +260,10 @@ def test_get_lat_lon_invalid(bad_data):
     with pytest.raises(ValueError):
         imgparse.get_lat_lon(bad_data[0])
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ParsingError):
         imgparse.get_lat_lon(exif_data=bad_data[1])
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ParsingError):
         imgparse.get_lat_lon(bad_data[0], exif_data=bad_data[1])
 
 
@@ -271,7 +289,7 @@ def test_get_lat_lon_dji(dji_image_data):
     assert [lat3, lon3] == pytest.approx([45.514942, -93.973210], abs=1e-06)
 
 
-def test_get_roll_pitch_yaw_invalid(bad_data):
+def test_get_roll_pitch_yaw_invalid(bad_data, dji_image_data):
     with pytest.raises(ValueError):
         imgparse.get_roll_pitch_yaw()
 
@@ -282,20 +300,26 @@ def test_get_roll_pitch_yaw_invalid(bad_data):
         imgparse.get_roll_pitch_yaw(exif_data=bad_data[1])
 
     with pytest.raises(ValueError):
-        imgparse.get_roll_pitch_yaw(xmp_data=bad_data[1])
+        imgparse.get_roll_pitch_yaw(xmp_data=bad_data[2])
 
     with pytest.raises(ValueError):
         imgparse.get_roll_pitch_yaw(bad_data[0], exif_data=bad_data[1])
 
     with pytest.raises(ValueError):
-        imgparse.get_roll_pitch_yaw(bad_data[0], xmp_data=bad_data[1])
+        imgparse.get_roll_pitch_yaw(bad_data[0], xmp_data=bad_data[2])
 
-    with pytest.raises(ValueError):
-        imgparse.get_roll_pitch_yaw(exif_data=bad_data[1], xmp_data=bad_data[1])
+    with pytest.raises(ParsingError):
+        imgparse.get_roll_pitch_yaw(exif_data=bad_data[1], xmp_data=bad_data[2])
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ParsingError):
         imgparse.get_roll_pitch_yaw(
-            bad_data[0], exif_data=bad_data[1], xmp_data=bad_data[1]
+            bad_data[0], exif_data=bad_data[1], xmp_data=bad_data[2]
+        )
+
+    dji_image_data[1]["Image Make"].values = "Bad Make"
+    with pytest.raises(ParsingError):
+        imgparse.get_roll_pitch_yaw(
+            exif_data=dji_image_data[1], xmp_data=dji_image_data[2]
         )
 
 
@@ -357,16 +381,16 @@ def test_get_roll_pitch_yaw_dji(dji_image_data):
 
 def test_get_dimensions_invalid(bad_data):
     with pytest.raises(ValueError):
-        imgparse.get_lat_lon()
+        imgparse.get_dimensions()
 
     with pytest.raises(ValueError):
-        imgparse.get_lat_lon(bad_data[0])
+        imgparse.get_dimensions(bad_data[0])
 
-    with pytest.raises(ValueError):
-        imgparse.get_lat_lon(exif_data=bad_data[1])
+    with pytest.raises(ParsingError):
+        imgparse.get_dimensions(exif_data=bad_data[1])
 
-    with pytest.raises(ValueError):
-        imgparse.get_lat_lon(bad_data[0], exif_data=bad_data[1])
+    with pytest.raises(ParsingError):
+        imgparse.get_dimensions(bad_data[0], exif_data=bad_data[1])
 
 
 def test_get_dimensions_sentera(sentera_image_data):
@@ -462,12 +486,63 @@ def test_get_ils_6x(sentera_6x_image_data):
 
 
 def test_get_ils_non6x(dji_image_data):
-
-    with pytest.raises(XMPTagNotFoundError):
+    with pytest.raises(ParsingError):
         imgparse.get_ils(dji_image_data[0])
 
-    with pytest.raises(XMPTagNotFoundError):
+    with pytest.raises(ParsingError):
         imgparse.get_ils(xmp_data=dji_image_data[2])
 
-    with pytest.raises(XMPTagNotFoundError):
+    with pytest.raises(ParsingError):
         imgparse.get_ils(dji_image_data[0], xmp_data=dji_image_data[2])
+
+
+def test_get_version_dji(dji_image_data):
+    version1 = imgparse.get_firmware_version(dji_image_data[0])
+    version2 = imgparse.get_firmware_version(
+        dji_image_data[0], exif_data=dji_image_data[1]
+    )
+    version3 = imgparse.get_firmware_version(exif_data=dji_image_data[1])
+
+    assert version1 == (1, 7, 1641)
+    assert version2 == (1, 7, 1641)
+    assert version3 == (1, 7, 1641)
+
+
+def test_get_version_sentera(sentera_image_data):
+    version1 = imgparse.get_firmware_version(sentera_image_data[0])
+    version2 = imgparse.get_firmware_version(
+        sentera_image_data[0], exif_data=sentera_image_data[1]
+    )
+    version3 = imgparse.get_firmware_version(exif_data=sentera_image_data[1])
+
+    assert version1 == (0, 22, 3)
+    assert version2 == (0, 22, 3)
+    assert version3 == (0, 22, 3)
+
+
+def test_bad_version(dji_image_data):
+    dji_image_data[1]["Image Software"].values = "Bad Version"
+    with pytest.raises(ParsingError):
+        imgparse.get_firmware_version(exif_data=dji_image_data[1])
+
+
+def test_bad_autoexposure(dji_image_data):
+    dji_image_data[1].pop("EXIF ISOSpeedRatings")
+    with pytest.raises(ParsingError):
+        imgparse.get_autoexposure(exif_data=dji_image_data[1])
+
+
+def test_bad_timestamp(dji_image_data):
+    dji_image_data[1]["EXIF DateTimeOriginal"].values = "Bad Timestamp"
+    with pytest.raises(ValueError):
+        imgparse.get_timestamp(exif_data=dji_image_data[1])
+
+    dji_image_data[1].pop("EXIF DateTimeOriginal")
+    with pytest.raises(ParsingError):
+        imgparse.get_timestamp(exif_data=dji_image_data[1])
+
+
+def test_bad_pixel_pitch(dji_image_data):
+    dji_image_data[1]["Image Model"].values = "Bad Model"
+    with pytest.raises(ParsingError):
+        imgparse.get_pixel_pitch(exif_data=dji_image_data[1])
