@@ -126,6 +126,16 @@ def get_gsd(image_path):
 
 
 @cli.command()
+@click.argument("image_path", required=True)
+def get_firmware_version(image_path):
+    """Parse firmware from metadata."""
+    print(
+        "Firmware version:",
+        ".".join(map(str, imgparse.get_firmware_version(image_path))),
+    )
+
+
+@cli.command()
 @click.argument("imagery_dir", required=True)
 def create_metadata_csv(imagery_dir):  # noqa: D301
     """

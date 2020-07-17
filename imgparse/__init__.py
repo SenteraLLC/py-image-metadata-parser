@@ -23,10 +23,12 @@ Run ``imgparse --help`` on the command line to see all available CLI commands th
 from imgparse._version import __version__
 from imgparse.getters import get_exif_data, get_xmp_data
 from imgparse.imgparse import (
+    ParsingError,
     get_altitude_msl,
     get_autoexposure,
     get_camera_params,
     get_dimensions,
+    get_firmware_version,
     get_focal_length,
     get_gsd,
     get_ils,
@@ -57,4 +59,6 @@ __all__ = [
     "get_ils",
     "get_timestamp",
     "get_autoexposure",
+    "get_firmware_version",
+    "ParsingError",
 ]
