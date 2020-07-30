@@ -213,7 +213,7 @@ def test_get_gsd_invalid(bad_data):
     with pytest.raises(ValueError):
         imgparse.get_gsd(bad_data[0])
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ParsingError):
         imgparse.get_gsd(bad_data[0], exif_data=bad_data[1])
 
     with pytest.raises(ValueError):
