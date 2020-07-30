@@ -440,7 +440,6 @@ def parse_session_alt(image_path):
 
 
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
-@get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
 def get_gsd(image_path, exif_data=None, xmp_data=None, corrected_alt=None):
     """
     Get the gsd of the image (in meters/pixel).
@@ -460,6 +459,8 @@ def get_gsd(image_path, exif_data=None, xmp_data=None, corrected_alt=None):
     if corrected_alt:
         alt = corrected_alt
     else:
+        if not xmp_data:
+            xmp_data = get_xmp_data(image_path)
         alt = get_relative_altitude(image_path, exif_data, xmp_data)
 
     return pitch * alt / focal
