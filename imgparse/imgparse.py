@@ -463,4 +463,8 @@ def get_gsd(image_path, exif_data=None, xmp_data=None, corrected_alt=None):
             xmp_data = get_xmp_data(image_path)
         alt = get_relative_altitude(image_path, exif_data, xmp_data)
 
-    return pitch * alt / focal
+    gsd = pitch * alt / focal
+    if gsd <= 0:
+        raise ValueError("Parsed gsd is less than or equal to 0")
+
+    return gsd
