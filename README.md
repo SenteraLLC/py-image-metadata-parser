@@ -4,81 +4,41 @@
 
 ## Installation 
 
-### 1) SSH Setup
+### Windows 
 
-Some Python libraries depend on private Github repositories, and the setup tools use ssh to access them.  You must link 
-ssh keys on your computer with your Github account when using Sentera Python
-libraries, else you'll encounter installation errors.  For Windows, make sure you have downloaded the correct 
-[Git Bash](https://gitforwindows.org/) to run the necessary commands.  For Linux, use a normal terminal.
-
-Git SSH Setup Instructions: https://help.github.com/en/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent
-
-Test your SSH setup with:
-
-    ssh -T git@github.com
-    
-### 2) Set Up Package Manager
-
-#### Windows (Conda)
-    
-1) Download [Miniconda](https://docs.conda.io/en/latest/miniconda.html) for Python3.7
-   
-#### Linux (Pipenv)
-
-1) If not installed, install pipenv.
-
-        pip install --user pipenv
-        
-2) Set your PATH to point to the pipenv executable by adding the following to ~/.profile
-
-        export PATH="$PATH:~/.local/bin"
-
-3) Check installation:
-
-        source ~/.profile
-        pipenv -h
-        
-### 3) Clone and Install Package
-
-#### Windows (Conda)
-
-1) Open Anaconda Prompt and clone **py-image-metadata-parser** with
+1) [Set up SSH](https://github.com/SenteraLLC/install-instructions/blob/master/ssh_setup.md)
+2) Install [conda](https://github.com/SenteraLLC/install-instructions/blob/master/conda.md)
+3) Install package
 
         git clone git@github.com:SenteraLLC/py-image-metadata-parser.git
-
-2) Install package with
-
         cd py-image-metadata-parser
-        start-ssh-agent
         conda env create -f environment.yml
         conda activate image-parsing
-        pip install -e .
+        pip install .
    
-3) To enforce all commits to adhere to **black** and **PEP8** style conventions, within the top level 
-   of the repo in the *image-parsing* environment, run
+4) Set up ``pre-commit`` to ensure all commits to adhere to **black** and **PEP8** style conventions.
 
         pre-commit install
    
-#### Linux (Pipenv)
+#### Linux
 
-1) Open terminal and clone **py-image-metadata-parser** with
+1) [Set up SSH](https://github.com/SenteraLLC/install-instructions/blob/master/ssh_setup.md)
+2) Install [pyenv](https://github.com/SenteraLLC/install-instructions/blob/master/pyenv.md) and [poetry](https://python-poetry.org/docs/#installation)
+3) Install package
 
         git clone git@github.com:SenteraLLC/py-image-metadata-parser.git
-
-2) Install package with
-
         cd py-image-metadata-parser
-        pipenv install --dev
+        pyenv install $(cat .python-version)
+        poetry install
         
-3) To enforce all commits to adhere to **black** and **PEP8** style conventions, within the top level 
-   of the repo, run
+4) Set up ``pre-commit`` to ensure all commits to adhere to **black** and **PEP8** style conventions.
 
-        pipenv run pre-commit install
+        poetry run pre-commit install
         
 ## CLI Usage
 
-Run ``imgparse --help`` **from any directory** to see a list of all CLI commands available.  Make sure you are in the
-correct conda environment/pipenv shell.
+Run ``imgparse --help`` to see a list of all CLI commands available.  Make sure you are in the correct conda 
+environment/poetry shell.
    
 ## Documentation
 
