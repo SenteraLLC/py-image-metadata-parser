@@ -24,5 +24,3 @@ repos:
           'pygments',
           'pep8-naming'
       ]
-default_language_version:
-    python: python3
