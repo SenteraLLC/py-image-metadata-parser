@@ -116,9 +116,15 @@ def memoize(f):
             key = args
 
         cache = func.cache  # attribute added by memoize
-        if key is not func.key:
-            func.key = key
+        if key != func.key:
+            logger.info("Not cached. Caching...")
             cache = func(*args, **kw)
+
+            func.key = key
+            func.cache = cache
+        else:
+            logger.info("Cached already!")
+
         return cache
 
     return decorate(f, _memoize)
