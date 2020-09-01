@@ -117,13 +117,13 @@ def memoize(f):
 
         cache = func.cache  # attribute added by memoize
         if key != func.key:
-            logger.info("Not cached. Caching...")
+            logger.debug("Not cached. Caching...")
             cache = func(*args, **kw)
 
             func.key = key
             func.cache = cache
         else:
-            logger.info("Cached already!")
+            logger.debug("Cached already!")
 
         return cache
 
