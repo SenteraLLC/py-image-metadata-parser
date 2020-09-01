@@ -4,6 +4,7 @@ import logging
 import os
 import re
 from datetime import datetime
+from typing import Callable, NamedTuple
 
 import imgparse.xmp as xmp
 from imgparse.decorators import get_if_needed
@@ -468,3 +469,58 @@ def get_gsd(image_path, exif_data=None, xmp_data=None, corrected_alt=None):
         raise ValueError("Parsed gsd is less than or equal to 0")
 
     return gsd
+
+
+class Namespace:
+    """Simple class for creating a namespace inside of a module."""
+
+    def __init__(self, **kwargs):
+        """Store arbitrary items in namespace."""
+        self.__dict__.update(kwargs)
+
+
+class Metadata(NamedTuple):
+    """Struct-like type representing a type of metadata, and the method to retrieve it."""
+
+    name: str
+    method: Callable
+
+
+metadata = Namespace(
+    ILS=Metadata(name="ILS", method=get_ils),
+    autoexposure=Metadata(name="Autoexposure", method=get_autoexposure),
+    timestamp=Metadata(name="Timestamp", method=get_timestamp),
+    pixel_pitch=Metadata(name="Pixel pitch (m)", method=get_pixel_pitch),
+    focal_length=Metadata(name="Focal length (m)", method=get_focal_length),
+    camera_params=Metadata(
+        name="(Focal length (m)," "Pixel pitch (m))", method=get_camera_params
+    ),
+    relative_alt=Metadata(name="Altitude (m)", method=get_relative_altitude),
+    lat_and_lon=Metadata(name="(Lat, Lon)", method=get_lat_lon),
+    altitude_msl=Metadata(name="Altitude MSL (m)", method=get_altitude_msl),
+    roll_pitch_yaw=Metadata(
+        name="(Roll (degrees)," "Pitch (degrees)," "Yaw (degrees))",
+        method=get_roll_pitch_yaw,
+    ),
+    make_and_model=Metadata(name="(Make, Model)", method=get_make_and_model),
+    dimensions=Metadata(name="Dimensions", method=get_dimensions),
+    GSD=Metadata(name="Gsd (m)", method=get_gsd),
+    firmware=Metadata(name="Firmware version", method=get_firmware_version),
+)
+
+
+def get_metadata(image_path: str, *metadata: Metadata):
+    """
+    Get a selection of supported metadata from the image.
+
+    Simple wrapper function that calls the individual get_* functions that match the names of the metadata
+    requested. This is useful when a user would like to get multiple metadata (e.g. GSD and lat/lon) in one
+    function call, rather than listing each call individually. Metadata are specified via the provided
+    `Metadata` instances -- this allows for IDE-assisted autocompletion and the prevention of misspelled
+    or non-existent metadata types.
+
+    :param image_path: the full path to the image
+    :param metadata: variable number of Metadata arguments
+    :return: **parsed_metadata** -- A tuple of values of all requested metadata
+    """
+    return (metadata_type.method(image_path) for metadata_type in metadata)
