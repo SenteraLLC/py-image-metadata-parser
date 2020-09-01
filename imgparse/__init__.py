@@ -34,10 +34,12 @@ from imgparse.imgparse import (
     get_ils,
     get_lat_lon,
     get_make_and_model,
+    get_metadata,
     get_pixel_pitch,
     get_relative_altitude,
     get_roll_pitch_yaw,
     get_timestamp,
+    metadata,
     parse_session_alt,
 )
 
@@ -60,5 +62,7 @@ __all__ = [
     "get_timestamp",
     "get_autoexposure",
     "get_firmware_version",
+    "get_metadata",
     "ParsingError",
+    "metadata",
 ]
