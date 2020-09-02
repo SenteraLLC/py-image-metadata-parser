@@ -381,13 +381,7 @@ def test_get_roll_pitch_yaw_dji(dji_image_data):
 
 def test_get_dimensions_invalid(bad_data):
     with pytest.raises(ValueError):
-        imgparse.get_dimensions()
-
-    with pytest.raises(ValueError):
         imgparse.get_dimensions(bad_data[0])
-
-    with pytest.raises(ParsingError):
-        imgparse.get_dimensions(exif_data=bad_data[1])
 
     with pytest.raises(ParsingError):
         imgparse.get_dimensions(bad_data[0], exif_data=bad_data[1])
@@ -395,26 +389,32 @@ def test_get_dimensions_invalid(bad_data):
 
 def test_get_dimensions_sentera(sentera_image_data):
     height1, width1 = imgparse.get_dimensions(sentera_image_data[0])
-    height2, width2 = imgparse.get_dimensions(exif_data=sentera_image_data[1])
-    height3, width3 = imgparse.get_dimensions(
+    height2, width2 = imgparse.get_dimensions(
         sentera_image_data[0], exif_data=sentera_image_data[1]
     )
 
     assert [height1, width1] == [3000, 4000]
     assert [height2, width2] == [3000, 4000]
-    assert [height3, width3] == [3000, 4000]
+
+
+def test_get_dimensions_6x(sentera_6x_image_data):
+    height1, width1 = imgparse.get_dimensions(sentera_6x_image_data[0])
+    height2, width2 = imgparse.get_dimensions(
+        sentera_6x_image_data[0], exif_data=sentera_6x_image_data[1]
+    )
+
+    assert [height1, width1] == [1464, 1952]
+    assert [height2, width2] == [1464, 1952]
 
 
 def test_get_dimensions_dji(dji_image_data):
     height1, width1 = imgparse.get_dimensions(dji_image_data[0])
-    height2, width2 = imgparse.get_dimensions(exif_data=dji_image_data[1])
-    height3, width3 = imgparse.get_dimensions(
+    height2, width2 = imgparse.get_dimensions(
         dji_image_data[0], exif_data=dji_image_data[1]
     )
 
     assert [height1, width1] == [3648, 4864]
     assert [height2, width2] == [3648, 4864]
-    assert [height3, width3] == [3648, 4864]
 
 
 def test_get_autoexposure_sentera(sentera_image_data):
