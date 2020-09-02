@@ -369,29 +369,33 @@ def get_make_and_model(image_path=None, exif_data=None):
 
 
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
-def get_dimensions(image_path=None, exif_data=None):
+def get_dimensions(image_path, exif_data=None):
     """
     Get the height and width (in pixels) of the image.
 
-    :param image_path: the full path to the image (optional if `exif_data` provided)
+    :param image_path: the full path to the image
     :param exif_data: the exif dictionary for the image (optional to speed up processing)
     :return: **height**, **width** - the height and width of the image
     :raises: ParsingError
     """
+    ext = os.path.splitext(image_path)[-1].lower()
+
     try:
-        return (
-            exif_data["EXIF ExifImageLength"].values[0],
-            exif_data["EXIF ExifImageWidth"].values[0],
-        )
-    except KeyError:
-        try:
+        if ext in [".jpg", ".jpeg"]:
+            return (
+                exif_data["EXIF ExifImageLength"].values[0],
+                exif_data["EXIF ExifImageWidth"].values[0],
+            )
+        elif ext in [".tif", ".tiff"]:
             return (
                 exif_data["Image ImageLength"].values[0],
                 exif_data["Image ImageWidth"].values[0],
             )
-        except KeyError:
-            logger.error("Couldn't parse the height and width of the image")
-            raise ParsingError("Couldn't parse the height and width of the image")
+        else:
+            raise KeyError
+    except KeyError:
+        logger.error("Couldn't parse the height and width of the image")
+        raise ParsingError("Couldn't parse the height and width of the image")
 
 
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
