@@ -16,16 +16,17 @@ logger = logging.getLogger(__name__)
 class ClickMetadata(click.ParamType):
     """Click type that converts a passed metadata type to a Metadata instance."""
 
-    metadata_items = vars(metadata)
-    name = "[" + "|".join((item for item in metadata_items)) + "]"
+    metadata_items = {
+        k: v for k, v in vars(metadata).items() if isinstance(v, metadata.Metadata)
+    }
 
     def convert(self, value, param, ctx):
         """Attempt to parse the passed metadata string to a Metadata instance, and fail if unable."""
         try:
-            return ClickMetadata.metadata_items[value]
+            return ClickMetadata.metadata_items[value.upper()]
         except KeyError:
             self.fail(
-                f"Invalid metadata type. Supported types are {ClickMetadata.name}",
+                f"Invalid metadata type '{value}'. Supported types are [{'|'.join((item for item in ClickMetadata.metadata_items))}]",
                 param,
                 ctx,
             )
