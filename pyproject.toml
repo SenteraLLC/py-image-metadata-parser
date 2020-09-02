@@ -1,0 +1,31 @@
+[tool.poetry]
+name = "imgparse"
+version = "1.8.0"
+description = "Python image-metadata-parser utilities"
+authors = []
+
+[tool.poetry.dependencies]
+python = "^3.7"
+exifread = "*"
+pandas = "*"
+click = "*"
+decorator = "*"
+
+[tool.poetry.dev-dependencies]
+pytest = "*"
+sphinx_rtd_theme = "*"
+sphinx = "*"
+pre_commit = "*"
+
+[tool.poetry.scripts]
+imgparse = "imgparse.cli:cli"
+
+[tool.isort]
+line_length = 88
+multi_line_output = 3
+include_trailing_comma = true
+known_third_party = ["click", "decorator", "exifread", "pandas", "pytest"]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

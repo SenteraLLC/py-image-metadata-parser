@@ -7,9 +7,7 @@ dependencies:
   - sphinx
   - sphinx_rtd_theme
   - pytest
-  - pre_commit=2.3.0
-  - pip
-  - pipenv
+  - pre_commit
   # main dependencies
   - exifread
   - pandas
