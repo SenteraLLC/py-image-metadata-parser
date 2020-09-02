@@ -4,7 +4,7 @@
 ## PR Checklist
 - [ ] Merged latest master
 - [ ] Updated version number
-- [ ] Version numbers match between package \__version\__ and pyproject.toml
+- [ ] Version numbers match between package \_\_version\_\_ and pyproject.toml
 - [ ] All private git packages are at their newest version in both *Pipfile* and *environment.yml*
 - [ ] All git package version numbers match between *Pipfile* and *environment.yml*
 ## Breaking Changes
