@@ -3,7 +3,7 @@
 import inspect
 import logging
 
-from decorator import decorator
+from decorator import decorate, decorator
 
 logger = logging.getLogger(__name__)
 
@@ -95,3 +95,36 @@ def get_if_needed(arg_to_get, getter, getter_args=None):
         return func(*args, **kwargs)
 
     return inner_get_if_needed
+
+
+def memoize(f):
+    """
+    Memoize the result of a wrapped function.
+
+    A simple memoize implementation. It works by adding a .cache attribute
+    to the decorated function. The cache will only store a single item, so
+    any invocation of the wrapped function with different arguments will
+    overwrite it.
+    """
+    f.cache = None
+    f.key = None
+
+    def _memoize(func, *args, **kw):
+        if kw:  # frozenset is used to ensure hashability
+            key = args, frozenset(kw.items())
+        else:
+            key = args
+
+        cache = func.cache  # attribute added by memoize
+        if key != func.key:
+            logger.debug("Not cached. Caching...")
+            cache = func(*args, **kw)
+
+            func.key = key
+            func.cache = cache
+        else:
+            logger.debug("Cached already!")
+
+        return cache
+
+    return decorate(f, _memoize)

@@ -40,6 +40,7 @@ from imgparse.imgparse import (
     get_timestamp,
     parse_session_alt,
 )
+from imgparse.metadata import get_metadata
 
 __all__ = [
     "__version__",
@@ -60,5 +61,6 @@ __all__ = [
     "get_timestamp",
     "get_autoexposure",
     "get_firmware_version",
+    "get_metadata",
     "ParsingError",
 ]

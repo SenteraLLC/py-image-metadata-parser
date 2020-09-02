@@ -6,10 +6,12 @@ import os
 import exifread
 
 import imgparse.xmp as xmp
+from imgparse.decorators import memoize
 
 logger = logging.getLogger(__name__)
 
 
+@memoize
 def get_xmp_data(image_path):
     """
     Extract the xmp data of the provided image as a continuous string.
@@ -33,6 +35,7 @@ def get_xmp_data(image_path):
         raise ValueError("Image file could not be found.")
 
 
+@memoize
 def get_exif_data(image_path):
     """
     Get a dictionary of lookup keys/values for the exif data of the provided image.

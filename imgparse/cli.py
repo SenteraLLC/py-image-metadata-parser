@@ -6,9 +6,30 @@ import os
 import click
 import pandas
 
+from imgparse import metadata
+
 from . import imgparse
 
 logger = logging.getLogger(__name__)
+
+
+class ClickMetadata(click.ParamType):
+    """Click type that converts a passed metadata type to a Metadata instance."""
+
+    metadata_items = {
+        k: v for k, v in vars(metadata).items() if isinstance(v, metadata.Metadata)
+    }
+
+    def convert(self, value, param, ctx):
+        """Attempt to parse the passed metadata string to a Metadata instance, and fail if unable."""
+        try:
+            return ClickMetadata.metadata_items[value.upper()]
+        except KeyError:
+            self.fail(
+                f"Invalid metadata type '{value}'. Supported types are [{'|'.join((item for item in ClickMetadata.metadata_items))}]",
+                param,
+                ctx,
+            )
 
 
 @click.group()
@@ -133,6 +154,15 @@ def get_firmware_version(image_path):
         "Firmware version:",
         ".".join(map(str, imgparse.get_firmware_version(image_path))),
     )
+
+
+@cli.command()
+@click.argument("image_path", required=True)
+@click.argument("metadata", required=True, nargs=-1, type=ClickMetadata())
+def get_metadata(image_path, metadata):
+    """Get a variable number of supported metadata."""
+    for metadata_type in metadata:
+        print(f"{metadata_type.name}:", metadata_type.method(image_path))
 
 
 @cli.command()
