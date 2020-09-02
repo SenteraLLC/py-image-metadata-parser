@@ -384,8 +384,14 @@ def get_dimensions(image_path=None, exif_data=None):
             exif_data["EXIF ExifImageWidth"].values[0],
         )
     except KeyError:
-        logger.error("Couldn't parse the height and width of the image")
-        raise ParsingError("Couldn't parse the height and width of the image")
+        try:
+            return (
+                exif_data["Image ImageLength"].values[0],
+                exif_data["Image ImageWidth"].values[0],
+            )
+        except KeyError:
+            logger.error("Couldn't parse the height and width of the image")
+            raise ParsingError("Couldn't parse the height and width of the image")
 
 
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
