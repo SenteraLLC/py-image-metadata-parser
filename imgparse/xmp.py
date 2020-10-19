@@ -48,12 +48,18 @@ Sentera = SensorMake(
 )
 
 DJI = SensorMake(
-    RELATIVE_ALT=re.compile(r'drone-dji:RelativeAltitude="(-?\+?[0-9]+.[0-9]+)"'),
-    ROLL=re.compile(r'drone-dji:GimbalRollDegree="(-?\+?[0-9]+.[0-9]+(?:E-?[0-9]+)?)"'),
-    PITCH=re.compile(
-        r'drone-dji:GimbalPitchDegree="(-?\+?[0-9]+.[0-9]+(?:E-?[0-9]+)?)"'
+    RELATIVE_ALT=re.compile(
+        r'drone-dji:RelativeAltitude(?:>|=")(-?\+?[0-9]+.[0-9]+)"?'
     ),
-    YAW=re.compile(r'drone-dji:GimbalYawDegree="(-?\+?[0-9]+.[0-9]+(?:E-?[0-9]+)?)"'),
+    ROLL=re.compile(
+        r'drone-dji:GimbalRollDegree(?:>|=")(-?\+?[0-9]+.[0-9]+(?:E-?[0-9]+)?)"?'
+    ),
+    PITCH=re.compile(
+        r'drone-dji:GimbalPitchDegree(?:>|=")(-?\+?[0-9]+.[0-9]+(?:E-?[0-9]+)?)"?'
+    ),
+    YAW=re.compile(
+        r'drone-dji:GimbalYawDegree(?:>|=")(-?\+?[0-9]+.[0-9]+(?:E-?[0-9]+)?)"?'
+    ),
 )
 
 
