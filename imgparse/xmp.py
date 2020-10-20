@@ -14,7 +14,7 @@ CHUNK_SIZE = 10000
 # Define patterns:
 FULL_XMP = re.compile(r"<x:xmpmeta.*</x:xmpmeta>", re.DOTALL)
 XMP_END = re.compile(r"</x:xmpmeta>")
-SEQ = re.compile(r"(?: *|\t)<rdf:li>(.*)</rdf:li>\n")
+SEQ = re.compile(r"(?: *|\t)<rdf:li>(.*)</rdf:li>")
 
 # Sentera-exclusive patterns:
 ILS = re.compile(r"<Camera:SunSensor>.*</Camera:SunSensor>", re.DOTALL)
