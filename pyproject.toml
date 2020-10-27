@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "imgparse"
-version = "1.9.2"
+version = "1.9.3"
 description = "Python image-metadata-parser utilities"
 authors = []
 
@@ -10,6 +10,7 @@ exifread = "*"
 pandas = "*"
 click = "*"
 decorator = "*"
+timezonefinder = "*"
 
 [tool.poetry.dev-dependencies]
 pytest = "*"
