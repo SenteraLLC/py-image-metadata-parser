@@ -1,5 +1,6 @@
 import os
 from datetime import datetime, timedelta
+import pytz
 
 import pytest
 
@@ -448,14 +449,17 @@ def test_get_timestamp_sentera(sentera_image_data):
         sentera_image_data[0], exif_data=sentera_image_data[1]
     )
 
+    correct_timestamp = datetime.strptime("2019:03:02 22:44:46", "%Y:%m:%d %H:%M:%S")
+    correct_timestamp = pytz.utc.localize(correct_timestamp)
+
     assert abs(
-        timestamp1 - datetime.strptime("2019:03:02 22:44:46", "%Y:%m:%d %H:%M:%S")
+        timestamp1 - correct_timestamp
     ) < timedelta(seconds=1)
     assert abs(
-        timestamp2 - datetime.strptime("2019:03:02 22:44:46", "%Y:%m:%d %H:%M:%S")
+        timestamp2 - correct_timestamp
     ) < timedelta(seconds=1)
     assert abs(
-        timestamp3 - datetime.strptime("2019:03:02 22:44:46", "%Y:%m:%d %H:%M:%S")
+        timestamp3 - correct_timestamp
     ) < timedelta(seconds=1)
 
 
@@ -464,14 +468,17 @@ def test_get_timestamp_dji(dji_image_data):
     timestamp2 = imgparse.get_timestamp(exif_data=dji_image_data[1])
     timestamp3 = imgparse.get_timestamp(dji_image_data[0], exif_data=dji_image_data[1])
 
+    correct_timestamp = datetime.strptime("2018:05:22 17:03:27", "%Y:%m:%d %H:%M:%S")
+    correct_timestamp = pytz.utc.localize(correct_timestamp)
+
     assert abs(
-        timestamp1 - datetime.strptime("2018:05:22 12:03:27", "%Y:%m:%d %H:%M:%S")
+        timestamp1 - correct_timestamp
     ) < timedelta(seconds=1)
     assert abs(
-        timestamp2 - datetime.strptime("2018:05:22 12:03:27", "%Y:%m:%d %H:%M:%S")
+        timestamp2 - correct_timestamp
     ) < timedelta(seconds=1)
     assert abs(
-        timestamp3 - datetime.strptime("2018:05:22 12:03:27", "%Y:%m:%d %H:%M:%S")
+        timestamp3 - correct_timestamp
     ) < timedelta(seconds=1)
 
 
