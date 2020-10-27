@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "imgparse"
-version = "1.9.2"
+version = "1.9.3"
 description = "Python image-metadata-parser utilities"
 authors = []
 
@@ -10,6 +10,7 @@ exifread = "*"
 pandas = "*"
 click = "*"
 decorator = "*"
+timezonefinder = "*"
 
 [tool.poetry.dev-dependencies]
 pytest = "*"
@@ -24,7 +25,7 @@ imgparse = "imgparse.cli:cli"
 line_length = 88
 multi_line_output = 3
 include_trailing_comma = true
-known_third_party = ["click", "decorator", "exifread", "pandas", "pytest"]
+known_third_party = ["click", "decorator", "exifread", "pandas", "pytest", "pytz", "timezonefinder"]
 
 [build-system]
 requires = ["poetry-core"]

@@ -13,3 +13,4 @@ dependencies:
   - pandas
   - click
   - decorator
+  - timezonefinder
