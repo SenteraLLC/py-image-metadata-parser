@@ -1,8 +1,8 @@
 import os
 from datetime import datetime, timedelta
-import pytz
 
 import pytest
+import pytz
 
 import imgparse
 from imgparse import ParsingError
@@ -452,15 +452,9 @@ def test_get_timestamp_sentera(sentera_image_data):
     correct_timestamp = datetime.strptime("2019:03:02 22:44:46", "%Y:%m:%d %H:%M:%S")
     correct_timestamp = pytz.utc.localize(correct_timestamp)
 
-    assert abs(
-        timestamp1 - correct_timestamp
-    ) < timedelta(seconds=1)
-    assert abs(
-        timestamp2 - correct_timestamp
-    ) < timedelta(seconds=1)
-    assert abs(
-        timestamp3 - correct_timestamp
-    ) < timedelta(seconds=1)
+    assert abs(timestamp1 - correct_timestamp) < timedelta(seconds=1)
+    assert abs(timestamp2 - correct_timestamp) < timedelta(seconds=1)
+    assert abs(timestamp3 - correct_timestamp) < timedelta(seconds=1)
 
 
 def test_get_timestamp_dji(dji_image_data):
@@ -471,15 +465,9 @@ def test_get_timestamp_dji(dji_image_data):
     correct_timestamp = datetime.strptime("2018:05:22 17:03:27", "%Y:%m:%d %H:%M:%S")
     correct_timestamp = pytz.utc.localize(correct_timestamp)
 
-    assert abs(
-        timestamp1 - correct_timestamp
-    ) < timedelta(seconds=1)
-    assert abs(
-        timestamp2 - correct_timestamp
-    ) < timedelta(seconds=1)
-    assert abs(
-        timestamp3 - correct_timestamp
-    ) < timedelta(seconds=1)
+    assert abs(timestamp1 - correct_timestamp) < timedelta(seconds=1)
+    assert abs(timestamp2 - correct_timestamp) < timedelta(seconds=1)
+    assert abs(timestamp3 - correct_timestamp) < timedelta(seconds=1)
 
 
 def test_get_ils_6x(sentera_6x_image_data):

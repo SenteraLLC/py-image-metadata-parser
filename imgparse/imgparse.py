@@ -4,8 +4,8 @@ import logging
 import os
 import re
 from datetime import datetime
-import pytz
 
+import pytz
 from timezonefinder import TimezoneFinder
 
 import imgparse.xmp as xmp
