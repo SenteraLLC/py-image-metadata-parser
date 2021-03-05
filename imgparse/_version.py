@@ -1,3 +1,3 @@
 """Defines package version.  Parsed by setup.py and imported by __init__.py."""
 
-__version__ = "1.9.3"
+__version__ = "1.9.4"
