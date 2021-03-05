@@ -198,13 +198,13 @@ def create_metadata_csv(imagery_dir):  # noqa: D301
     data_frame = pandas.DataFrame(
         columns=[
             "File Name",
-            "Lat (decimal degrees)",
-            "Lon (decimal degrees)",
-            "Alt (meters MSL)",
-            "Roll (decimal degrees)",
-            "Pitch (decimal degrees)",
-            "Yaw (decimal degrees)",
-            "Relative Altitude",
+            "Lat (degrees)",
+            "Lon (degrees)",
+            "ASL Alt (meters)",
+            "Roll (degrees)",
+            "Pitch (degrees)",
+            "Yaw (degrees)",
+            "AGL Alt (meters)",
             "Focal Length (pixels)",
         ]
     )
