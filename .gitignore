@@ -8,3 +8,4 @@ analytics-metadata.csv
 .coverage
 empty_dir/
 htmlcov/
+.DS_Store

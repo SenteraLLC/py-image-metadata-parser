@@ -198,13 +198,14 @@ def create_metadata_csv(imagery_dir):  # noqa: D301
     data_frame = pandas.DataFrame(
         columns=[
             "File Name",
-            "Lat (decimal degrees)",
-            "Lon (decimal degrees)",
-            "Alt (meters MSL)",
-            "Roll (decimal degrees)",
-            "Pitch (decimal degrees)",
-            "Yaw (decimal degrees)",
-            "Relative Altitude",
+            "Lat (degrees)",
+            "Lon (degrees)",
+            "ASL Alt (meters)",
+            "Roll (degrees)",
+            "Pitch (degrees)",
+            "Yaw (degrees)",
+            "AGL Alt (meters)",
+            "Focal Length (pixels)",
         ]
     )
 
@@ -212,6 +213,7 @@ def create_metadata_csv(imagery_dir):  # noqa: D301
         logger.info("Parsing image: %s", image_path)
         exif_data = imgparse.get_exif_data(image_path)
         xmp_data = imgparse.get_xmp_data(image_path)
+        fl, pp = imgparse.get_camera_params(image_path)
 
         data_frame.loc[len(data_frame)] = [
             os.path.split(image_path)[1],
@@ -219,6 +221,7 @@ def create_metadata_csv(imagery_dir):  # noqa: D301
             imgparse.get_altitude_msl(image_path, exif_data),
             *imgparse.get_roll_pitch_yaw(image_path, exif_data, xmp_data),
             imgparse.get_relative_altitude(image_path, exif_data, xmp_data),
+            fl / pp,
         ]
 
     metadata_csv = os.path.join(imagery_dir, "analytics-metadata.csv")
