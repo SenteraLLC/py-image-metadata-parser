@@ -168,7 +168,7 @@ def get_metadata(image_path, metadata):
 @cli.command()
 @click.argument("imagery_dir", required=True)
 def create_metadata_csv(imagery_dir):  # noqa: D301
-    """
+    r"""
     Construct a metadata csv file within the provided imagery directory.
 
     \b
