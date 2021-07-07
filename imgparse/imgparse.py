@@ -80,7 +80,7 @@ def get_firmware_version(image_path=None, exif_data=None):
 @get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
 def get_ils(image_path=None, xmp_data=None, use_clear_channel=False):
     """
-    Get the ILS value of an image taken with a Sentera 6X sensor with an ILS module.
+    Get the ILS value of an image captured by a sensor with an ILS module.
 
     This function will always raise an exception if called on XMP data from any sensor other than a 6X with
     an included ILS module.
