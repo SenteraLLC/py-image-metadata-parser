@@ -78,7 +78,7 @@ def get_firmware_version(image_path=None, exif_data=None):
 
 
 @get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
-def get_ils(image_path=None, xmp_data=None):
+def get_ils(image_path=None, xmp_data=None, use_clear_channel=False):
     """
     Get the ILS value of an image taken with a Sentera 6X sensor with an ILS module.
 
@@ -87,11 +87,15 @@ def get_ils(image_path=None, xmp_data=None):
 
     :param image_path: the full path to the image (optional if `xmp_data` provided)
     :param xmp_data: the XMP data of image, as a string dump of the original XML (optional to speed up processing)
+    :param use_clear_channel: if true, refer to the ILS clear channel value instead of the default
     :return: **ils** -- ILS value of image, as a floating point number
     :raises: ParsingError
     """
     try:
-        ils = float(xmp.find(xmp_data, [xmp.ILS, xmp.SEQ]))
+        if use_clear_channel:
+            ils = float(xmp.find(xmp_data, [xmp.ILS_CLEAR]))
+        else:
+            ils = float(xmp.find(xmp_data, [xmp.ILS, xmp.SEQ]))
     except XMPTagNotFoundError:
         logger.error("Couldn't parse ILS value")
         raise ParsingError(
