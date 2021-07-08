@@ -18,6 +18,7 @@ SEQ = re.compile(r"(?: *|\t)<rdf:li>(.*)</rdf:li>")
 
 # Sentera-exclusive patterns:
 ILS = re.compile(r"<Camera:SunSensor>.*</Camera:SunSensor>", re.DOTALL)
+ILS_CLEAR = re.compile(r'ILS:Clear="(.*)"')
 
 
 class XMPTagNotFoundError(Exception):
