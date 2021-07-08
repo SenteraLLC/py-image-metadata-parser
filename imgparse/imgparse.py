@@ -95,9 +95,7 @@ def get_ils(image_path=None, xmp_data=None, use_clear_channel=False):
             ils = float(xmp.find(xmp_data, [xmp.ILS, xmp.SEQ]))
     except XMPTagNotFoundError:
         logger.error("Couldn't parse ILS value")
-        raise ParsingError(
-            "Couldn't parse ILS value."
-        )
+        raise ParsingError("Couldn't parse ILS value.")
 
     return ils
 
