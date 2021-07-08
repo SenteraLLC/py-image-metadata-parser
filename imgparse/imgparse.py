@@ -82,9 +82,6 @@ def get_ils(image_path=None, xmp_data=None, use_clear_channel=False):
     """
     Get the ILS value of an image captured by a sensor with an ILS module.
 
-    This function will always raise an exception if called on XMP data from any sensor other than a 6X with
-    an included ILS module.
-
     :param image_path: the full path to the image (optional if `xmp_data` provided)
     :param xmp_data: the XMP data of image, as a string dump of the original XML (optional to speed up processing)
     :param use_clear_channel: if true, refer to the ILS clear channel value instead of the default
@@ -99,8 +96,7 @@ def get_ils(image_path=None, xmp_data=None, use_clear_channel=False):
     except XMPTagNotFoundError:
         logger.error("Couldn't parse ILS value")
         raise ParsingError(
-            "Couldn't parse ILS value. ILS will only be present if the sensor is a Sentera 6X "
-            "with an ILS module."
+            "Couldn't parse ILS value."
         )
 
     return ils
