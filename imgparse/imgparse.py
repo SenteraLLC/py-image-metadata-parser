@@ -489,3 +489,24 @@ def get_gsd(image_path, exif_data=None, xmp_data=None, corrected_alt=None):
         raise ValueError("Parsed gsd is less than or equal to 0")
 
     return gsd
+
+
+@get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
+def get_wavelength_data(image_path=None, xmp_data=None):
+    """
+    Get the ILS value of an image captured by a sensor with an ILS module.
+
+    :param image_path: the full path to the image (optional if `xmp_data` provided)
+    :param xmp_data: the XMP data of image, as a string dump of the original XML (optional to speed up processing)
+    :param use_clear_channel: if true, refer to the ILS clear channel value instead of the default
+    :return: **ils** -- ILS value of image, as a floating point number
+    :raises: ParsingError
+    """
+    try:
+        central_wavelength = xmp.find(xmp_data, [xmp.CNTWV, xmp.SEQ])
+        wavelength_fwhm = xmp.find(xmp_data, [xmp.FWHM, xmp.SEQ])
+    except XMPTagNotFoundError:
+        logger.error("Couldn't parse wavelength data")
+        raise ParsingError("Couldn't parse wavelength data.")
+
+    return central_wavelength, wavelength_fwhm

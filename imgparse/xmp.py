@@ -18,6 +18,10 @@ SEQ = re.compile(r"(?: *|\t)<rdf:li>(.*)</rdf:li>")
 
 # Sentera-exclusive patterns:
 ILS = re.compile(r"<Camera:SunSensor>.*</Camera:SunSensor>", re.DOTALL)
+CNTWV = re.compile(
+    r"<Camera:CentralWavelength>.*</Camera:CentralWavelength>", re.DOTALL
+)
+FWHM = re.compile(r"<Camera:WavelengthFWHM>.*</Camera:WavelengthFWHM>", re.DOTALL)
 ILS_CLEAR = re.compile(r'ILS:Clear="(.*)"')
 
 
