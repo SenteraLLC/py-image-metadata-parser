@@ -112,18 +112,16 @@ def find(xmp_data: str, patterns: List[re.Pattern]) -> str:
     :raises: XMPTagNotFoundError
     """
 
-    def _find_inner(partial_xmp: str, pattern: re.Pattern) -> str:
-        match = pattern.findall(partial_xmp)
+    def _find_inner(partial_xmp: List[str], pattern: re.Pattern) -> List[str]:
+        matches = []
+        for s in partial_xmp:
+            matches += pattern.findall(s)
 
         # If called on a string but no match was found, findall() returns an empty list:
-        if match:
-            # Returns the whole match
-            print(match)
-            print(match[0])
-            return match
-        else:
+        if not matches:
             raise XMPTagNotFoundError(
                 "A tag pattern did not match with the XMP string. The tag may not exist."
             )
+        return matches
 
-    return reduce(_find_inner, patterns, xmp_data)
+    return reduce(_find_inner, patterns, [xmp_data])
