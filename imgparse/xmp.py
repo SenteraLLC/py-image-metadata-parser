@@ -118,6 +118,8 @@ def find(xmp_data: str, patterns: List[re.Pattern]) -> str:
         # If called on a string but no match was found, findall() returns an empty list:
         if match:
             # Returns the whole match
+            print(match)
+            print(match[0])
             return match[0]
         else:
             raise XMPTagNotFoundError(
