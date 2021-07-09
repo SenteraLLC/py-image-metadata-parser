@@ -120,7 +120,7 @@ def find(xmp_data: str, patterns: List[re.Pattern]) -> str:
             # Returns the whole match
             print(match)
             print(match[0])
-            return match[0]
+            return match
         else:
             raise XMPTagNotFoundError(
                 "A tag pattern did not match with the XMP string. The tag may not exist."
