@@ -503,8 +503,8 @@ def get_wavelength_data(image_path=None, xmp_data=None):
     :raises: ParsingError
     """
     try:
-        central_wavelength = xmp.find(xmp_data, [xmp.CNTWV, xmp.SEQ])
-        wavelength_fwhm = xmp.find(xmp_data, [xmp.FWHM, xmp.SEQ])
+        central_wavelength = xmp.find_multiple(xmp_data, [xmp.CNTWV, xmp.SEQ])
+        wavelength_fwhm = xmp.find_multiple(xmp_data, [xmp.FWHM, xmp.SEQ])
     except XMPTagNotFoundError:
         logger.error("Couldn't parse wavelength data")
         raise ParsingError("Couldn't parse wavelength data.")

@@ -102,13 +102,41 @@ def find(xmp_data: str, patterns: List[re.Pattern]) -> str:
     This function recurses over the list of patterns, applying each one to the remaining matching XMP string
     and passing the subsequent matching string to the next iteration.
 
-    If multiple capture groups are in a passed pattern, that pattern must be the last pattern in the list --
-    in this situation, a tuple will be returned with each matched group. This can be useful when matching tags
-    in a "<rdf:Seq>".
+    Only the first matching occurence is passed for each step.
 
     :param xmp_data: XMP string to be parsed
     :param patterns: List of patterns to be applied to the XMP string
     :return: **match** -- Matched string (if all matches are successful)
+    :raises: XMPTagNotFoundError
+    """
+
+    def _find_inner(partial_xmp: str, pattern: re.Pattern) -> str:
+        match = pattern.findall(partial_xmp)
+
+        # If called on a string but no match was found, findall() returns an empty list:
+        if match:
+            # Returns the whole match
+            return match[0]
+        else:
+            raise XMPTagNotFoundError(
+                "A tag pattern did not match with the XMP string. The tag may not exist."
+            )
+
+    return reduce(_find_inner, patterns, xmp_data)
+
+
+def find_multiple(xmp_data: str, patterns: List[re.Pattern]) -> List[str]:
+    """
+    Sequentially apply a list of patterns to the xmp data to parse a value of interest.
+
+    This function recurses over the list of patterns, applying each one to the remaining matching XMP strings
+    and passing the subsequent matching strings to the next iteration.
+
+    All matching occurences are returned in a list, even if there's only one.
+
+    :param xmp_data: XMP string to be parsed
+    :param patterns: List of patterns to be applied to the XMP string
+    :return: **match** -- Matched strings (if all matches are successful)
     :raises: XMPTagNotFoundError
     """
 
