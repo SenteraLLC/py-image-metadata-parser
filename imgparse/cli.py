@@ -158,6 +158,19 @@ def get_firmware_version(image_path):
 
 @cli.command()
 @click.argument("image_path", required=True)
+def get_wavelength_data(image_path):
+    """Parse wavelength data from metadata."""
+    data = imgparse.get_wavelength_data(image_path)
+    print("Central Wavelength:")
+    for w in data[0]:
+        print(f"  {w}")
+    print("WavelengthFWHM:")
+    for f in data[1]:
+        print(f"  {f}")
+
+
+@cli.command()
+@click.argument("image_path", required=True)
 @click.argument("metadata", required=True, nargs=-1, type=ClickMetadata())
 def get_metadata(image_path, metadata):
     """Get a variable number of supported metadata."""

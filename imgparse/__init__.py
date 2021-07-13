@@ -38,6 +38,7 @@ from imgparse.imgparse import (
     get_relative_altitude,
     get_roll_pitch_yaw,
     get_timestamp,
+    get_wavelength_data,
     parse_session_alt,
 )
 from imgparse.metadata import get_metadata
@@ -61,6 +62,7 @@ __all__ = [
     "get_timestamp",
     "get_autoexposure",
     "get_firmware_version",
+    "get_wavelength_data",
     "get_metadata",
     "ParsingError",
 ]
