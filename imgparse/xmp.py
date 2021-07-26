@@ -22,6 +22,7 @@ CNTWV = re.compile(
     r"<Camera:CentralWavelength>.*</Camera:CentralWavelength>", re.DOTALL
 )
 FWHM = re.compile(r"<Camera:WavelengthFWHM>.*</Camera:WavelengthFWHM>", re.DOTALL)
+BNDNM = re.compile(r"<Camera:BandName>.*</Camera:BandName>", re.DOTALL)
 ILS_CLEAR = re.compile(r'ILS:Clear="(.*)"')
 
 

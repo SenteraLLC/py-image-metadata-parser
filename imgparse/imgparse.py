@@ -494,12 +494,12 @@ def get_gsd(image_path, exif_data=None, xmp_data=None, corrected_alt=None):
 @get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
 def get_wavelength_data(image_path=None, xmp_data=None):
     """
-    Get the ILS value of an image captured by a sensor with an ILS module.
+    Get the central and FWHM wavelength values of an image.
 
     :param image_path: the full path to the image (optional if `xmp_data` provided)
     :param xmp_data: the XMP data of image, as a string dump of the original XML (optional to speed up processing)
-    :param use_clear_channel: if true, refer to the ILS clear channel value instead of the default
-    :return: **ils** -- ILS value of image, as a floating point number
+    :return: central_wavelength -- central wavelength of each band, as a list of ints
+    :return: wavelength_fwhm -- wavelength fwhm of each band, as a list of ints
     :raises: ParsingError
     """
     try:
@@ -510,3 +510,22 @@ def get_wavelength_data(image_path=None, xmp_data=None):
         raise ParsingError("Couldn't parse wavelength data.")
 
     return central_wavelength, wavelength_fwhm
+
+
+@get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
+def get_bandnames(image_path=None, xmp_data=None):
+    """
+    Get the name of each band of an image.
+
+    :param image_path: the full path to the image (optional if `xmp_data` provided)
+    :param xmp_data: the XMP data of image, as a string dump of the original XML (optional to speed up processing)
+    :return: **band_names** -- name of each band of image, as a list of strings
+    :raises: ParsingError
+    """
+    try:
+        band_names = xmp.find_multiple(xmp_data, [xmp.BNDNM, xmp.SEQ])
+    except XMPTagNotFoundError:
+        logger.error("Couldn't parse bandnames")
+        raise ParsingError("Couldn't parse bandnames.")
+
+    return band_names

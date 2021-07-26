@@ -171,6 +171,16 @@ def get_wavelength_data(image_path):
 
 @cli.command()
 @click.argument("image_path", required=True)
+def get_bandnames(image_path):
+    """Parse bandnames from metadata."""
+    names = imgparse.get_bandnames(image_path)
+    print("Bandnames:")
+    for name in names:
+        print(f"  {name}")
+
+
+@cli.command()
+@click.argument("image_path", required=True)
 @click.argument("metadata", required=True, nargs=-1, type=ClickMetadata())
 def get_metadata(image_path, metadata):
     """Get a variable number of supported metadata."""

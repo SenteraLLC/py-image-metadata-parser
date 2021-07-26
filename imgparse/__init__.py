@@ -26,6 +26,7 @@ from imgparse.imgparse import (
     ParsingError,
     get_altitude_msl,
     get_autoexposure,
+    get_bandnames,
     get_camera_params,
     get_dimensions,
     get_firmware_version,
@@ -63,6 +64,7 @@ __all__ = [
     "get_autoexposure",
     "get_firmware_version",
     "get_wavelength_data",
+    "get_bandnames",
     "get_metadata",
     "ParsingError",
 ]
