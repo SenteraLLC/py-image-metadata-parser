@@ -34,6 +34,7 @@ FIRMWARE = Metadata(name="Firmware version", method=imgparse.get_firmware_versio
 WAVELENGTH = Metadata(
     name="Central Wavelength, WavelengthFWHM", method=imgparse.get_wavelength_data
 )
+BANDNAME = Metadata(name="BandName", method=imgparse.get_bandnames)
 
 
 def get_metadata(image_path: str, *metadata: Metadata):
