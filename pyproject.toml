@@ -1,16 +1,17 @@
 [tool.poetry]
 name = "imgparse"
-version = "1.10.6"
+version = "1.10.7"
 description = "Python image-metadata-parser utilities"
 authors = []
 
 [tool.poetry.dependencies]
 python = "^3.7"
 exifread = "*"
-pandas = "*"
 click = "*"
 decorator = "*"
 timezonefinder = "*"
+
+pandas = {version = "*", optional = true}
 
 [tool.poetry.dev-dependencies]
 pytest = "*"
@@ -20,6 +21,9 @@ pre_commit = "*"
 
 [tool.poetry.scripts]
 imgparse = "imgparse.cli:cli"
+
+[tool.poetry.extras]
+metadata_csv = ["pandas"]
 
 [tool.isort]
 line_length = 88
