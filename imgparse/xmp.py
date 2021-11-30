@@ -47,10 +47,10 @@ class SensorMake(NamedTuple):
 
 
 Sentera = SensorMake(
-    RELATIVE_ALT=re.compile(r"Camera:AboveGroundAltitude[\D]*(-?[0-9]+.[0-9]+)"),
-    ROLL=re.compile(r"Camera:Roll[\D]*(-?[0-9]+.[0-9]+(?:E-?[0-9]+)?)"),
-    PITCH=re.compile(r"Camera:Pitch[\D]*(-?[0-9]+.[0-9]+(?:E-?[0-9]+)?)"),
-    YAW=re.compile(r"Camera:Yaw[\D]*(-?[0-9]+.[0-9]+(?:E-?[0-9]+)?)"),
+    RELATIVE_ALT=re.compile(r"Camera:AboveGroundAltitude[^-\d]*(-?[0-9]+.[0-9]+)"),
+    ROLL=re.compile(r"Camera:Roll[^-\d]*(-?[0-9]+.[0-9]+(?:E-?[0-9]+)?)"),
+    PITCH=re.compile(r"Camera:Pitch[^-\d]*(-?[0-9]+.[0-9]+(?:E-?[0-9]+)?)"),
+    YAW=re.compile(r"Camera:Yaw[^-\d]*(-?[0-9]+.[0-9]+(?:E-?[0-9]+)?)"),
 )
 
 DJI = SensorMake(
