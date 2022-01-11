@@ -49,30 +49,45 @@ def test_get_camera_params_invalid(bad_data):
     with pytest.raises(ValueError):
         imgparse.get_camera_params(bad_data[0])
 
-    with pytest.raises(ParsingError):
-        imgparse.get_camera_params(exif_data=bad_data[1])
+    with pytest.raises(ValueError):
+        imgparse.get_camera_params(bad_data[0], exif_data=bad_data[1])
+
+    with pytest.raises(ValueError):
+        imgparse.get_camera_params(bad_data[0], xmp_data=bad_data[2])
 
     with pytest.raises(ParsingError):
-        imgparse.get_camera_params(bad_data[0], exif_data=bad_data[1])
+        imgparse.get_camera_params(
+            bad_data[0], exif_data=bad_data[1], xmp_data=bad_data[2]
+        )
 
 
 def test_get_camera_params_dji(dji_image_data):
     focal1, pitch1 = imgparse.get_camera_params(dji_image_data[0])
-    focal2, pitch2 = imgparse.get_camera_params(exif_data=dji_image_data[1])
+    focal2, pitch2 = imgparse.get_camera_params(
+        exif_data=dji_image_data[1], xmp_data=dji_image_data[2]
+    )
     focal3, pitch3 = imgparse.get_camera_params(
-        dji_image_data[0], exif_data=dji_image_data[1]
+        dji_image_data[0], exif_data=dji_image_data[1], xmp_data=dji_image_data[2]
+    )
+    focal4, pitch4 = imgparse.get_camera_params(
+        dji_image_data[0], use_calibrated_focal_length=True
     )
 
     assert [focal1, pitch1] == [0.0088, 2.41e-06]
     assert [focal2, pitch2] == [0.0088, 2.41e-06]
     assert [focal3, pitch3] == [0.0088, 2.41e-06]
+    assert [focal4, pitch4] == pytest.approx([3.666666, 2.41e-06], abs=1e-06)
 
 
 def test_get_camera_params_sentera(sentera_image_data):
     focal1, pitch1 = imgparse.get_camera_params(sentera_image_data[0])
-    focal2, pitch2 = imgparse.get_camera_params(exif_data=sentera_image_data[1])
+    focal2, pitch2 = imgparse.get_camera_params(
+        exif_data=sentera_image_data[1], xmp_data=sentera_image_data[2]
+    )
     focal3, pitch3 = imgparse.get_camera_params(
-        sentera_image_data[0], exif_data=sentera_image_data[1]
+        sentera_image_data[0],
+        exif_data=sentera_image_data[1],
+        xmp_data=sentera_image_data[2],
     )
 
     assert [focal1, pitch1] == pytest.approx([0.025, 1.55e-06], abs=1e-06)
@@ -88,10 +103,12 @@ def test_get_make_and_model_invalid(bad_data):
         imgparse.get_camera_params(bad_data[0])
 
     with pytest.raises(ParsingError):
-        imgparse.get_camera_params(exif_data=bad_data[1])
+        imgparse.get_camera_params(exif_data=bad_data[1], xmp_data=bad_data[2])
 
     with pytest.raises(ParsingError):
-        imgparse.get_camera_params(bad_data[0], exif_data=bad_data[1])
+        imgparse.get_camera_params(
+            bad_data[0], exif_data=bad_data[1], xmp_data=bad_data[2]
+        )
 
 
 def test_get_make_and_model_dji(dji_image_data):
@@ -155,13 +172,17 @@ def test_get_relative_altitude_sentera(sentera_image_data):
     alt2 = imgparse.get_relative_altitude(
         sentera_image_data[0], exif_data=sentera_image_data[1]
     )
+    alt3 = imgparse.get_relative_altitude(sentera_image_data[0], use_rlf=True)
 
     sentera_image_path = os.path.join(base_path, "data", "IMG_00003.jpg")
-    alt3 = imgparse.get_relative_altitude(sentera_image_path)
+    alt4 = imgparse.get_relative_altitude(sentera_image_path)
+    alt5 = imgparse.get_relative_altitude(sentera_image_path, use_rlf=True)
 
     assert alt1 == 51.042
     assert alt2 == 51.042
-    assert alt3 == pytest.approx(41.55, abs=1e-03)
+    assert alt3 == 52.041  # AltimeterCalculatedAGL
+    assert alt4 == pytest.approx(41.55, abs=1e-03)
+    assert alt5 == 42.46  # AltimeterCalcuatedAGL
 
 
 def test_get_relative_altitude_dji(dji_image_data):
@@ -214,7 +235,7 @@ def test_get_gsd_invalid(bad_data):
     with pytest.raises(ValueError):
         imgparse.get_gsd(bad_data[0])
 
-    with pytest.raises(ParsingError):
+    with pytest.raises(ValueError):
         imgparse.get_gsd(bad_data[0], exif_data=bad_data[1])
 
     with pytest.raises(ValueError):
