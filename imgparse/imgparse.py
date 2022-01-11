@@ -497,6 +497,7 @@ def parse_session_alt(image_path):
 
 
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
+@get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
 def get_gsd(
     image_path,
     exif_data=None,
@@ -521,8 +522,6 @@ def get_gsd(
     :return: **gsd** - the ground sample distance of the image in meters
     :raises: ParsingError
     """
-    if not xmp_data:
-        xmp_data = get_xmp_data(image_path)
     focal, pitch = get_camera_params(
         image_path, exif_data, xmp_data, use_calibrated_focal_length
     )
