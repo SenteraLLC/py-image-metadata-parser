@@ -215,7 +215,7 @@ def get_camera_params(
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
 @get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
 def get_relative_altitude(
-    image_path, exif_data=None, xmp_data=None, session_alt=False, use_rlf=False
+    image_path, exif_data=None, xmp_data=None, alt_source="relative"
 ):
     """
     Get the relative altitude of the sensor above the ground (in meters) when the image was taken.
@@ -232,8 +232,7 @@ def get_relative_altitude(
     :param image_path: the full path to the image
     :param exif_data: the exif dictionary for the image (optional to speed up processing)
     :param xmp_data: the XMP data of image, as a string dump of the original XML (optional to speed up processing)
-    :param session_alt: enable to extract the session agl altitude instead of xmp agl altitude for Sentera imagery
-    :param use_rlf: enable to, if session_alt is not enabled, use rlf data, if available, for Sentera imagery
+    :param alt_source: for Sentera imagery, set to "session" to extract session agl alt, or "rlf" to use laser range finder
     :return: **relative_alt** - the relative altitude of the camera above the ground
     :raises: ParsingError
     """
@@ -245,24 +244,24 @@ def get_relative_altitude(
 
     make, model = get_make_and_model(image_path, exif_data)
     if make == "Sentera":
-        if not session_alt:
-            if use_rlf:
-                try:
-                    return float(xmp.find(xmp_data, [xmp.Sentera.LRF_ALT]))
-                except XMPTagNotFoundError:
-                    logger.warning(
-                        "Altimeter calcualted altitude not found in XMP. Defaulting to relative altitude."
-                    )
-
+        if alt_source == "session":
+            return _fallback_to_session(image_path)
+        elif alt_source == "rlf":
             try:
-                rel_alt = float(xmp.find(xmp_data, [xmp.Sentera.RELATIVE_ALT]))
+                return float(xmp.find(xmp_data, [xmp.Sentera.LRF_ALT]))
             except XMPTagNotFoundError:
                 logger.warning(
-                    "Relative altitude not found in XMP. Attempting to parse from session.txt file."
+                    "Altimeter calculated altitude not found in XMP. Defaulting to relative altitude."
                 )
-                rel_alt = _fallback_to_session(image_path)
-        else:
+
+        try:
+            rel_alt = float(xmp.find(xmp_data, [xmp.Sentera.RELATIVE_ALT]))
+        except XMPTagNotFoundError:
+            logger.warning(
+                "Relative altitude not found in XMP. Attempting to parse from session.txt file."
+            )
             rel_alt = _fallback_to_session(image_path)
+
     else:
         try:
             rel_alt = float(xmp.find(xmp_data, [xmp.DJI.RELATIVE_ALT]))
@@ -504,7 +503,7 @@ def get_gsd(
     xmp_data=None,
     corrected_alt=None,
     use_calibrated_focal_length=False,
-    use_rlf=False,
+    alt_source="relative",
 ):
     """
     Get the gsd of the image (in meters/pixel).
@@ -518,7 +517,7 @@ def get_gsd(
     :param xmp_data: the XMP data of image, as a string dump of the original XML (optional to speed up processing)
     :param corrected_alt: corrected relative altitude (optional)
     :param use_calibrated_focal_length: enable to use calibrated focal length if available
-    :param use_rlf: enable to, if session_alt is not enabled, use rlf data, if available, for Sentera imagery
+    :param alt_source: for Sentera imagery, set to "session" to extract session agl alt, or "rlf" to use laser range finder
     :return: **gsd** - the ground sample distance of the image in meters
     :raises: ParsingError
     """
@@ -528,7 +527,7 @@ def get_gsd(
     if corrected_alt:
         alt = corrected_alt
     else:
-        alt = get_relative_altitude(image_path, exif_data, xmp_data, use_rlf)
+        alt = get_relative_altitude(image_path, exif_data, xmp_data, alt_source)
 
     gsd = pitch * alt / focal
     if gsd <= 0:

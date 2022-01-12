@@ -172,11 +172,11 @@ def test_get_relative_altitude_sentera(sentera_image_data):
     alt2 = imgparse.get_relative_altitude(
         sentera_image_data[0], exif_data=sentera_image_data[1]
     )
-    alt3 = imgparse.get_relative_altitude(sentera_image_data[0], use_rlf=True)
+    alt3 = imgparse.get_relative_altitude(sentera_image_data[0], alt_source="rlf")
 
     sentera_image_path = os.path.join(base_path, "data", "IMG_00003.jpg")
     alt4 = imgparse.get_relative_altitude(sentera_image_path)
-    alt5 = imgparse.get_relative_altitude(sentera_image_path, use_rlf=True)
+    alt5 = imgparse.get_relative_altitude(sentera_image_path, alt_source="rlf")
 
     assert alt1 == 51.042
     assert alt2 == 51.042
