@@ -518,7 +518,7 @@ def get_gsd(
     :param xmp_data: the XMP data of image, as a string dump of the original XML (optional to speed up processing)
     :param corrected_alt: corrected relative altitude (optional)
     :param use_calibrated_focal_length: enable to use calibrated focal length if available
-    :param use_rlf: enable to, if session_alt is not enabled, use rlf data, if available, for Sentera imagery
+    :param use_rlf: enable to use rlf data, if available, for Sentera imagery
     :return: **gsd** - the ground sample distance of the image in meters
     :raises: ParsingError
     """
