@@ -41,25 +41,39 @@ class SensorMake(NamedTuple):
     """
 
     RELATIVE_ALT: re.Pattern
+    LRF_ALT: re.Pattern
     ROLL: re.Pattern
     PITCH: re.Pattern
     YAW: re.Pattern
+    FOCAL_LEN: re.Pattern
 
 
 Sentera = SensorMake(
     RELATIVE_ALT=re.compile(r"Camera:AboveGroundAltitude[^-\d]*(-?[0-9]+.[0-9]+)"),
+    LRF_ALT=re.compile(
+        r"Sentera:AltimeterCalcul?atedAGL[^-\d]*(-?[0-9]+.[0-9]+)"
+    ),  # l was left out in Quad v1.0.0
     ROLL=re.compile(r"Camera:Roll[^-\d]*(-?[0-9]+.[0-9]+(?:E-?[0-9]+)?)"),
     PITCH=re.compile(r"Camera:Pitch[^-\d]*(-?[0-9]+.[0-9]+(?:E-?[0-9]+)?)"),
     YAW=re.compile(r"Camera:Yaw[^-\d]*(-?[0-9]+.[0-9]+(?:E-?[0-9]+)?)"),
+    FOCAL_LEN=re.compile(r"Camera:PerspectiveFocalLength[^-\d]*(-?[0-9]+.[0-9]+)"),
 )
 
 DJI = SensorMake(
-    RELATIVE_ALT=re.compile(r'drone-dji:RelativeAltitude="(-?\+?[0-9]+.[0-9]+)"'),
-    ROLL=re.compile(r'drone-dji:GimbalRollDegree="(-?\+?[0-9]+.[0-9]+(?:E-?[0-9]+)?)"'),
-    PITCH=re.compile(
-        r'drone-dji:GimbalPitchDegree="(-?\+?[0-9]+.[0-9]+(?:E-?[0-9]+)?)"'
+    RELATIVE_ALT=re.compile(r"drone-dji:RelativeAltitude[^-\d]*(-?\+?[0-9]+.[0-9]+)"),
+    LRF_ALT=None,  # Only supported for Sentera sensors
+    ROLL=re.compile(
+        r"drone-dji:GimbalRollDegree[^-\d]*(-?\+?[0-9]+.[0-9]+(?:E-?[0-9]+)?)"
     ),
-    YAW=re.compile(r'drone-dji:GimbalYawDegree="(-?\+?[0-9]+.[0-9]+(?:E-?[0-9]+)?)"'),
+    PITCH=re.compile(
+        r"drone-dji:GimbalPitchDegree[^-\d]*(-?\+?[0-9]+.[0-9]+(?:E-?[0-9]+)?)"
+    ),
+    YAW=re.compile(
+        r"drone-dji:GimbalYawDegree[^-\d]*(-?\+?[0-9]+.[0-9]+(?:E-?[0-9]+)?)"
+    ),
+    FOCAL_LEN=re.compile(
+        r"drone-dji:CalibratedFocalLength[^-\d]*(-?\+?[0-9]+.[0-9]+(?:E-?[0-9]+)?)"
+    ),
 )
 
 

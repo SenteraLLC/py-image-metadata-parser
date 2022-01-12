@@ -190,16 +190,23 @@ def get_pixel_pitch(image_path=None, exif_data=None):
 
 
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
-def get_camera_params(image_path=None, exif_data=None):
+@get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
+def get_camera_params(
+    image_path=None, exif_data=None, xmp_data=None, use_calibrated_focal_length=False
+):
     """
     Get the focal length and pixel pitch (in meters) of the sensor that took the image.
 
     :param image_path: the full path to the image (optional if `exif_data` provided)
     :param exif_data: the exif dictionary for the image (optional to speed up processing)
+    :param xmp_data: the XMP data of image, as a string dump of the original XML (optional to speed up processing)
+    :param use_calibrated_focal_length: enable to use calibrated focal length if available
     :return: **focal_length, pixel_pitch** - the camera parameters in meters
     :raises: ParsingError
     """
-    focal_length = get_focal_length(image_path, exif_data)
+    focal_length = get_focal_length(
+        image_path, exif_data, xmp_data, use_calibrated_focal_length
+    )
     pixel_pitch = get_pixel_pitch(image_path, exif_data)
 
     return focal_length, pixel_pitch
@@ -207,7 +214,9 @@ def get_camera_params(image_path=None, exif_data=None):
 
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
 @get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
-def get_relative_altitude(image_path, exif_data=None, xmp_data=None, session_alt=False):
+def get_relative_altitude(
+    image_path, exif_data=None, xmp_data=None, alt_source="relative"
+):
     """
     Get the relative altitude of the sensor above the ground (in meters) when the image was taken.
 
@@ -223,7 +232,7 @@ def get_relative_altitude(image_path, exif_data=None, xmp_data=None, session_alt
     :param image_path: the full path to the image
     :param exif_data: the exif dictionary for the image (optional to speed up processing)
     :param xmp_data: the XMP data of image, as a string dump of the original XML (optional to speed up processing)
-    :param session_alt: enable to extract the session agl altitude instead of xmp agl altitude for Sentera imagery
+    :param alt_source: for Sentera imagery, set to "session" to extract session agl alt, or "rlf" to use laser range finder
     :return: **relative_alt** - the relative altitude of the camera above the ground
     :raises: ParsingError
     """
@@ -235,16 +244,24 @@ def get_relative_altitude(image_path, exif_data=None, xmp_data=None, session_alt
 
     make, model = get_make_and_model(image_path, exif_data)
     if make == "Sentera":
-        if not session_alt:
+        if alt_source == "session":
+            return _fallback_to_session(image_path)
+        elif alt_source == "rlf":
             try:
-                rel_alt = float(xmp.find(xmp_data, [xmp.Sentera.RELATIVE_ALT]))
+                return float(xmp.find(xmp_data, [xmp.Sentera.LRF_ALT]))
             except XMPTagNotFoundError:
                 logger.warning(
-                    "Relative altitude not found in XMP. Attempting to parse from session.txt file."
+                    "Altimeter calculated altitude not found in XMP. Defaulting to relative altitude."
                 )
-                rel_alt = _fallback_to_session(image_path)
-        else:
+
+        try:
+            rel_alt = float(xmp.find(xmp_data, [xmp.Sentera.RELATIVE_ALT]))
+        except XMPTagNotFoundError:
+            logger.warning(
+                "Relative altitude not found in XMP. Attempting to parse from session.txt file."
+            )
             rel_alt = _fallback_to_session(image_path)
+
     else:
         try:
             rel_alt = float(xmp.find(xmp_data, [xmp.DJI.RELATIVE_ALT]))
@@ -346,15 +363,33 @@ def get_roll_pitch_yaw(image_path=None, exif_data=None, xmp_data=None):
 
 
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
-def get_focal_length(image_path=None, exif_data=None):
+@get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
+def get_focal_length(
+    image_path=None, exif_data=None, xmp_data=None, use_calibrated=False
+):
     """
     Get the focal length (in meters) of the sensor that took the image.
 
     :param image_path: the full path to the image (optional if `exif_data` provided)
     :param exif_data: the exif dictionary for the image (optional to speed up processing)
+    :param xmp_data: the XMP data of image, as a string dump of the original XML (optional to speed up processing)
+    :param use_calibrated: enable to use calibrated focal length if available
     :return: **focal_length** - the focal length of the camera in meters
     :raises: ParsingError
     """
+    if use_calibrated:
+        make, model = get_make_and_model(image_path=image_path, exif_data=exif_data)
+        if make == "Sentera":
+            regex = xmp.Sentera.FOCAL_LEN
+        elif make == "DJI":
+            regex = xmp.DJI.FOCAL_LEN
+        try:
+            return float(xmp.find(xmp_data, [regex])) / 1000
+        except XMPTagNotFoundError:
+            logger.warning(
+                "Perspective focal length not found in XMP. Defaulting to uncalibrated focal length."
+            )
+
     try:
         return _convert_to_float(exif_data["EXIF FocalLength"]) / 1000
     except KeyError:
@@ -461,7 +496,15 @@ def parse_session_alt(image_path):
 
 
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
-def get_gsd(image_path, exif_data=None, xmp_data=None, corrected_alt=None):
+@get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
+def get_gsd(
+    image_path,
+    exif_data=None,
+    xmp_data=None,
+    corrected_alt=None,
+    use_calibrated_focal_length=False,
+    alt_source="relative",
+):
     """
     Get the gsd of the image (in meters/pixel).
 
@@ -473,16 +516,18 @@ def get_gsd(image_path, exif_data=None, xmp_data=None, corrected_alt=None):
     :param exif_data: the exif dictionary for the image (optional to speed up processing)
     :param xmp_data: the XMP data of image, as a string dump of the original XML (optional to speed up processing)
     :param corrected_alt: corrected relative altitude (optional)
+    :param use_calibrated_focal_length: enable to use calibrated focal length if available
+    :param alt_source: for Sentera imagery, set to "session" to extract session agl alt, or "rlf" to use laser range finder
     :return: **gsd** - the ground sample distance of the image in meters
     :raises: ParsingError
     """
-    focal, pitch = get_camera_params(image_path, exif_data)
+    focal, pitch = get_camera_params(
+        image_path, exif_data, xmp_data, use_calibrated_focal_length
+    )
     if corrected_alt:
         alt = corrected_alt
     else:
-        if not xmp_data:
-            xmp_data = get_xmp_data(image_path)
-        alt = get_relative_altitude(image_path, exif_data, xmp_data)
+        alt = get_relative_altitude(image_path, exif_data, xmp_data, alt_source)
 
     gsd = pitch * alt / focal
     if gsd <= 0:
