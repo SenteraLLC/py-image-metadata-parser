@@ -61,7 +61,7 @@ Sentera = SensorMake(
 
 DJI = SensorMake(
     RELATIVE_ALT=re.compile(r"drone-dji:RelativeAltitude[^-\d]*(-?\+?[0-9]+.[0-9]+)"),
-    LRF_ALT=re.compile(r"Only supported for Sentera sensors"),
+    LRF_ALT=None,  # Only supported for Sentera sensors
     ROLL=re.compile(
         r"drone-dji:GimbalRollDegree[^-\d]*(-?\+?[0-9]+.[0-9]+(?:E-?[0-9]+)?)"
     ),
