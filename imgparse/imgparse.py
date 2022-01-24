@@ -249,14 +249,14 @@ def get_relative_altitude(
             return _fallback_to_session(image_path)
         elif alt_source == "rlf":
             try:
-                return float(xmp_data[0][xmp.Sentera.LRF_ALT])
+                return float(xmp_data[xmp.Sentera.LRF_ALT])
             except KeyError:
                 logger.warning(
                     "Altimeter calculated altitude not found in XMP. Defaulting to relative altitude."
                 )
 
         try:
-            rel_alt = float(xmp_data[0][xmp.Sentera.RELATIVE_ALT])
+            rel_alt = float(xmp_data[xmp.Sentera.RELATIVE_ALT])
         except KeyError:
             logger.warning(
                 "Relative altitude not found in XMP. Attempting to parse from session.txt file."
@@ -341,9 +341,9 @@ def get_roll_pitch_yaw(image_path=None, exif_data=None, xmp_data=None):
 
     try:
         if make == "Sentera":
-            roll = float(xmp_data[0][xmp.Sentera.ROLL])
-            pitch = float(xmp_data[0][xmp.Sentera.PITCH])
-            yaw = float(xmp_data[0][xmp.Sentera.YAW])
+            roll = float(xmp_data[xmp.Sentera.ROLL])
+            pitch = float(xmp_data[xmp.Sentera.PITCH])
+            yaw = float(xmp_data[xmp.Sentera.YAW])
         elif make == "DJI" or make == "Hasselblad":
             roll = float(xmp_data[xmp.DJI.ROLL])
             pitch = float(xmp_data[xmp.DJI.PITCH])

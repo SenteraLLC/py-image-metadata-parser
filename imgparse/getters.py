@@ -29,9 +29,15 @@ def get_xmp_data(image_path):
 
     try:
         with open(image_path, encoding="latin_1") as file:
-            return xmltodict.parse(xmp.find_xmp_string(file))["x:xmpmeta"]["rdf:RDF"][
-                "rdf:Description"
-            ]
+            xmp_dict = xmltodict.parse(xmp.find_xmp_string(file))["x:xmpmeta"][
+                "rdf:RDF"
+            ]["rdf:Description"]
+            if isinstance(xmp_dict, list):
+                xmp_dict = xmp_dict[0]
+            if isinstance(xmp_dict, dict):
+                return xmp_dict
+            else:
+                raise ValueError("Couldn't parse xmp data")
 
     except FileNotFoundError:
         logger.error("Image file at path %s could not be found.", image_path)
