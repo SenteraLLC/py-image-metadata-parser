@@ -4,7 +4,7 @@ import io
 import logging
 import re
 from functools import reduce
-from typing import List, NamedTuple
+from typing import List
 
 logger = logging.getLogger(__name__)
 
@@ -16,13 +16,6 @@ FULL_XMP = re.compile(r"<x:xmpmeta.*</x:xmpmeta>", re.DOTALL)
 XMP_END = re.compile(r"</x:xmpmeta>")
 SEQ = re.compile(r"(?: *|\t)<rdf:li>(.*)</rdf:li>")
 
-# Sentera-exclusive patterns:
-ILS = re.compile(r"<Camera:SunSensor>.*</Camera:SunSensor>", re.DOTALL)
-CNTWV = re.compile(
-    r"<Camera:CentralWavelength>.*</Camera:CentralWavelength>", re.DOTALL
-)
-FWHM = re.compile(r"<Camera:WavelengthFWHM>.*</Camera:WavelengthFWHM>", re.DOTALL)
-BNDNM = re.compile(r"<Camera:BandName>.*</Camera:BandName>", re.DOTALL)
 ILS_CLEAR = re.compile(r'ILS:Clear="(.*)"')
 
 
@@ -32,48 +25,38 @@ class XMPTagNotFoundError(Exception):
     pass
 
 
-class SensorMake(NamedTuple):
-    """
-    Named tuple storing the regex patterns to match against for various XMP values of different sensors.
+class DotDict(dict):
+    """dot.notation access to dictionary attributes."""
 
-    For example, Sentera sensors preface most XMP data with the "Camera:" prefix, while DJI sensors use "drone-dji".
-    Instances of this named tuple for each of these makes are below.
-    """
-
-    RELATIVE_ALT: re.Pattern
-    LRF_ALT: re.Pattern
-    ROLL: re.Pattern
-    PITCH: re.Pattern
-    YAW: re.Pattern
-    FOCAL_LEN: re.Pattern
+    __getattr__ = dict.get
+    __setattr__ = dict.__setitem__
+    __delattr__ = dict.__delitem__
 
 
-Sentera = SensorMake(
-    RELATIVE_ALT=re.compile(r"Camera:AboveGroundAltitude[^-\d]*(-?[0-9]+.[0-9]+)"),
-    LRF_ALT=re.compile(
-        r"Sentera:AltimeterCalcul?atedAGL[^-\d]*(-?[0-9]+.[0-9]+)"
-    ),  # l was left out in Quad v1.0.0
-    ROLL=re.compile(r"Camera:Roll[^-\d]*(-?[0-9]+.[0-9]+(?:E-?[0-9]+)?)"),
-    PITCH=re.compile(r"Camera:Pitch[^-\d]*(-?[0-9]+.[0-9]+(?:E-?[0-9]+)?)"),
-    YAW=re.compile(r"Camera:Yaw[^-\d]*(-?[0-9]+.[0-9]+(?:E-?[0-9]+)?)"),
-    FOCAL_LEN=re.compile(r"Camera:PerspectiveFocalLength[^-\d]*(-?[0-9]+.[0-9]+)"),
+Sentera = DotDict(
+    {
+        "RELATIVE_ALT": "Camera:AboveGroundAltitude",
+        "LRF_ALT": "Sentera:AltimeterCalculatedAGL",
+        "ROLL": "Camera:Roll",
+        "PITCH": "Camera:Pitch",
+        "YAW": "Camera:Yaw",
+        "FOCAL_LEN": "Camera:PerspectiveFocalLength",
+        "CENTRAL_WAVELENGTH": "Camera:CentralWavelength",
+        "WAVELENGTH_FWHM": "Camera:WavelengthFWHM",
+        "BANDNAME": "Camera:BandName",
+        "ILS": "Camera:SunSensor",
+    }
 )
 
-DJI = SensorMake(
-    RELATIVE_ALT=re.compile(r"drone-dji:RelativeAltitude[^-\d]*(-?\+?[0-9]+.[0-9]+)"),
-    LRF_ALT=None,  # Only supported for Sentera sensors
-    ROLL=re.compile(
-        r"drone-dji:GimbalRollDegree[^-\d]*(-?\+?[0-9]+.[0-9]+(?:E-?[0-9]+)?)"
-    ),
-    PITCH=re.compile(
-        r"drone-dji:GimbalPitchDegree[^-\d]*(-?\+?[0-9]+.[0-9]+(?:E-?[0-9]+)?)"
-    ),
-    YAW=re.compile(
-        r"drone-dji:GimbalYawDegree[^-\d]*(-?\+?[0-9]+.[0-9]+(?:E-?[0-9]+)?)"
-    ),
-    FOCAL_LEN=re.compile(
-        r"drone-dji:CalibratedFocalLength[^-\d]*(-?\+?[0-9]+.[0-9]+(?:E-?[0-9]+)?)"
-    ),
+DJI = DotDict(
+    {
+        "RELATIVE_ALT": "@drone-dji:RelativeAltitude",
+        "ROLL": "@drone-dji:GimbalRollDegree",
+        "PITCH": "@drone-dji:GimbalPitchDegree",
+        "YAW": "@drone-dji:GimbalYawDegree",
+        "FOCAL_LEN": "@drone-dji:CalibratedFocalLength",
+        "SELF_DATA": "@drone-dji:SelfData",
+    }
 )
 
 

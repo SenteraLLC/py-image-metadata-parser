@@ -14,7 +14,7 @@ base_path = os.path.dirname(os.path.realpath(__file__))
 def bad_data():
     bad_path = os.path.join(base_path, "bad_data", "BAD_IMG.jpg")
     bad_dict = {"BadKey1": "BadValue1", "BadKey2": 0}
-    bad_xmp = "Bad XMP string"
+    bad_xmp = {"Bad Key1": "Bad Value1"}
     return [bad_path, bad_dict, bad_xmp]
 
 
@@ -163,7 +163,7 @@ def test_get_relative_altitude_invalid(bad_data, dji_image_data):
 
     with pytest.raises(ParsingError):
         imgparse.get_relative_altitude(
-            dji_image_data[0], exif_data=dji_image_data[1], xmp_data="Bad xmp"
+            dji_image_data[0], exif_data=dji_image_data[1], xmp_data=bad_data[2]
         )
 
 

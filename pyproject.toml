@@ -10,6 +10,7 @@ exifread = "*"
 click = "*"
 decorator = "*"
 timezonefinder = "*"
+xmltodict = "*"
 
 pandas = {version = "*", optional = true}
 
@@ -29,7 +30,7 @@ metadata_csv = ["pandas"]
 line_length = 88
 multi_line_output = 3
 include_trailing_comma = true
-known_third_party = ["click", "decorator", "exifread", "pandas", "pytest", "pytz", "timezonefinder"]
+known_third_party = ["click", "decorator", "exifread", "pandas", "pytest", "pytz", "timezonefinder", "xmltodict"]
 
 [build-system]
 requires = ["poetry-core"]

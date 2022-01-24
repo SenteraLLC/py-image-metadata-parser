@@ -4,6 +4,7 @@ import logging
 import os
 
 import exifread
+import xmltodict
 
 import imgparse.xmp as xmp
 from imgparse.decorators import memoize
@@ -28,7 +29,9 @@ def get_xmp_data(image_path):
 
     try:
         with open(image_path, encoding="latin_1") as file:
-            return xmp.find_xmp_string(file)
+            return xmltodict.parse(xmp.find_xmp_string(file))["x:xmpmeta"]["rdf:RDF"][
+                "rdf:Description"
+            ]
 
     except FileNotFoundError:
         logger.error("Image file at path %s could not be found.", image_path)

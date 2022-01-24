@@ -12,7 +12,6 @@ import imgparse.xmp as xmp
 from imgparse.decorators import get_if_needed
 from imgparse.getters import get_exif_data, get_xmp_data
 from imgparse.pixel_pitches import PIXEL_PITCHES
-from imgparse.xmp import XMPTagNotFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -88,16 +87,18 @@ def get_ils(image_path=None, xmp_data=None, use_clear_channel=False):
     :return: **ils** -- ILS value of image, as a floating point number
     :raises: ParsingError
     """
-    try:
-        if use_clear_channel:
-            ils = float(xmp.find(xmp_data, [xmp.ILS_CLEAR]))
-        else:
-            ils = float(xmp.find(xmp_data, [xmp.ILS, xmp.SEQ]))
-    except XMPTagNotFoundError:
-        logger.error("Couldn't parse ILS value")
-        raise ParsingError("Couldn't parse ILS value.")
-
-    return ils
+    # try:
+    #     # if use_clear_channel:
+    #     #     ils = float(xmp.find(xmp_data, [xmp.ILS_CLEAR]))
+    #     # else:
+    #     #     ils = float(xmp.find(xmp_data, [xmp.ILS, xmp.SEQ]))
+    # except KeyError:
+    #     logger.error("Couldn't parse ILS value")
+    #     raise ParsingError("Couldn't parse ILS value.")
+    #
+    # return ils
+    # TODO: Support ILS
+    raise ParsingError("ILS not supported")
 
 
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
@@ -248,15 +249,15 @@ def get_relative_altitude(
             return _fallback_to_session(image_path)
         elif alt_source == "rlf":
             try:
-                return float(xmp.find(xmp_data, [xmp.Sentera.LRF_ALT]))
-            except XMPTagNotFoundError:
+                return float(xmp_data[0][xmp.Sentera.LRF_ALT])
+            except KeyError:
                 logger.warning(
                     "Altimeter calculated altitude not found in XMP. Defaulting to relative altitude."
                 )
 
         try:
-            rel_alt = float(xmp.find(xmp_data, [xmp.Sentera.RELATIVE_ALT]))
-        except XMPTagNotFoundError:
+            rel_alt = float(xmp_data[0][xmp.Sentera.RELATIVE_ALT])
+        except KeyError:
             logger.warning(
                 "Relative altitude not found in XMP. Attempting to parse from session.txt file."
             )
@@ -264,8 +265,8 @@ def get_relative_altitude(
 
     else:
         try:
-            rel_alt = float(xmp.find(xmp_data, [xmp.DJI.RELATIVE_ALT]))
-        except XMPTagNotFoundError:
+            rel_alt = float(xmp_data[xmp.DJI.RELATIVE_ALT])
+        except KeyError:
             raise ParsingError(
                 "Couldn't parse relative altitude from xmp data.  Camera type may not be supported."
             )
@@ -340,18 +341,18 @@ def get_roll_pitch_yaw(image_path=None, exif_data=None, xmp_data=None):
 
     try:
         if make == "Sentera":
-            roll = float(xmp.find(xmp_data, [xmp.Sentera.ROLL]))
-            pitch = float(xmp.find(xmp_data, [xmp.Sentera.PITCH]))
-            yaw = float(xmp.find(xmp_data, [xmp.Sentera.YAW]))
+            roll = float(xmp_data[0][xmp.Sentera.ROLL])
+            pitch = float(xmp_data[0][xmp.Sentera.PITCH])
+            yaw = float(xmp_data[0][xmp.Sentera.YAW])
         elif make == "DJI" or make == "Hasselblad":
-            roll = float(xmp.find(xmp_data, [xmp.DJI.ROLL]))
-            pitch = float(xmp.find(xmp_data, [xmp.DJI.PITCH]))
+            roll = float(xmp_data[xmp.DJI.ROLL])
+            pitch = float(xmp_data[xmp.DJI.PITCH])
             # Bring pitch into aircraft pov
             pitch += 90
-            yaw = float(xmp.find(xmp_data, [xmp.DJI.YAW]))
+            yaw = float(xmp_data[xmp.DJI.YAW])
         else:
-            raise XMPTagNotFoundError()
-    except XMPTagNotFoundError:
+            raise KeyError()
+    except KeyError:
         logger.error(
             "Couldn't extract roll/pitch/yaw.  Only Sentera and DJI sensors are supported right now"
         )
@@ -379,13 +380,12 @@ def get_focal_length(
     """
     if use_calibrated:
         make, model = get_make_and_model(image_path=image_path, exif_data=exif_data)
-        if make == "Sentera":
-            regex = xmp.Sentera.FOCAL_LEN
-        elif make == "DJI":
-            regex = xmp.DJI.FOCAL_LEN
         try:
-            return float(xmp.find(xmp_data, [regex])) / 1000
-        except XMPTagNotFoundError:
+            if make == "Sentera":
+                return float(xmp_data[xmp.Sentera.FOCAL_LEN]) / 1000
+            elif make == "DJI":
+                return float(xmp_data[xmp.DJI.FOCAL_LEN]) / 1000
+        except KeyError:
             logger.warning(
                 "Perspective focal length not found in XMP. Defaulting to uncalibrated focal length."
             )
@@ -547,14 +547,16 @@ def get_wavelength_data(image_path=None, xmp_data=None):
     :return: wavelength_fwhm -- wavelength fwhm of each band, as a list of ints
     :raises: ParsingError
     """
-    try:
-        central_wavelength = xmp.find_multiple(xmp_data, [xmp.CNTWV, xmp.SEQ])
-        wavelength_fwhm = xmp.find_multiple(xmp_data, [xmp.FWHM, xmp.SEQ])
-    except XMPTagNotFoundError:
-        logger.error("Couldn't parse wavelength data")
-        raise ParsingError("Couldn't parse wavelength data.")
-
-    return central_wavelength, wavelength_fwhm
+    # try:
+    #     central_wavelength = xmp.find_multiple(xmp_data, [xmp.CNTWV, xmp.SEQ])
+    #     wavelength_fwhm = xmp.find_multiple(xmp_data, [xmp.FWHM, xmp.SEQ])
+    # except XMPTagNotFoundError:
+    #     logger.error("Couldn't parse wavelength data")
+    #     raise ParsingError("Couldn't parse wavelength data.")
+    #
+    # return central_wavelength, wavelength_fwhm
+    # TODO: Wavelength not supported
+    raise ParsingError("Wavelength not supported")
 
 
 @get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
@@ -567,10 +569,12 @@ def get_bandnames(image_path=None, xmp_data=None):
     :return: **band_names** -- name of each band of image, as a list of strings
     :raises: ParsingError
     """
-    try:
-        band_names = xmp.find_multiple(xmp_data, [xmp.BNDNM, xmp.SEQ])
-    except XMPTagNotFoundError:
-        logger.error("Couldn't parse bandnames")
-        raise ParsingError("Couldn't parse bandnames.")
-
-    return band_names
+    # try:
+    #     band_names = xmp.find_multiple(xmp_data, [xmp.BNDNM, xmp.SEQ])
+    # except XMPTagNotFoundError:
+    #     logger.error("Couldn't parse bandnames")
+    #     raise ParsingError("Couldn't parse bandnames.")
+    #
+    # return band_names
+    # TODO: Bandnames not supported
+    raise ParsingError("Bandnames not supported")
