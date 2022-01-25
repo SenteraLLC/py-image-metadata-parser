@@ -43,6 +43,14 @@ def _convert_to_float(tag, index=0):
     return float(tag.values[index].num) / float(tag.values[index].den)
 
 
+def _parse_seq(tag, type_cast_func=None):
+    """Parse an xml sequence."""
+    seq = tag["rdf:Seq"]["rdf:li"]
+    if isinstance(seq, list) and type_cast_func is not None:
+        seq = [type_cast_func(item) for item in seq]
+    return seq
+
+
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
 def get_firmware_version(image_path, exif_data=None):
     """
@@ -51,8 +59,8 @@ def get_firmware_version(image_path, exif_data=None):
     Expects camera firmware version to be in semver format (i.e. MAJOR.MINOR.PATCH), with an optional 'v'
     at the beginning.
 
-    :param image_path:
-    :param exif_data:
+    :param image_path: the full path to the image
+    :param exif_data: used internally for memoization. Not necessary to supply.
     :return: **major**, **minor**, **patch** - sensor software version
     :raises: ParsingError
     """
@@ -78,8 +86,8 @@ def get_autoexposure(image_path, exif_data=None):
     Autoexposure is derived from the integration time and gain of the sensor, which are stored in
     separate tags. This function retrieves those values and performs the calculation.
 
-    :param image_path: the full path to the image (optional if `exif_data` provided)
-    :param exif_data: the exif dictionary for the image (optional to speed up processing)
+    :param image_path: the full path to the image
+    :param exif_data: used internally for memoization. Not necessary to supply.
     :return: **autoexposure** - image autoexposure value
     :raises: ParsingError
     """
@@ -101,8 +109,8 @@ def get_timestamp(image_path, exif_data=None, format_string="%Y:%m:%d %H:%M:%S")
     If originating from a Sentera or DJI sensor, the format of the tag will likely be that of the default input.
     However, other sensors may store timestamps in other formats.
 
-    :param image_path: the full path to the image (optional if `exif_data` provided)
-    :param exif_data: the exif dictionary for the image (optional to speed up processing)
+    :param image_path: the full path to the image
+    :param exif_data: used internally for memoization. Not necessary to supply.
     :param format_string: Format code, as a string, to be used to parse the image timestamp.
     :return: **datetime_obj**: Parsed timestamp, in the format specified by the input format string.
     :raises: ParsingError
@@ -137,8 +145,8 @@ def get_pixel_pitch(image_path, exif_data=None):
     Non-Sentera cameras don't store the pixel pitch in the exif tags, so that is found in a lookup table.  See
     `pixel_pitches.py` to check which non-Sentera sensor models are supported and to add support for new sensors.
 
-    :param image_path: the full path to the image (optional if `exif_data` provided)
-    :param exif_data: the exif dictionary for the image (optional to speed up processing)
+    :param image_path: the full path to the image
+    :param exif_data: used internally for memoization. Not necessary to supply.
     :return: **pixel_pitch** - the pixel pitch of the camera in meters
     :raises: ParsingError
     """
@@ -164,8 +172,8 @@ def get_camera_params(
     Get the focal length and pixel pitch (in meters) of the sensor that took the image.
 
     :param image_path: the full path to the image (optional if `exif_data` provided)
-    :param exif_data: the exif dictionary for the image (optional to speed up processing)
-    :param xmp_data: the XMP data of image, as a string dump of the original XML (optional to speed up processing)
+    :param exif_data: used internally for memoization. Not necessary to supply.
+    :param xmp_data: used internally for memoization. Not necessary to supply.
     :param use_calibrated_focal_length: enable to use calibrated focal length if available
     :return: **focal_length, pixel_pitch** - the camera parameters in meters
     :raises: ParsingError
@@ -224,8 +232,8 @@ def get_relative_altitude(
     file associated with the image instead.
 
     :param image_path: the full path to the image
-    :param exif_data: the exif dictionary for the image (optional to speed up processing)
-    :param xmp_data: the XMP data of image, as a string dump of the original XML (optional to speed up processing)
+    :param exif_data: used internally for memoization. Not necessary to supply.
+    :param xmp_data: used internally for memoization. Not necessary to supply.
     :param alt_source: for Sentera imagery, set to "session" to extract session agl alt, or "rlf" to use laser range finder
     :return: **relative_alt** - the relative altitude of the camera above the ground
     :raises: ParsingError
@@ -267,8 +275,8 @@ def get_lat_lon(image_path, exif_data=None):
     """
     Get the latitude and longitude of the sensor when the image was taken.
 
-    :param image_path: the full path to the image (optional if `exif_data` provided)
-    :param exif_data: the exif dictionary for the image (optional to speed up processing)
+    :param image_path: the full path to the image
+    :param exif_data: used internally for memoization. Not necessary to supply.
     :return: **latitude, longitude** - the location of where the image was taken
     :raises: ParsingError
     """
@@ -297,8 +305,8 @@ def get_altitude_msl(image_path, exif_data=None):
     """
     Get the absolute altitude (meters above msl) of the sensor when the image was taken.
 
-    :param image_path: the full path to the image (optional if `exif_data` provided)
-    :param exif_data: the exif dictionary for the image (optional to speed up processing)
+    :param image_path: the full path to the image
+    :param exif_data: used internally for memoization. Not necessary to supply.
     :return: **altitude_msl** - the absolute altitude of the image in meters.
     :raises: ParsingError
     """
@@ -315,13 +323,9 @@ def get_roll_pitch_yaw(image_path, exif_data=None, xmp_data=None):
     """
     Get the orientation of the sensor (roll, pitch, yaw in degrees) when the image was taken.
 
-    .. note::
-
-        Only Sentera and DJI sensors are supported for this function right now.
-
-    :param image_path: the full path to the image (optional if `exif_data` provided)
-    :param exif_data: the exif dictionary for the image (optional to speed up processing)
-    :param xmp_data: the XMP data of image, as a string dump of the original XML (optional to speed up processing)
+    :param image_path: the full path to the image
+    :param exif_data: used internally for memoization. Not necessary to supply.
+    :param xmp_data: used internally for memoization. Not necessary to supply.
     :return: **roll, pitch, yaw** - the orientation (degrees) of the camera with respect to the NED frame
     :raises: ParsingError
     """
@@ -348,16 +352,16 @@ def get_focal_length(image_path, exif_data=None, xmp_data=None, use_calibrated=F
     """
     Get the focal length (in meters) of the sensor that took the image.
 
-    :param image_path: the full path to the image (optional if `exif_data` provided)
-    :param exif_data: the exif dictionary for the image (optional to speed up processing)
-    :param xmp_data: the XMP data of image, as a string dump of the original XML (optional to speed up processing)
+    :param image_path: the full path to the image
+    :param exif_data: used internally for memoization. Not necessary to supply.
+    :param xmp_data: used internally for memoization. Not necessary to supply.
     :param use_calibrated: enable to use calibrated focal length if available
     :return: **focal_length** - the focal length of the camera in meters
     :raises: ParsingError
     """
     if use_calibrated:
         try:
-            make, model = get_make_and_model(image_path=image_path, exif_data=exif_data)
+            make, model = get_make_and_model(image_path, exif_data=exif_data)
             xmp_tags = xmp.get_tags(make)
             return float(xmp_data[xmp_tags.FOCAL_LEN]) / 1000
         except KeyError:
@@ -377,8 +381,8 @@ def get_make_and_model(image_path, exif_data=None):
     """
     Get the make and model of the sensor that took the image.
 
-    :param image_path: the full path to the image (optional if `exif_data` provided)
-    :param exif_data: the exif dictionary for the image (optional to speed up processing)
+    :param image_path: the full path to the image
+    :param exif_data: used internally for memoization. Not necessary to supply.
     :return: **make**, **model** - the make and model of the camera
     :raises: ParsingError
     """
@@ -395,7 +399,7 @@ def get_dimensions(image_path, exif_data=None):
     Get the height and width (in pixels) of the image.
 
     :param image_path: the full path to the image
-    :param exif_data: the exif dictionary for the image (optional to speed up processing)
+    :param exif_data: used internally for memoization. Not necessary to supply.
     :return: **height**, **width** - the height and width of the image
     :raises: ParsingError
     """
@@ -437,7 +441,7 @@ def get_gsd(
     :param xmp_data: the XMP data of image, as a string dump of the original XML (optional to speed up processing)
     :param corrected_alt: corrected relative altitude (optional)
     :param use_calibrated_focal_length: enable to use calibrated focal length if available
-    :param alt_source: for Sentera imagery, set to "session" to extract session agl alt, or "rlf" to use laser range finder
+    :param alt_source: Set to "lrf" to use laser range finder
     :return: **gsd** - the ground sample distance of the image in meters
     :raises: ParsingError
     """
@@ -456,29 +460,29 @@ def get_gsd(
     return gsd
 
 
-# @get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
-# def get_wavelength_data(image_path=None, xmp_data=None):
-#     """
-#     Get the central and FWHM wavelength values of an image.
-#
-#     :param image_path: the full path to the image (optional if `xmp_data` provided)
-#     :param xmp_data: the XMP data of image, as a string dump of the original XML (optional to speed up processing)
-#     :return: central_wavelength -- central wavelength of each band, as a list of ints
-#     :return: wavelength_fwhm -- wavelength fwhm of each band, as a list of ints
-#     :raises: ParsingError
-#     """
-#     # try:
-#     #     central_wavelength = xmp.find_multiple(xmp_data, [xmp.CNTWV, xmp.SEQ])
-#     #     wavelength_fwhm = xmp.find_multiple(xmp_data, [xmp.FWHM, xmp.SEQ])
-#     # except XMPTagNotFoundError:
-#     #     logger.error("Couldn't parse wavelength data")
-#     #     raise ParsingError("Couldn't parse wavelength data.")
-#     #
-#     # return central_wavelength, wavelength_fwhm
-#     # TODO: Wavelength not supported
-#     raise ParsingError("Wavelength not supported")
-#
-#
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
+def get_wavelength_data(image_path=None, xmp_data=None):
+    """
+    Get the central and FWHM wavelength values of an image.
+
+    :param image_path: the full path to the image
+    :param xmp_data: used internally for memoization. Not necessary to supply.
+    :return: **central_wavelength** - central wavelength of each band, as a list of ints
+    :return: **wavelength_fwhm** - wavelength fwhm of each band, as a list of ints
+    :raises: ParsingError
+    """
+    # TODO: Test
+    try:
+        make, model = get_make_and_model(image_path)
+        xmp_tags = xmp.get_tags(make)
+        central_wavelength = _parse_seq(xmp_data[xmp_tags.WAVELENGTH_CENTRAL], int)
+        wavelength_fwhm = _parse_seq(xmp_data[xmp_tags.WAVELENGTH_FWHM], int)
+        return central_wavelength, wavelength_fwhm
+    except KeyError:
+        logger.error("Couldn't parse wavelength data")
+        raise ParsingError("Couldn't parse wavelength data")
+
+
 # @get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
 # def get_bandnames(image_path=None, xmp_data=None):
 #     """
@@ -500,28 +504,22 @@ def get_gsd(
 #     raise ParsingError("Bandnames not supported")
 #
 #
-#
-#
-# @get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
-# def get_ils(image_path=None, xmp_data=None, use_clear_channel=False):
-#     """
-#     Get the ILS value of an image captured by a sensor with an ILS module.
-#
-#     :param image_path: the full path to the image (optional if `xmp_data` provided)
-#     :param xmp_data: the XMP data of image, as a string dump of the original XML (optional to speed up processing)
-#     :param use_clear_channel: if true, refer to the ILS clear channel value instead of the default
-#     :return: **ils** -- ILS value of image, as a floating point number
-#     :raises: ParsingError
-#     """
-#     # try:
-#     #     # if use_clear_channel:
-#     #     #     ils = float(xmp.find(xmp_data, [xmp.ILS_CLEAR]))
-#     #     # else:
-#     #     #     ils = float(xmp.find(xmp_data, [xmp.ILS, xmp.SEQ]))
-#     # except KeyError:
-#     #     logger.error("Couldn't parse ILS value")
-#     #     raise ParsingError("Couldn't parse ILS value.")
-#     #
-#     # return ils
-#     # TODO: Support ILS
-#     raise ParsingError("ILS not supported")
+@get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
+def get_ils(image_path=None, xmp_data=None, use_clear_channel=False):
+    """
+    Get the ILS value of an image captured by a sensor with an ILS module.
+
+    :param image_path: the full path to the image (optional if `xmp_data` provided)
+    :param xmp_data: the XMP data of image, as a string dump of the original XML (optional to speed up processing)
+    :param use_clear_channel: if true, refer to the ILS clear channel value instead of the default
+    :return: **ils** -- ILS value of image, as a floating point number
+    :raises: ParsingError
+    """
+    # TODO: Support clear channel
+    try:
+        make, model = get_make_and_model(image_path)
+        xmp_tags = xmp.get_tags(make)
+        return float(_parse_seq(xmp_data[xmp_tags.ILS]))
+    except KeyError:
+        logger.error("Couldn't parse ILS value")
+        raise ParsingError("Couldn't parse ILS value")

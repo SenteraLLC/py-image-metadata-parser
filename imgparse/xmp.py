@@ -16,6 +16,9 @@ class SensorTags:
     FOCAL_LEN = None
     LRF_ALT = None
     LRF_ALT2 = None
+    ILS = None
+    WAVELENGTH_CENTRAL = "Camera:CentralWavelength"
+    WAVELENGTH_FWHM = "Camera:WavelengthFWHM"
 
 
 class SenteraTags(SensorTags):
@@ -29,8 +32,8 @@ class SenteraTags(SensorTags):
     ILS = "Camera:SunSensor"
     LRF_ALT = "Sentera:AltimeterCalculatedAGL"
     LRF_ALT2 = "Sentera:AltimeterCalcuatedAGL"  # l was left out in Quad v1.0.0
-    # WAVELENGTH_CENTRAL = "Camera:CentralWavelength"
-    # WAVELENGTH_FWHM = "Camera:WavelengthFWHM"
+    WAVELENGTH_CENTRAL = "Camera:CentralWavelength"
+    WAVELENGTH_FWHM = "Camera:WavelengthFWHM"
     # BANDNAME = "Camera:BandName"
 
 

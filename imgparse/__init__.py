@@ -17,6 +17,7 @@ from imgparse.imgparse import (  # get_bandnames,; get_wavelength_data,; get_ils
     get_firmware_version,
     get_focal_length,
     get_gsd,
+    get_ils,
     get_lat_lon,
     get_make_and_model,
     get_pixel_pitch,
@@ -49,5 +50,5 @@ __all__ = [
     "ParsingError",
     # "get_wavelength_data",
     # "get_bandnames",
-    # "get_ils",
+    "get_ils",
 ]

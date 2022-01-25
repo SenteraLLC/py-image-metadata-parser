@@ -256,25 +256,17 @@ def test_get_timestamp_dji(dji_image_data):
     assert abs(timestamp - correct_timestamp) < timedelta(seconds=1)
 
 
-# def test_get_ils_6x(sentera_6x_image_data):
-#     ils1 = imgparse.get_ils(sentera_6x_image_data[0])
-#     ils2 = imgparse.get_ils(xmp_data=sentera_6x_image_data[2])
-#     ils3 = imgparse.get_ils(sentera_6x_image_data[0], xmp_data=sentera_6x_image_data[2])
-#
-#     assert ils1 == 10532.165
-#     assert ils2 == 10532.165
-#     assert ils3 == 10532.165
-#
-#
-# def test_get_ils_non6x(dji_image_data):
-#     with pytest.raises(ParsingError):
-#         imgparse.get_ils(dji_image_data[0])
-#
-#     with pytest.raises(ParsingError):
-#         imgparse.get_ils(xmp_data=dji_image_data[2])
-#
-#     with pytest.raises(ParsingError):
-#         imgparse.get_ils(dji_image_data[0], xmp_data=dji_image_data[2])
+def test_get_ils_6x(sentera_6x_image_data):
+    ils = imgparse.get_ils(sentera_6x_image_data[0])
+    assert ils == 10532.165
+
+
+def test_get_ils_non6x(dji_image_data):
+    with pytest.raises(ParsingError):
+        imgparse.get_ils(dji_image_data[0])
+
+    with pytest.raises(ParsingError):
+        imgparse.get_ils(dji_image_data[0], xmp_data=dji_image_data[2])
 
 
 def test_get_version_dji(dji_image_data):
