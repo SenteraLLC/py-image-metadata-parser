@@ -37,7 +37,7 @@ def dji_image_data():
 
 @pytest.fixture
 def dji_homepoint_image_data():
-    dji_image_path = os.path.join(base_path, "data", "DJI_home_point.JPG")
+    dji_image_path = os.path.join(base_path, "data", "DJI_home_point.jpg")
     dji_exif_data = imgparse.get_exif_data(dji_image_path)
     dji_xmp_data = imgparse.get_xmp_data(dji_image_path)
     return [dji_image_path, dji_exif_data, dji_xmp_data]
