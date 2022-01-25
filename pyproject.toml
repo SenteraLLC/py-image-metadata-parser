@@ -16,6 +16,7 @@ pandas = {version = "*", optional = true}
 
 [tool.poetry.dev-dependencies]
 pytest = "*"
+pytest-coverage= "*"
 sphinx_rtd_theme = "*"
 sphinx = "*"
 pre_commit = "*"

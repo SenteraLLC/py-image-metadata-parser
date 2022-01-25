@@ -70,7 +70,12 @@ def test_get_camera_params_dji(dji_image_data):
 
 def test_get_camera_params_sentera(sentera_image_data):
     focal, pitch = imgparse.get_camera_params(sentera_image_data[0])
+    focal2, pitch2 = imgparse.get_camera_params(
+        sentera_image_data[0], use_calibrated_focal_length=True
+    )
+
     assert [focal, pitch] == pytest.approx([0.025, 1.55e-06], abs=1e-06)
+    assert [focal2, pitch2] == pytest.approx([0.025, 1.55e-06], abs=1e-06)
 
 
 def test_get_make_and_model_invalid(bad_data):
@@ -132,8 +137,10 @@ def test_get_relative_altitude_sentera(sentera_image_data):
 
 
 def test_get_relative_altitude_dji(dji_image_data):
-    alt = imgparse.get_relative_altitude(dji_image_data[0])
-    assert alt == 15.2
+    alt1 = imgparse.get_relative_altitude(dji_image_data[0])
+    alt2 = imgparse.get_relative_altitude(dji_image_data[0], alt_source="lrf")
+    assert alt1 == 15.2
+    assert alt2 == 15.2
 
 
 def test_get_altitude_msl_invalid(bad_data):
@@ -211,6 +218,9 @@ def test_get_roll_pitch_yaw_dji(dji_image_data):
 def test_get_dimensions_invalid(bad_data):
     with pytest.raises(ParsingError):
         imgparse.get_dimensions(bad_data[0], exif_data=bad_data[1])
+
+    with pytest.raises(ParsingError):
+        imgparse.get_dimensions("/bad/path.png", exif_data=bad_data[1])
 
 
 def test_get_dimensions_sentera(sentera_image_data):

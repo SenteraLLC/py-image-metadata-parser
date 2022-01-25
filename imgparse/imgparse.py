@@ -417,7 +417,9 @@ def get_dimensions(image_path, exif_data=None):
                 exif_data["Image ImageWidth"].values[0],
             )
         else:
-            raise ParsingError(f"Image format {ext} isn't supported for height/width")
+            raise ParsingError(
+                f"Image format {ext} isn't supported for parsing height/width"
+            )
     except KeyError:
         logger.error("Couldn't parse the height and width of the image")
         raise ParsingError("Couldn't parse the height and width of the image")
@@ -462,52 +464,6 @@ def get_gsd(
 
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
 @get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
-def get_wavelength_data(image_path, exif_data=None, xmp_data=None):
-    """
-    Get the central and FWHM wavelength values of an image.
-
-    :param image_path: the full path to the image
-    :param exif_data: used internally for memoization. Not necessary to supply.
-    :param xmp_data: used internally for memoization. Not necessary to supply.
-    :return: **central_wavelength** - central wavelength of each band, as a list of ints
-    :return: **wavelength_fwhm** - wavelength fwhm of each band, as a list of ints
-    :raises: ParsingError
-    """
-    # TODO: Test
-    try:
-        make, model = get_make_and_model(image_path, exif_data)
-        xmp_tags = xmp.get_tags(make)
-        central_wavelength = _parse_seq(xmp_data[xmp_tags.WAVELENGTH_CENTRAL], int)
-        wavelength_fwhm = _parse_seq(xmp_data[xmp_tags.WAVELENGTH_FWHM], int)
-        return central_wavelength, wavelength_fwhm
-    except KeyError:
-        logger.error("Couldn't parse wavelength data")
-        raise ParsingError("Couldn't parse wavelength data")
-
-
-# @get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
-# def get_bandnames(image_path=None, xmp_data=None):
-#     """
-#     Get the name of each band of an image.
-#
-#     :param image_path: the full path to the image (optional if `xmp_data` provided)
-#     :param xmp_data: the XMP data of image, as a string dump of the original XML (optional to speed up processing)
-#     :return: **band_names** -- name of each band of image, as a list of strings
-#     :raises: ParsingError
-#     """
-#     # try:
-#     #     band_names = xmp.find_multiple(xmp_data, [xmp.BNDNM, xmp.SEQ])
-#     # except XMPTagNotFoundError:
-#     #     logger.error("Couldn't parse bandnames")
-#     #     raise ParsingError("Couldn't parse bandnames.")
-#     #
-#     # return band_names
-#     # TODO: Bandnames not supported
-#     raise ParsingError("Bandnames not supported")
-
-
-@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
-@get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
 def get_ils(image_path, exif_data=None, xmp_data=None, use_clear_channel=False):
     """
     Get the ILS value of an image captured by a sensor with an ILS module.
@@ -527,3 +483,50 @@ def get_ils(image_path, exif_data=None, xmp_data=None, use_clear_channel=False):
     except KeyError:
         logger.error("Couldn't parse ILS value")
         raise ParsingError("Couldn't parse ILS value")
+
+
+# @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
+# @get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
+# def get_wavelength_data(image_path, exif_data=None, xmp_data=None):
+#     """
+#     Get the central and FWHM wavelength values of an image.
+#
+#     :param image_path: the full path to the image
+#     :param exif_data: used internally for memoization. Not necessary to supply.
+#     :param xmp_data: used internally for memoization. Not necessary to supply.
+#     :return: **central_wavelength** - central wavelength of each band, as a list of ints
+#     :return: **wavelength_fwhm** - wavelength fwhm of each band, as a list of ints
+#     :raises: ParsingError
+#     """
+#     # TODO: Test
+#     try:
+#         make, model = get_make_and_model(image_path, exif_data)
+#         xmp_tags = xmp.get_tags(make)
+#         central_wavelength = _parse_seq(xmp_data[xmp_tags.WAVELENGTH_CENTRAL], int)
+#         wavelength_fwhm = _parse_seq(xmp_data[xmp_tags.WAVELENGTH_FWHM], int)
+#         return central_wavelength, wavelength_fwhm
+#     except KeyError:
+#         logger.error("Couldn't parse wavelength data")
+#         raise ParsingError("Couldn't parse wavelength data")
+
+
+# @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
+# @get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
+# def get_bandnames(image_path=None, exif_data=None, xmp_data=None):
+#     """
+#     Get the name of each band of an image.
+#
+#     :param image_path: the full path to the image
+#     :param exif_data: used internally for memoization. Not necessary to supply.
+#     :param xmp_data: used internally for memoization. Not necessary to supply.
+#     :return: **band_names** -- name of each band of image, as a list of strings
+#     :raises: ParsingError
+#     """
+#     # TODO: Test
+#     try:
+#         make, model = get_make_and_model(image_path, exif_data)
+#         xmp_tags = xmp.get_tags(make)
+#         return _parse_seq(xmp_data[xmp_tags.BANDNAME])
+#     except KeyError:
+#         logger.error("Couldn't parse bandnames")
+#         raise ParsingError("Couldn't parse bandnames")
