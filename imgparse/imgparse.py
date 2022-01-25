@@ -256,6 +256,7 @@ def get_relative_altitude(
             try:
                 return float(xmp_data[xmp_tags.LRF_ALT])
             except KeyError:
+                # Specific logic to handle quad v1.0.0 incorrect tag
                 return float(xmp_data[xmp_tags.LRF_ALT2])
         except KeyError:
             logger.warning(
@@ -485,14 +486,13 @@ def get_gsd(
 
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
 @get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
-def get_ils(image_path, exif_data=None, xmp_data=None, use_clear_channel=False):
+def get_ils(image_path, exif_data=None, xmp_data=None):
     """
     Get the ILS value of an image captured by a sensor with an ILS module.
 
     :param image_path: the full path to the image
     :param exif_data: used internally for memoization. Not necessary to supply.
     :param xmp_data: used internally for memoization. Not necessary to supply.
-    :param use_clear_channel: if true, refer to the ILS clear channel value instead of the default
     :return: **ils** -- ILS value of image, as a floating point number
     :raises: ParsingError
     """

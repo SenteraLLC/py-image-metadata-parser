@@ -15,7 +15,7 @@ class SensorTags:
     YAW = None
     FOCAL_LEN = None
     LRF_ALT = None
-    LRF_ALT2 = None
+    LRF_ALT2 = None  # See SenteraTags below
     ILS = None
     WAVELENGTH_CENTRAL = None
     WAVELENGTH_FWHM = None
@@ -52,7 +52,7 @@ def get_tags(make):
     """Return the XMP tags based on sensor make."""
     if make == "Sentera":
         return SenteraTags
-    elif make == "DJI":
+    elif make == "DJI" or make == "Hasselblad":
         return DJITags
     else:
         return SensorTags
