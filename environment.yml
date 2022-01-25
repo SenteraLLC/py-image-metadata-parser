@@ -14,3 +14,4 @@ dependencies:
   - click
   - decorator
   - timezonefinder
+  - xmltodict
