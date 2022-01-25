@@ -28,25 +28,26 @@ def get_xmp_data(image_path):
     :return: **xmp_data** - XMP data of image, as a string dump of the original XML
     :raises: ParsingError, FileNotFoundError
     """
+    with open(image_path, encoding="latin_1") as file:
+        xmp_dict = xmltodict.parse(_find_xmp_string(file))
+
     try:
-        with open(image_path, encoding="latin_1") as file:
-            xmp_dict = xmltodict.parse(_find_xmp_string(file))["x:xmpmeta"]["rdf:RDF"][
-                "rdf:Description"
-            ]
-            # If there are too many xmp tags, returned as list
-            if isinstance(xmp_dict, list):
-                temp_dict = {}
-                for d in xmp_dict:
-                    temp_dict.update(d)
-                xmp_dict = temp_dict
-            # Remove '@' signs, which appear to be non-consistent
-            for k in list(xmp_dict):
-                if k[0] == "@":
-                    xmp_dict[k[1:]] = xmp_dict.pop(k)
-            return xmp_dict
+        xmp_dict = xmp_dict["x:xmpmeta"]["rdf:RDF"]["rdf:Description"]
     except KeyError:
         logger.error("Couldn't parse xmp data for image: %s", image_path)
         raise ParsingError("Couldn't parse xmp data for image")
+
+    # If there are too many xmp tags, returned as list
+    if isinstance(xmp_dict, list):
+        temp_dict = {}
+        for d in xmp_dict:
+            temp_dict.update(d)
+        xmp_dict = temp_dict
+    # Remove '@' signs, which appear to be non-consistent
+    for k in list(xmp_dict):
+        if k[0] == "@":
+            xmp_dict[k[1:]] = xmp_dict.pop(k)
+    return xmp_dict
 
 
 @memoize
