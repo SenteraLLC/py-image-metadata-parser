@@ -210,7 +210,6 @@ def test_get_roll_pitch_yaw_sentera(sentera_image_data):
 
 
 def test_get_roll_pitch_yaw_dji(dji_image_data):
-    print(imgparse.get_make_and_model(dji_image_data[0]))
     roll, pitch, yaw = imgparse.get_roll_pitch_yaw(dji_image_data[0])
     assert [roll, pitch, yaw] == pytest.approx([0, 0.1, 90.2], abs=1e-06)
 
