@@ -496,8 +496,6 @@ def get_ils(image_path, exif_data=None, xmp_data=None, use_clear_channel=False):
     :return: **ils** -- ILS value of image, as a floating point number
     :raises: ParsingError
     """
-    # TODO: Support clear channel
-    print(xmp_data)
     try:
         make, model = get_make_and_model(image_path, exif_data)
         xmp_tags = xmp.get_tags(make)
@@ -520,7 +518,6 @@ def get_wavelength_data(image_path, exif_data=None, xmp_data=None):
     :return: **wavelength_fwhm** - wavelength fwhm of each band, as a list of ints
     :raises: ParsingError
     """
-    # TODO: Test
     try:
         make, model = get_make_and_model(image_path, exif_data)
         xmp_tags = xmp.get_tags(make)
@@ -546,7 +543,6 @@ def get_bandnames(image_path=None, exif_data=None, xmp_data=None):
     :return: **band_names** -- name of each band of image, as a list of strings
     :raises: ParsingError
     """
-    # TODO: Test
     try:
         make, model = get_make_and_model(image_path, exif_data)
         xmp_tags = xmp.get_tags(make)
