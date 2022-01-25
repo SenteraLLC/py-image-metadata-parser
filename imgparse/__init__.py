@@ -9,7 +9,7 @@ Run ``imgparse --help`` on the command line to see all available CLI commands th
 from imgparse._version import __version__
 from imgparse.exceptions import ParsingError
 from imgparse.getters import get_exif_data, get_xmp_data
-from imgparse.imgparse import (  # get_bandnames,; get_wavelength_data,; get_ils,
+from imgparse.imgparse import (  # get_bandnames; get_wavelength_data
     get_altitude_msl,
     get_autoexposure,
     get_camera_params,

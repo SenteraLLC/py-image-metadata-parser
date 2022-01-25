@@ -26,7 +26,7 @@ def get_xmp_data(image_path):
 
     :param image_path: full path to image to parse xmp from
     :return: **xmp_data** - XMP data of image, as a string dump of the original XML
-    :raises: ParsingError
+    :raises: ParsingError, FileNotFoundError
     """
     try:
         with open(image_path, encoding="latin_1") as file:
@@ -60,7 +60,7 @@ def get_exif_data(image_path):
 
     :param image_path: full path to image to parse exif from
     :return: **exif_data** - a dictionary of lookup keys/values for image exif data.
-    :raises: ValueError
+    :raises: ValueError, FileNotFoundError
     """
     file = open(image_path, "rb")
     exif_data = exifread.process_file(file, details=False)
