@@ -14,6 +14,8 @@ class SensorTags:
     PITCH = None
     YAW = None
     FOCAL_LEN = None
+    LRF_ALT = None
+    LRF_ALT2 = None
 
 
 class SenteraTags(SensorTags):

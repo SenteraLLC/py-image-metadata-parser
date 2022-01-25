@@ -426,7 +426,7 @@ def get_gsd(
     exif_data=None,
     xmp_data=None,
     corrected_alt=None,
-    use_calibrated=False,
+    use_calibrated_focal_length=False,
     alt_source="default",
 ):
     """
@@ -436,12 +436,14 @@ def get_gsd(
     :param exif_data: the exif dictionary for the image (optional to speed up processing)
     :param xmp_data: the XMP data of image, as a string dump of the original XML (optional to speed up processing)
     :param corrected_alt: corrected relative altitude (optional)
-    :param use_calibrated: enable to use calibrated focal length if available
+    :param use_calibrated_focal_length: enable to use calibrated focal length if available
     :param alt_source: for Sentera imagery, set to "session" to extract session agl alt, or "rlf" to use laser range finder
     :return: **gsd** - the ground sample distance of the image in meters
     :raises: ParsingError
     """
-    focal, pitch = get_camera_params(image_path, exif_data, xmp_data, use_calibrated)
+    focal, pitch = get_camera_params(
+        image_path, exif_data, xmp_data, use_calibrated_focal_length
+    )
     if corrected_alt:
         alt = corrected_alt
     else:
