@@ -92,9 +92,18 @@ def get_camera_params(image_path):
 
 @cli.command()
 @click.argument("image_path", required=True)
-def get_relative_altitude(image_path):
+@click.option(
+    "--source", default="default", type=click.Choice(["default", "lrf", "terrain"])
+)
+@click.option("--api_key")
+def get_relative_altitude(image_path, source, api_key):
     """Parse relative altitude from metadata."""
-    print("Altitude (m):", imgparse.get_relative_altitude(image_path))
+    print(
+        "Altitude (m):",
+        imgparse.get_relative_altitude(
+            image_path, alt_source=source, terrain_api_key=api_key
+        ),
+    )
 
 
 @cli.command()
@@ -177,6 +186,15 @@ def get_bandnames(image_path):
     print("Bandnames:")
     for name in names:
         print(f"  {name}")
+
+
+@cli.command()
+@click.argument("image_path", required=True)
+def get_home_point(image_path):
+    """Parse flight home point from metadata."""
+    lat, lon = imgparse.get_home_point(image_path)
+    print("Lat:", lat)
+    print("Lon:", lon)
 
 
 @cli.command()
