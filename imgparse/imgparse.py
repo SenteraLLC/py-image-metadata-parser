@@ -46,8 +46,11 @@ def _convert_to_float(tag, index=0):
 def _parse_seq(tag, type_cast_func=None):
     """Parse an xml sequence."""
     seq = tag["rdf:Seq"]["rdf:li"]
-    if isinstance(seq, list) and type_cast_func is not None:
+    if not isinstance(seq, list):
+        seq = [seq]
+    if type_cast_func is not None:
         seq = [type_cast_func(item) for item in seq]
+
     return seq
 
 
@@ -72,8 +75,10 @@ def get_firmware_version(image_path, exif_data=None):
             raise KeyError()
         major, minor, patch = version_match.group(0).split(".")
     except KeyError or ValueError:
-        logger.error("Couldn't parse sensor version")
-        raise ParsingError("Couldn't parse sensor version")
+        logger.error("Couldn't parse sensor version. Sensor might not be supported")
+        raise ParsingError(
+            "Couldn't parse sensor version. Sensor might not be supported"
+        )
 
     return int(major), int(minor), int(patch)
 
@@ -95,8 +100,12 @@ def get_autoexposure(image_path, exif_data=None):
         iso = exif_data["EXIF ISOSpeedRatings"].values[0]
         integration_time = _convert_to_float(exif_data["EXIF ExposureTime"])
     except KeyError:
-        logger.error("Couldn't parse either ISO or exposure time")
-        raise ParsingError("Couldn't parse either ISO or exposure time")
+        logger.error(
+            "Couldn't parse either ISO or exposure time. Sensor might not be supported"
+        )
+        raise ParsingError(
+            "Couldn't parse either ISO or exposure time. Sensor might not be supported"
+        )
 
     return iso * integration_time
 
@@ -120,8 +129,10 @@ def get_timestamp(image_path, exif_data=None, format_string="%Y:%m:%d %H:%M:%S")
             exif_data["EXIF DateTimeOriginal"].values, format_string
         )
     except KeyError:
-        logger.error("Couldn't parse image timestamp")
-        raise ParsingError("Couldn't parse image timestamp")
+        logger.error("Couldn't parse image timestamp. Sensor might not be supported")
+        raise ParsingError(
+            "Couldn't parse image timestamp. Sensor might not be supported"
+        )
     except ValueError:
         logger.error("Couldn't parse found timestamp with given format string")
         raise ParsingError("Couldn't parse found timestamp with given format string")
@@ -157,8 +168,8 @@ def get_pixel_pitch(image_path, exif_data=None):
         else:
             pixel_pitch = PIXEL_PITCHES[make][model]
     except KeyError:
-        logger.error("Couldn't parse pixel pitch")
-        raise ParsingError("Couldn't parse pixel pitch")
+        logger.error("Couldn't parse pixel pitch. Sensor might not be supported")
+        raise ParsingError("Couldn't parse pixel pitch. Sensor might not be supported")
 
     return pixel_pitch
 
@@ -286,8 +297,8 @@ def get_lat_lon(image_path, exif_data=None):
         gps_longitude = exif_data["GPS GPSLongitude"]
         gps_longitude_ref = exif_data["GPS GPSLongitudeRef"]
     except KeyError:
-        logger.error("Couldn't parse lat/lon")
-        raise ParsingError("Couldn't parse lat/lon")
+        logger.error("Couldn't parse lat/lon. Sensor might not be supported")
+        raise ParsingError("Couldn't parse lat/lon. Sensor might not be supported")
 
     lat = _convert_to_degrees(gps_latitude)
     if gps_latitude_ref.values[0] != "N":
@@ -313,8 +324,8 @@ def get_altitude_msl(image_path, exif_data=None):
     try:
         return _convert_to_float(exif_data["GPS GPSAltitude"])
     except KeyError:
-        logger.error("Couldn't parse altitude msl")
-        raise ParsingError("Couldn't parse altitude msl")
+        logger.error("Couldn't parse altitude msl. Sensor might not be supported")
+        raise ParsingError("Couldn't parse altitude msl. Sensor might not be supported")
 
 
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
@@ -340,8 +351,10 @@ def get_roll_pitch_yaw(image_path, exif_data=None, xmp_data=None):
             # Bring pitch into aircraft pov
             pitch += 90
     except KeyError:
-        logger.error("Couldn't parse roll/pitch/yaw")
-        raise ParsingError("Couldn't parse roll/pitch/yaw")
+        logger.error("Couldn't parse roll/pitch/yaw. Sensor might not be supported")
+        raise ParsingError(
+            "Couldn't parse roll/pitch/yaw. Sensor might not be supported"
+        )
 
     return roll, pitch, yaw
 
@@ -372,8 +385,10 @@ def get_focal_length(image_path, exif_data=None, xmp_data=None, use_calibrated=F
     try:
         return _convert_to_float(exif_data["EXIF FocalLength"]) / 1000
     except KeyError:
-        logger.error("Couldn't parse the focal length")
-        raise ParsingError("Couldn't parse the focal length")
+        logger.error("Couldn't parse the focal length. Sensor might not be supported")
+        raise ParsingError(
+            "Couldn't parse the focal length. Sensor might not be supported"
+        )
 
 
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
@@ -389,8 +404,10 @@ def get_make_and_model(image_path, exif_data=None):
     try:
         return exif_data["Image Make"].values, exif_data["Image Model"].values
     except KeyError:
-        logger.error("Couldn't parse the make and model of the camera")
-        raise ParsingError("Couldn't parse the make and model of the camera")
+        logger.error("Couldn't parse the make and model. Sensor might not be supported")
+        raise ParsingError(
+            "Couldn't parse the make and model. Sensor might not be supported"
+        )
 
 
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
@@ -421,8 +438,12 @@ def get_dimensions(image_path, exif_data=None):
                 f"Image format {ext} isn't supported for parsing height/width"
             )
     except KeyError:
-        logger.error("Couldn't parse the height and width of the image")
-        raise ParsingError("Couldn't parse the height and width of the image")
+        logger.error(
+            "Couldn't parse the height and width of the image. Sensor might not be supported"
+        )
+        raise ParsingError(
+            "Couldn't parse the height and width of the image. Sensor might not be supported"
+        )
 
 
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
@@ -476,57 +497,60 @@ def get_ils(image_path, exif_data=None, xmp_data=None, use_clear_channel=False):
     :raises: ParsingError
     """
     # TODO: Support clear channel
+    print(xmp_data)
     try:
         make, model = get_make_and_model(image_path, exif_data)
         xmp_tags = xmp.get_tags(make)
-        return float(_parse_seq(xmp_data[xmp_tags.ILS]))
+        return _parse_seq(xmp_data[xmp_tags.ILS], float)
     except KeyError:
-        logger.error("Couldn't parse ILS value")
-        raise ParsingError("Couldn't parse ILS value")
+        logger.error("Couldn't parse ILS value. Sensor might not be supported")
+        raise ParsingError("Couldn't parse ILS value. Sensor might not be supported")
 
 
-# @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
-# @get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
-# def get_wavelength_data(image_path, exif_data=None, xmp_data=None):
-#     """
-#     Get the central and FWHM wavelength values of an image.
-#
-#     :param image_path: the full path to the image
-#     :param exif_data: used internally for memoization. Not necessary to supply.
-#     :param xmp_data: used internally for memoization. Not necessary to supply.
-#     :return: **central_wavelength** - central wavelength of each band, as a list of ints
-#     :return: **wavelength_fwhm** - wavelength fwhm of each band, as a list of ints
-#     :raises: ParsingError
-#     """
-#     # TODO: Test
-#     try:
-#         make, model = get_make_and_model(image_path, exif_data)
-#         xmp_tags = xmp.get_tags(make)
-#         central_wavelength = _parse_seq(xmp_data[xmp_tags.WAVELENGTH_CENTRAL], int)
-#         wavelength_fwhm = _parse_seq(xmp_data[xmp_tags.WAVELENGTH_FWHM], int)
-#         return central_wavelength, wavelength_fwhm
-#     except KeyError:
-#         logger.error("Couldn't parse wavelength data")
-#         raise ParsingError("Couldn't parse wavelength data")
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
+@get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
+def get_wavelength_data(image_path, exif_data=None, xmp_data=None):
+    """
+    Get the central and FWHM wavelength values of an image.
+
+    :param image_path: the full path to the image
+    :param exif_data: used internally for memoization. Not necessary to supply.
+    :param xmp_data: used internally for memoization. Not necessary to supply.
+    :return: **central_wavelength** - central wavelength of each band, as a list of ints
+    :return: **wavelength_fwhm** - wavelength fwhm of each band, as a list of ints
+    :raises: ParsingError
+    """
+    # TODO: Test
+    try:
+        make, model = get_make_and_model(image_path, exif_data)
+        xmp_tags = xmp.get_tags(make)
+        central_wavelength = _parse_seq(xmp_data[xmp_tags.WAVELENGTH_CENTRAL], int)
+        wavelength_fwhm = _parse_seq(xmp_data[xmp_tags.WAVELENGTH_FWHM], int)
+        return central_wavelength, wavelength_fwhm
+    except KeyError:
+        logger.error("Couldn't parse wavelength data. Sensor might not be supported")
+        raise ParsingError(
+            "Couldn't parse wavelength data. Sensor might not be supported"
+        )
 
 
-# @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
-# @get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
-# def get_bandnames(image_path=None, exif_data=None, xmp_data=None):
-#     """
-#     Get the name of each band of an image.
-#
-#     :param image_path: the full path to the image
-#     :param exif_data: used internally for memoization. Not necessary to supply.
-#     :param xmp_data: used internally for memoization. Not necessary to supply.
-#     :return: **band_names** -- name of each band of image, as a list of strings
-#     :raises: ParsingError
-#     """
-#     # TODO: Test
-#     try:
-#         make, model = get_make_and_model(image_path, exif_data)
-#         xmp_tags = xmp.get_tags(make)
-#         return _parse_seq(xmp_data[xmp_tags.BANDNAME])
-#     except KeyError:
-#         logger.error("Couldn't parse bandnames")
-#         raise ParsingError("Couldn't parse bandnames")
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
+@get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
+def get_bandnames(image_path=None, exif_data=None, xmp_data=None):
+    """
+    Get the name of each band of an image.
+
+    :param image_path: the full path to the image
+    :param exif_data: used internally for memoization. Not necessary to supply.
+    :param xmp_data: used internally for memoization. Not necessary to supply.
+    :return: **band_names** -- name of each band of image, as a list of strings
+    :raises: ParsingError
+    """
+    # TODO: Test
+    try:
+        make, model = get_make_and_model(image_path, exif_data)
+        xmp_tags = xmp.get_tags(make)
+        return _parse_seq(xmp_data[xmp_tags.BANDNAME])
+    except KeyError:
+        logger.error("Couldn't parse bandnames. Sensor might not be supported")
+        raise ParsingError("Couldn't parse bandnames. Sensor might not be supported")

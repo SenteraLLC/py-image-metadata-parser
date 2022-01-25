@@ -30,11 +30,11 @@ MAKE_AND_MODEL = Metadata(name="(Make, Model)", method=imgparse.get_make_and_mod
 DIMENSIONS = Metadata(name="Dimensions", method=imgparse.get_dimensions)
 GSD = Metadata(name="Gsd (m)", method=imgparse.get_gsd)
 FIRMWARE = Metadata(name="Firmware version", method=imgparse.get_firmware_version)
-# WAVELENGTH = Metadata(
-#     name="Central Wavelength, WavelengthFWHM", method=imgparse.get_wavelength_data
-# )
-# BANDNAME = Metadata(name="BandName", method=imgparse.get_bandnames)
-# ILS = Metadata(name="ILS", method=imgparse.get_ils)
+WAVELENGTH = Metadata(
+    name="Central Wavelength, WavelengthFWHM", method=imgparse.get_wavelength_data
+)
+BANDNAME = Metadata(name="BandName", method=imgparse.get_bandnames)
+ILS = Metadata(name="ILS", method=imgparse.get_ils)
 
 
 def get_metadata(image_path: str, *metadata: Metadata):

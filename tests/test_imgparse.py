@@ -43,6 +43,14 @@ def sentera_6x_image_data():
     return [sentera_6x_image_path, sentera_6x_exif_data, sentera_6x_xmp_data]
 
 
+@pytest.fixture
+def sentera_quad_image_data():
+    sentera_quad_image_path = os.path.join(base_path, "data", "sentera_quad.jpg")
+    sentera_quad_exif_data = imgparse.get_exif_data(sentera_quad_image_path)
+    sentera_quad_xmp_data = imgparse.get_xmp_data(sentera_quad_image_path)
+    return [sentera_quad_image_path, sentera_quad_exif_data, sentera_quad_xmp_data]
+
+
 def test_get_camera_params_invalid(bad_data):
     with pytest.raises(FileNotFoundError):
         imgparse.get_camera_params(bad_data[0])
@@ -122,13 +130,12 @@ def test_get_relative_altitude_invalid(bad_data, dji_image_data):
         )
 
 
-def test_get_relative_altitude_sentera(sentera_image_data):
+def test_get_relative_altitude_sentera(sentera_image_data, sentera_quad_image_data):
     alt1 = imgparse.get_relative_altitude(sentera_image_data[0])
     alt2 = imgparse.get_relative_altitude(sentera_image_data[0], alt_source="lrf")
 
-    sentera_lrf2_path = os.path.join(base_path, "data", "sentera_lrf2.jpg")
-    alt3 = imgparse.get_relative_altitude(sentera_lrf2_path)
-    alt4 = imgparse.get_relative_altitude(sentera_lrf2_path, alt_source="lrf")
+    alt3 = imgparse.get_relative_altitude(sentera_quad_image_data[0])
+    alt4 = imgparse.get_relative_altitude(sentera_quad_image_data[0], alt_source="lrf")
 
     assert alt1 == 51.042
     assert alt2 == 52.041  # AltimeterCalculatedAGL
@@ -267,7 +274,7 @@ def test_get_timestamp_dji(dji_image_data):
 
 def test_get_ils_6x(sentera_6x_image_data):
     ils = imgparse.get_ils(sentera_6x_image_data[0])
-    assert ils == 10532.165
+    assert ils == [10532.165]
 
 
 def test_get_ils_non6x(dji_image_data):
@@ -318,3 +325,31 @@ def test_bad_pixel_pitch(dji_image_data):
     exif_data["Image Model"].values = "Bad Model"
     with pytest.raises(ParsingError):
         imgparse.get_pixel_pitch(dji_image_data[0], exif_data=exif_data)
+
+
+def test_invalid_bandnames(dji_image_data):
+    with pytest.raises(ParsingError):
+        imgparse.get_bandnames(dji_image_data[0])
+
+
+def test_invalid_wavelength_data(dji_image_data):
+    with pytest.raises(ParsingError):
+        imgparse.get_wavelength_data(dji_image_data[0])
+
+
+def test_get_bandnames(sentera_6x_image_data, sentera_quad_image_data):
+    bandnames1 = imgparse.get_bandnames(sentera_6x_image_data[0])
+    bandnames2 = imgparse.get_bandnames(sentera_quad_image_data[0])
+
+    assert bandnames1 == ["Blue"]
+    assert bandnames2 == ["Red", "Green", "Blue"]
+
+
+def test_get_wavelength_data(sentera_6x_image_data, sentera_quad_image_data):
+    central1, fwhm1 = imgparse.get_wavelength_data(sentera_6x_image_data[0])
+    central2, fwhm2 = imgparse.get_wavelength_data(sentera_quad_image_data[0])
+
+    assert central1 == [475]
+    assert fwhm1 == [30]
+    assert central2 == [630, 525, 450]
+    assert fwhm2 == [125, 160, 130]
