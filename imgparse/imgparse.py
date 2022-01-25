@@ -126,11 +126,11 @@ def get_timestamp(image_path, exif_data=None, format_string="%Y:%m:%d %H:%M:%S")
         logger.error("Couldn't parse found timestamp with given format string")
         raise ParsingError("Couldn't parse found timestamp with given format string")
 
-    make, model = get_make_and_model(image_path=image_path, exif_data=exif_data)
+    make, model = get_make_and_model(image_path, exif_data)
     if make == "Sentera":
         datetime_obj = pytz.utc.localize(datetime_obj)
     else:
-        lat, lon = get_lat_lon(image_path=image_path, exif_data=exif_data)
+        lat, lon = get_lat_lon(image_path, exif_data)
         timezone = pytz.timezone(TimezoneFinder().timezone_at(lng=lon, lat=lat))
         datetime_obj = timezone.localize(datetime_obj)
 
@@ -171,7 +171,7 @@ def get_camera_params(
     """
     Get the focal length and pixel pitch (in meters) of the sensor that took the image.
 
-    :param image_path: the full path to the image (optional if `exif_data` provided)
+    :param image_path: the full path to the image
     :param exif_data: used internally for memoization. Not necessary to supply.
     :param xmp_data: used internally for memoization. Not necessary to supply.
     :param use_calibrated_focal_length: enable to use calibrated focal length if available
@@ -361,7 +361,7 @@ def get_focal_length(image_path, exif_data=None, xmp_data=None, use_calibrated=F
     """
     if use_calibrated:
         try:
-            make, model = get_make_and_model(image_path, exif_data=exif_data)
+            make, model = get_make_and_model(image_path, exif_data)
             xmp_tags = xmp.get_tags(make)
             return float(xmp_data[xmp_tags.FOCAL_LEN]) / 1000
         except KeyError:
@@ -437,8 +437,8 @@ def get_gsd(
     Get the gsd of the image (in meters/pixel).
 
     :param image_path: the full path to the image
-    :param exif_data: the exif dictionary for the image (optional to speed up processing)
-    :param xmp_data: the XMP data of image, as a string dump of the original XML (optional to speed up processing)
+    :param exif_data: used internally for memoization. Not necessary to supply.
+    :param xmp_data: used internally for memoization. Not necessary to supply.
     :param corrected_alt: corrected relative altitude (optional)
     :param use_calibrated_focal_length: enable to use calibrated focal length if available
     :param alt_source: Set to "lrf" to use laser range finder
@@ -461,11 +461,13 @@ def get_gsd(
 
 
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
-def get_wavelength_data(image_path=None, xmp_data=None):
+@get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
+def get_wavelength_data(image_path, exif_data=None, xmp_data=None):
     """
     Get the central and FWHM wavelength values of an image.
 
     :param image_path: the full path to the image
+    :param exif_data: used internally for memoization. Not necessary to supply.
     :param xmp_data: used internally for memoization. Not necessary to supply.
     :return: **central_wavelength** - central wavelength of each band, as a list of ints
     :return: **wavelength_fwhm** - wavelength fwhm of each band, as a list of ints
@@ -473,7 +475,7 @@ def get_wavelength_data(image_path=None, xmp_data=None):
     """
     # TODO: Test
     try:
-        make, model = get_make_and_model(image_path)
+        make, model = get_make_and_model(image_path, exif_data)
         xmp_tags = xmp.get_tags(make)
         central_wavelength = _parse_seq(xmp_data[xmp_tags.WAVELENGTH_CENTRAL], int)
         wavelength_fwhm = _parse_seq(xmp_data[xmp_tags.WAVELENGTH_FWHM], int)
@@ -502,22 +504,24 @@ def get_wavelength_data(image_path=None, xmp_data=None):
 #     # return band_names
 #     # TODO: Bandnames not supported
 #     raise ParsingError("Bandnames not supported")
-#
-#
+
+
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
 @get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
-def get_ils(image_path=None, xmp_data=None, use_clear_channel=False):
+def get_ils(image_path, exif_data=None, xmp_data=None, use_clear_channel=False):
     """
     Get the ILS value of an image captured by a sensor with an ILS module.
 
-    :param image_path: the full path to the image (optional if `xmp_data` provided)
-    :param xmp_data: the XMP data of image, as a string dump of the original XML (optional to speed up processing)
+    :param image_path: the full path to the image
+    :param exif_data: used internally for memoization. Not necessary to supply.
+    :param xmp_data: used internally for memoization. Not necessary to supply.
     :param use_clear_channel: if true, refer to the ILS clear channel value instead of the default
     :return: **ils** -- ILS value of image, as a floating point number
     :raises: ParsingError
     """
     # TODO: Support clear channel
     try:
-        make, model = get_make_and_model(image_path)
+        make, model = get_make_and_model(image_path, exif_data)
         xmp_tags = xmp.get_tags(make)
         return float(_parse_seq(xmp_data[xmp_tags.ILS]))
     except KeyError:
