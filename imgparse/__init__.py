@@ -21,33 +21,26 @@ Run ``imgparse --help`` on the command line to see all available CLI commands th
 """
 
 from imgparse._version import __version__
-from imgparse.getters import get_exif_data, get_xmp_data
-from imgparse.imgparse import (
-    ParsingError,
+from imgparse.exceptions import ParsingError
+from imgparse.parse import (
+    get_make_and_model,
     get_altitude_msl,
     get_autoexposure,
-    get_bandnames,
     get_camera_params,
     get_dimensions,
     get_firmware_version,
     get_focal_length,
     get_gsd,
-    get_ils,
     get_lat_lon,
-    get_make_and_model,
     get_pixel_pitch,
     get_relative_altitude,
     get_roll_pitch_yaw,
     get_timestamp,
-    get_wavelength_data,
-    parse_session_alt,
 )
 from imgparse.metadata import get_metadata
 
 __all__ = [
     "__version__",
-    "get_xmp_data",
-    "get_exif_data",
     "get_camera_params",
     "get_relative_altitude",
     "get_lat_lon",
@@ -57,14 +50,10 @@ __all__ = [
     "get_make_and_model",
     "get_dimensions",
     "get_pixel_pitch",
-    "parse_session_alt",
     "get_gsd",
-    "get_ils",
     "get_timestamp",
     "get_autoexposure",
     "get_firmware_version",
-    "get_wavelength_data",
-    "get_bandnames",
     "get_metadata",
     "ParsingError",
 ]

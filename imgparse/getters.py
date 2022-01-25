@@ -1,15 +1,22 @@
 """Getter functions for various image data."""
 
 import logging
-import os
+import re
 
 import exifread
 import xmltodict
 
-import imgparse.xmp as xmp
 from imgparse.decorators import memoize
+from imgparse.exceptions import ParsingError
 
 logger = logging.getLogger(__name__)
+
+# Define misc constants:
+CHUNK_SIZE = 10000
+
+# Define patterns:
+FULL_XMP = re.compile(r"<x:xmpmeta.*</x:xmpmeta>", re.DOTALL)
+XMP_END = re.compile(r"</x:xmpmeta>")
 
 
 @memoize
@@ -21,27 +28,21 @@ def get_xmp_data(image_path):
     :return: **xmp_data** - XMP data of image, as a string dump of the original XML
     :raises: ValueError
     """
-    if not image_path or not os.path.isfile(image_path):
-        logger.error(
-            "Image doesn't exist.  Couldn't read xmp data for image: %s", image_path
-        )
-        raise ValueError("Image doesn't exist. Couldn't read xmp data")
-
-    try:
-        with open(image_path, encoding="latin_1") as file:
-            xmp_dict = xmltodict.parse(xmp.find_xmp_string(file))["x:xmpmeta"][
-                "rdf:RDF"
-            ]["rdf:Description"]
-            if isinstance(xmp_dict, list):
-                xmp_dict = xmp_dict[0]
-            if isinstance(xmp_dict, dict):
-                return xmp_dict
-            else:
-                raise ValueError("Couldn't parse xmp data")
-
-    except FileNotFoundError:
-        logger.error("Image file at path %s could not be found.", image_path)
-        raise ValueError("Image file could not be found.")
+    with open(image_path, encoding="latin_1") as file:
+        xmp_dict = xmltodict.parse(_find_xmp_string(file))["x:xmpmeta"][
+            "rdf:RDF"
+        ]["rdf:Description"]
+        # If there are too many xmp tags, returned as list
+        if isinstance(xmp_dict, list):
+            temp_dict = {}
+            for d in xmp_dict:
+                temp_dict.update(d)
+            xmp_dict = temp_dict
+        # Remove '@' signs, which appear to be non-consistent
+        for k in list(xmp_dict):
+            if k[0] == '@':
+                xmp_dict[k[1:]] = xmp_dict.pop(k)
+        return xmp_dict
 
 
 @memoize
@@ -57,12 +58,6 @@ def get_exif_data(image_path):
     :return: **exif_data** - a dictionary of lookup keys/values for image exif data.
     :raises: ValueError
     """
-    if not image_path or not os.path.isfile(image_path):
-        logger.error(
-            "Image doesn't exist.  Can't read exif data for image: %s", image_path
-        )
-        raise ValueError("Image doesn't exist. Couldn't read exif data.")
-
     file = open(image_path, "rb")
     exif_data = exifread.process_file(file, details=False)
     file.close()
@@ -72,3 +67,36 @@ def get_exif_data(image_path):
         raise ValueError("Couldn't read exif data for image.")
 
     return exif_data
+
+
+def _find_xmp_string(file):
+    """
+    Load chunks of an input image iteratively and search for the XMP data.
+
+    On each iteration, a new chunk of the file (of size specified by xmp.CHUNK_SIZE) is read and
+    appended to the already read portion of the file. The XMP regex is then matched against this string,
+    and if the XMP data is found, returns the match. If no match is found, the function continues.
+
+    :param file: Handler to file open for reading
+    :return: **xmp_data**: XMP data of image, as string dump
+    """
+    file_so_far = ""
+    while True:
+        chunk = file.read(CHUNK_SIZE)
+
+        # If at end of file, chunk will be None
+        if not chunk:
+            logger.error(
+                "Couldn't parse XMP string from the image file. The image may not have XMP information."
+            )
+            raise ParsingError("Couldn't parse XMP string from the image file.")
+
+        start_search_at = max(
+            0, len(file_so_far) - 12
+        )  # 12 is the length of the ending XMP tag
+        file_so_far += chunk
+
+        end_match = re.search(XMP_END, file_so_far[start_search_at:])
+        # If we matched the end, we know `file_so_far` contains the whole XMP string
+        if end_match:
+            return re.search(FULL_XMP, file_so_far).group(0)
