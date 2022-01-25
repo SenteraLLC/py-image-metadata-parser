@@ -283,6 +283,7 @@ def get_relative_altitude(
     """
     make, model = get_make_and_model(image_path, exif_data)
     xmp_tags = xmp.get_tags(make)
+    terrain_alt = 0
     if alt_source == "lrf":
         try:
             try:
@@ -296,18 +297,16 @@ def get_relative_altitude(
             )
     elif alt_source == "terrain":
         try:
-            relative_alt = float(xmp_data[xmp_tags.RELATIVE_ALT])
             terrain_alt = _get_terrain_elevation(
                 image_path, exif_data, xmp_data, terrain_api_key
             )
-            return relative_alt + terrain_alt
-        except ParsingError or KeyError:
+        except ParsingError:
             logger.warning(
-                "Couldn't determine terrain aware altitude. Defaulting to relative altitude"
+                "Couldn't determine terrain elevation. Defaulting to relative altitude"
             )
 
     try:
-        return float(xmp_data[xmp_tags.RELATIVE_ALT])
+        return float(xmp_data[xmp_tags.RELATIVE_ALT]) + terrain_alt
     except KeyError:
         if make == "Sentera":
             logger.warning(

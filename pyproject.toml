@@ -21,6 +21,7 @@ pytest-coverage= "*"
 sphinx_rtd_theme = "*"
 sphinx = "*"
 pre_commit = "*"
+requests-mock = "*"
 
 [tool.poetry.scripts]
 imgparse = "imgparse.cli:cli"
