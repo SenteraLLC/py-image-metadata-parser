@@ -223,7 +223,7 @@ def parse_session_alt(image_path):
     if not session_alt:
         logger.error(
             "Couldn't parse session altitude from session.txt for image: %s",
-            imagery_dir,
+            image_path,
         )
         raise ParsingError("Couldn't parse session altitude from session.txt")
 
@@ -245,7 +245,7 @@ def get_relative_altitude(
     :param image_path: the full path to the image
     :param exif_data: used internally for memoization. Not necessary to supply.
     :param xmp_data: used internally for memoization. Not necessary to supply.
-    :param alt_source: for Sentera imagery, set to "session" to extract session agl alt, or "rlf" to use laser range finder
+    :param alt_source: Set to "lrf" for laser range finder.
     :return: **relative_alt** - the relative altitude of the camera above the ground
     :raises: ParsingError
     """
