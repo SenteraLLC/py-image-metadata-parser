@@ -43,8 +43,9 @@ def get_xmp_data(image_path):
         for d in xmp_dict:
             temp_dict.update(d)
         xmp_dict = temp_dict
+
     # Remove '@' signs, which appear to be non-consistent
-xmp_dict = {k: v.lstrip('@') for k, v in xmp_dict.items()}
+    xmp_dict = {k.lstrip("@"): v for k, v in xmp_dict.items()}
     return xmp_dict
 
 
