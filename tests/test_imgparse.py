@@ -379,6 +379,11 @@ def test_terrain_elevation(dji_homepoint_image_data, requests_mock):
     )
     assert alt2 == 121.4
 
+    with pytest.raises(ParsingError):
+        imgparse.get_relative_altitude(
+            dji_homepoint_image_data[0], alt_source="terrain", fallback=False
+        )
+
 
 def test_get_homepoint_invalid(sentera_image_data):
     with pytest.raises(ParsingError):

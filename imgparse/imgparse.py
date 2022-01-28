@@ -265,19 +265,27 @@ def get_relative_altitude(
     xmp_data=None,
     alt_source="default",
     terrain_api_key=None,
+    fallback=True,
 ):
     """
     Get the relative altitude of the sensor above the ground (in meters) when the image was taken.
 
-    If the image is from a Sentera sensor, will try to read the agl altitude from the xmp tags by default.  If
-    image is from an older firmware version, this xmp tag will not exist, and will fall back to using the `session.txt`
-    file associated with the image instead.
+    `alt_source` by default will grab the relative altitude stored in the image's xmp data. Other options are `lrf` to
+    use the altitude detected from a laser range finder or `terrain` to use google's terrain api to correct the relative
+    altitude with the terrain elevation change from the home point. If a non-default `alt_source` is specified and
+    fails, the function will "fallback" and return the default xmp relative altitude instead. To disable this fallback
+    and raise an error if the specified `alt_source` isn't available, set `fallback` to False.
+
+    There is an additional fallback if the image is from an older firmware Sentera sensor. For older Sentera sensor's,
+    this xmp tag will not exist, and instead the relative altitude must be computed using the `session.txt` file
+    associated with the image instead.
 
     :param image_path: the full path to the image
     :param exif_data: used internally for memoization. Not necessary to supply.
     :param xmp_data: used internally for memoization. Not necessary to supply.
     :param alt_source: Set to "lrf" for laser range finder. "terrain" for terrain aware altitude.
     :param terrain_api_key: Required if `alt_source` set to "terrain". API key to access google elevation api.
+    :param fallback: If disabled and the specified `alt_source` fails, will throw an error instead of falling back.
     :return: **relative_alt** - the relative altitude of the camera above the ground
     :raises: ParsingError
     """
@@ -304,6 +312,12 @@ def get_relative_altitude(
             logger.warning(
                 "Couldn't determine terrain elevation. Defaulting to relative altitude"
             )
+
+    if alt_source != "default" and not fallback:
+        logger.error(
+            "Fallback disabled. Couldn't parse relative altitude for given alt_source"
+        )
+        raise ParsingError("Couldn't parse relative altitude for given alt_source")
 
     try:
         return float(xmp_data[xmp_tags.RELATIVE_ALT]) + terrain_alt
