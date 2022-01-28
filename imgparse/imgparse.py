@@ -226,7 +226,7 @@ def parse_session_alt(image_path):
     if not session_alt:
         logger.error(
             "Couldn't parse session altitude from session.txt for image: %s",
-            imagery_dir,
+            image_path,
         )
         raise ParsingError("Couldn't parse session altitude from session.txt")
 
