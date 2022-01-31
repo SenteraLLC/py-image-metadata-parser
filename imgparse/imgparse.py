@@ -10,7 +10,7 @@ import requests
 from timezonefinder import TimezoneFinder
 
 from imgparse import xmp
-from imgparse.decorators import get_if_needed
+from imgparse.decorators import get_if_needed, memoize
 from imgparse.exceptions import ParsingError
 from imgparse.getters import get_exif_data, get_xmp_data
 from imgparse.pixel_pitches import PIXEL_PITCHES
@@ -233,7 +233,7 @@ def parse_session_alt(image_path):
     return float(session_alt)
 
 
-def _get_terrain_elevation(image_path, exif_data, xmp_data, api_key):
+def _compute_terrain_offset(image_path, exif_data, xmp_data, api_key):
     """
     Get relative terrain elevation for the image from google's terrain api.
 
@@ -244,17 +244,33 @@ def _get_terrain_elevation(image_path, exif_data, xmp_data, api_key):
     """
     home_lat, home_lon = get_home_point(image_path, exif_data, xmp_data)
     image_lat, image_lon = get_lat_lon(image_path, exif_data)
+    home_elevation = _get_home_point_elevation(home_lat, home_lon, api_key)
+    image_elevation = _get_terrain_elevation(image_lat, image_lon, api_key)
+    return home_elevation - image_elevation
+
+
+def _get_terrain_elevation(lat, lon, api_key):
+    """Call out to the google elevation api to get the terrain elevation at a given lat/lon."""
     params = {
-        "locations": f"{home_lat} {home_lon} | {image_lat} {image_lon}",
+        "locations": f"{lat} {lon}",
         "key": api_key,
     }
     response = requests.request("GET", TERRAIN_URL, params=params).json()
     if response["status"] != "OK":
         logger.warning("Couldn't access google terrain api")
         raise ParsingError("Couldn't access google terrain api")
-    home_elevation = response["results"][0]["elevation"]
-    image_elevation = response["results"][1]["elevation"]
-    return home_elevation - image_elevation
+    return response["results"][0]["elevation"]
+
+
+@memoize
+def _get_home_point_elevation(lat, lon, api_key):
+    """
+    Memoized wrapper around `get_terrain_elevation()`.
+
+    Ensure we aren't making multiple calls to google to get the same home point elevation for images from the
+    same flight.
+    """
+    return _get_terrain_elevation(lat, lon, api_key)
 
 
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
@@ -305,7 +321,7 @@ def get_relative_altitude(
             )
     elif alt_source == "terrain":
         try:
-            terrain_alt = _get_terrain_elevation(
+            terrain_alt = _compute_terrain_offset(
                 image_path, exif_data, xmp_data, terrain_api_key
             )
         except ParsingError:

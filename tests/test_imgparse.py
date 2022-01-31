@@ -364,14 +364,24 @@ def test_get_wavelength_data(sentera_6x_image_data, sentera_quad_image_data):
 
 
 def test_terrain_elevation(dji_homepoint_image_data, requests_mock):
-    requests_mock.get(
+    mock = requests_mock.get(
         imgparse.imgparse.TERRAIN_URL,
-        json={"status": "OK", "results": [{"elevation": 50}, {"elevation": 0}]},
+        [
+            {"json": {"status": "OK", "results": [{"elevation": 50}]}},
+            {"json": {"status": "OK", "results": [{"elevation": 0}]}},
+        ],
     )
     alt = imgparse.get_relative_altitude(
         dji_homepoint_image_data[0], alt_source="terrain"
     )
     assert alt == 171.4
+
+    alt = imgparse.get_relative_altitude(
+        dji_homepoint_image_data[0], alt_source="terrain"
+    )
+    assert alt == 171.4
+    # Make sure home point only requested once
+    assert len(mock.request_history) == 3
 
     requests_mock.get(imgparse.imgparse.TERRAIN_URL, json={"status": "ERROR"})
     alt2 = imgparse.get_relative_altitude(
