@@ -46,6 +46,7 @@ class DJITags(SensorTags):
     PITCH = "drone-dji:GimbalPitchDegree"
     YAW = "drone-dji:GimbalYawDegree"
     FOCAL_LEN = "drone-dji:CalibratedFocalLength"
+    SELF_DATA = "drone-dji:SelfData"
 
 
 def get_tags(make):

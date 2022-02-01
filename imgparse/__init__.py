@@ -18,6 +18,7 @@ from imgparse.imgparse import (
     get_firmware_version,
     get_focal_length,
     get_gsd,
+    get_home_point,
     get_ils,
     get_lat_lon,
     get_make_and_model,
@@ -53,4 +54,5 @@ __all__ = [
     "get_wavelength_data",
     "get_bandnames",
     "get_ils",
+    "get_home_point",
 ]

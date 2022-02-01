@@ -6,15 +6,18 @@ import re
 from datetime import datetime
 
 import pytz
+import requests
 from timezonefinder import TimezoneFinder
 
 from imgparse import xmp
-from imgparse.decorators import get_if_needed
+from imgparse.decorators import get_if_needed, memoize
 from imgparse.exceptions import ParsingError
 from imgparse.getters import get_exif_data, get_xmp_data
 from imgparse.pixel_pitches import PIXEL_PITCHES
 
 logger = logging.getLogger(__name__)
+
+TERRAIN_URL = "https://maps.googleapis.com/maps/api/elevation/json"
 
 
 def _convert_to_degrees(tag):
@@ -230,27 +233,81 @@ def parse_session_alt(image_path):
     return float(session_alt)
 
 
+def _compute_terrain_offset(image_path, exif_data, xmp_data, api_key):
+    """
+    Get relative terrain elevation for the image from google's terrain api.
+
+    Relative terrain elevation is the flight home point terrain elevation - the image terrain elevation.
+    The relative altitude stored in an image's xmp data is relative to the home point takeoff, not the
+    altitude of the drone above the ground at each image location. We add the relative terrain elevation
+    to the relative altitude to get the actual altitude of the drone above the ground.
+    """
+    home_lat, home_lon = get_home_point(image_path, exif_data, xmp_data)
+    image_lat, image_lon = get_lat_lon(image_path, exif_data)
+    home_elevation = _get_home_point_elevation(home_lat, home_lon, api_key)
+    image_elevation = _get_terrain_elevation(image_lat, image_lon, api_key)
+    return home_elevation - image_elevation
+
+
+def _get_terrain_elevation(lat, lon, api_key):
+    """Call out to the google elevation api to get the terrain elevation at a given lat/lon."""
+    params = {
+        "locations": f"{lat} {lon}",
+        "key": api_key,
+    }
+    response = requests.request("GET", TERRAIN_URL, params=params).json()
+    if response["status"] != "OK":
+        logger.warning("Couldn't access google terrain api")
+        raise ParsingError("Couldn't access google terrain api")
+    return response["results"][0]["elevation"]
+
+
+@memoize
+def _get_home_point_elevation(lat, lon, api_key):
+    """
+    Memoized wrapper around `get_terrain_elevation()`.
+
+    Ensure we aren't making multiple calls to google to get the same home point elevation for images from the
+    same flight.
+    """
+    return _get_terrain_elevation(lat, lon, api_key)
+
+
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
 @get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
 def get_relative_altitude(
-    image_path, exif_data=None, xmp_data=None, alt_source="default"
+    image_path,
+    exif_data=None,
+    xmp_data=None,
+    alt_source="default",
+    terrain_api_key=None,
+    fallback=True,
 ):
     """
     Get the relative altitude of the sensor above the ground (in meters) when the image was taken.
 
-    If the image is from a Sentera sensor, will try to read the agl altitude from the xmp tags by default.  If
-    image is from an older firmware version, this xmp tag will not exist, and will fall back to using the `session.txt`
-    file associated with the image instead.
+    `alt_source` by default will grab the relative altitude stored in the image's xmp data. Other options are `lrf` to
+    use the altitude detected from a laser range finder or `terrain` to use google's terrain api to correct the relative
+    altitude with the terrain elevation change from the home point. If a non-default `alt_source` is specified and
+    fails, the function will "fallback" and return the default xmp relative altitude instead. To disable this fallback
+    and raise an error if the specified `alt_source` isn't available, set `fallback` to False.
+
+    There is an additional fallback if the image is from an older firmware Sentera sensor. For older Sentera sensor's,
+    this xmp tag will not exist, and instead the relative altitude must be computed using the `session.txt` file
+    associated with the image instead.
 
     :param image_path: the full path to the image
     :param exif_data: used internally for memoization. Not necessary to supply.
     :param xmp_data: used internally for memoization. Not necessary to supply.
-    :param alt_source: Set to "lrf" for laser range finder.
+    :param alt_source: Set to "lrf" for laser range finder. "terrain" for terrain aware altitude.
+    :param terrain_api_key: Required if `alt_source` set to "terrain". API key to access google elevation api.
+    :param fallback: If disabled and the specified `alt_source` fails, will throw an error instead of falling back.
     :return: **relative_alt** - the relative altitude of the camera above the ground
     :raises: ParsingError
     """
     make, model = get_make_and_model(image_path, exif_data)
     xmp_tags = xmp.get_tags(make)
+    terrain_alt = 0
     if alt_source == "lrf":
         try:
             try:
@@ -260,11 +317,26 @@ def get_relative_altitude(
                 return float(xmp_data[xmp_tags.LRF_ALT2])
         except KeyError:
             logger.warning(
-                "Altimeter calculated altitude not found in XMP. Defaulting to relative altitude."
+                "Altimeter calculated altitude not found in XMP. Defaulting to relative altitude"
+            )
+    elif alt_source == "terrain":
+        try:
+            terrain_alt = _compute_terrain_offset(
+                image_path, exif_data, xmp_data, terrain_api_key
+            )
+        except ParsingError:
+            logger.warning(
+                "Couldn't determine terrain elevation. Defaulting to relative altitude"
             )
 
+    if alt_source != "default" and not fallback:
+        logger.error(
+            "Fallback disabled. Couldn't parse relative altitude for given alt_source"
+        )
+        raise ParsingError("Couldn't parse relative altitude for given alt_source")
+
     try:
-        return float(xmp_data[xmp_tags.RELATIVE_ALT])
+        return float(xmp_data[xmp_tags.RELATIVE_ALT]) + terrain_alt
     except KeyError:
         if make == "Sentera":
             logger.warning(
@@ -493,7 +565,7 @@ def get_ils(image_path, exif_data=None, xmp_data=None):
     :param image_path: the full path to the image
     :param exif_data: used internally for memoization. Not necessary to supply.
     :param xmp_data: used internally for memoization. Not necessary to supply.
-    :return: **ils** -- ILS value of image, as a floating point number
+    :return: **ils** - ILS value of image, as a floating point number
     :raises: ParsingError
     """
     try:
@@ -533,14 +605,14 @@ def get_wavelength_data(image_path, exif_data=None, xmp_data=None):
 
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
 @get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
-def get_bandnames(image_path=None, exif_data=None, xmp_data=None):
+def get_bandnames(image_path, exif_data=None, xmp_data=None):
     """
     Get the name of each band of an image.
 
     :param image_path: the full path to the image
     :param exif_data: used internally for memoization. Not necessary to supply.
     :param xmp_data: used internally for memoization. Not necessary to supply.
-    :return: **band_names** -- name of each band of image, as a list of strings
+    :return: **band_names** - name of each band of image, as a list of strings
     :raises: ParsingError
     """
     try:
@@ -550,3 +622,29 @@ def get_bandnames(image_path=None, exif_data=None, xmp_data=None):
     except KeyError:
         logger.error("Couldn't parse bandnames. Sensor might not be supported")
         raise ParsingError("Couldn't parse bandnames. Sensor might not be supported")
+
+
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
+@get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
+def get_home_point(image_path, exif_data=None, xmp_data=None):
+    """
+    Get the flight home point. Used for `get_relative_altitude(alt_source=terrain)`.
+
+    :param image_path: the full path to the image
+    :param exif_data: used internally for memoization. Not necessary to supply.
+    :param xmp_data: used internally for memoization. Not necessary to supply.
+    :return: **lat**, **lon** - coordinates of flight home point
+    """
+    try:
+        make, model = get_make_and_model(image_path, exif_data)
+        if make == "DJI":
+            self_data = xmp_data[xmp.DJITags.SELF_DATA].split("|")
+            if len(self_data) == 4:
+                return self_data[0], self_data[1]
+            else:
+                raise KeyError()
+        else:
+            raise KeyError()
+    except KeyError:
+        logger.error("Couldn't parse home point. Sensor might not be supported")
+        raise ParsingError("Couldn't parse home point. Sensor might not be supported")
