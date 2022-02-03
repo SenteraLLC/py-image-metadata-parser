@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "imgparse"
-version = "1.11.0"
+version = "1.12.1"
 description = "Python image-metadata-parser utilities"
 authors = []
 
@@ -9,15 +9,19 @@ python = "^3.7"
 exifread = "*"
 click = "*"
 decorator = "*"
+xmltodict = "*"
+requests = "*"
 
 pandas = {version = "*", optional = true}
 timezonefinder = {version = "^5.2.0", optional = true}
 
 [tool.poetry.dev-dependencies]
 pytest = "*"
+pytest-coverage= "*"
 sphinx_rtd_theme = "*"
 sphinx = "*"
 pre_commit = "*"
+requests-mock = "*"
 
 [tool.poetry.scripts]
 imgparse = "imgparse.cli:cli"
@@ -30,7 +34,7 @@ tzfinder = ["timezonefinder"]
 line_length = 88
 multi_line_output = 3
 include_trailing_comma = true
-known_third_party = ["click", "decorator", "exifread", "pandas", "pytest", "pytz"]
+known_third_party = ["click", "decorator", "exifread", "pandas", "pytest", "pytz", "requests", "xmltodict"]
 
 [build-system]
 requires = ["poetry-core"]

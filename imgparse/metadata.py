@@ -12,7 +12,6 @@ class Metadata(NamedTuple):
     method: Callable
 
 
-ILS = Metadata(name="ILS", method=imgparse.get_ils)
 AUTOEXPOSURE = Metadata(name="Autoexposure", method=imgparse.get_autoexposure)
 TIMESTAMP = Metadata(name="Timestamp", method=imgparse.get_timestamp)
 PIXEL_PITCH = Metadata(name="Pixel pitch (m)", method=imgparse.get_pixel_pitch)
@@ -35,6 +34,7 @@ WAVELENGTH = Metadata(
     name="Central Wavelength, WavelengthFWHM", method=imgparse.get_wavelength_data
 )
 BANDNAME = Metadata(name="BandName", method=imgparse.get_bandnames)
+ILS = Metadata(name="ILS", method=imgparse.get_ils)
 
 
 def get_metadata(image_path: str, *metadata: Metadata):
