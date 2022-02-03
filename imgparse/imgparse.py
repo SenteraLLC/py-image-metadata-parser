@@ -6,7 +6,6 @@ import re
 from datetime import datetime
 
 import pytz
-from timezonefinder import TimezoneFinder
 
 import imgparse.xmp as xmp
 from imgparse.decorators import get_if_needed
@@ -153,7 +152,17 @@ def get_timestamp(image_path=None, exif_data=None, format_string="%Y:%m:%d %H:%M
         datetime_obj = pytz.utc.localize(datetime_obj)
     elif make == "DJI":
         lat, lon = get_lat_lon(image_path=image_path, exif_data=exif_data)
-        timezone = pytz.timezone(TimezoneFinder().timezone_at(lng=lon, lat=lat))
+        try:
+            from timezonefinder import TimezoneFinder
+
+            timezone = pytz.timezone(TimezoneFinder().timezone_at(lng=lon, lat=lat))
+        except ImportError:
+            print(
+                "Module timezonefinder is required for retrieving timestamps from DJI sensors."
+            )
+            print("Please execute `poetry install -E tzfinder` to install this module.")
+            raise
+
         datetime_obj = timezone.localize(datetime_obj)
     else:
         logger.warning("Sensor make isn't supported for timezone aware datetimes.")

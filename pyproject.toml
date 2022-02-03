@@ -30,7 +30,7 @@ tzfinder = ["timezonefinder"]
 line_length = 88
 multi_line_output = 3
 include_trailing_comma = true
-known_third_party = ["click", "decorator", "exifread", "pandas", "pytest", "pytz", "timezonefinder"]
+known_third_party = ["click", "decorator", "exifread", "pandas", "pytest", "pytz"]
 
 [build-system]
 requires = ["poetry-core"]
