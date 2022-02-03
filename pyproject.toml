@@ -9,9 +9,9 @@ python = "^3.7"
 exifread = "*"
 click = "*"
 decorator = "*"
-timezonefinder = "*"
 
 pandas = {version = "*", optional = true}
+timezonefinder = {version = "^5.2.0", optional = true}
 
 [tool.poetry.dev-dependencies]
 pytest = "*"
@@ -24,6 +24,7 @@ imgparse = "imgparse.cli:cli"
 
 [tool.poetry.extras]
 metadata_csv = ["pandas"]
+tzfinder = ["timezonefinder"]
 
 [tool.isort]
 line_length = 88
