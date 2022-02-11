@@ -637,12 +637,17 @@ def get_home_point(image_path, exif_data=None, xmp_data=None):
     """
     try:
         make, model = get_make_and_model(image_path, exif_data)
+        xmp_tags = xmp.get_tags(make)
         if make == "DJI":
-            self_data = xmp_data[xmp.DJITags.SELF_DATA].split("|")
+            self_data = xmp_data[xmp_tags.SELF_DATA].split("|")
             if len(self_data) == 4:
-                return self_data[0], self_data[1]
+                return float(self_data[0]), float(self_data[1])
             else:
                 raise KeyError()
+        elif make == "Sentera":
+            return float(xmp_data[xmp_tags.HOMEPOINT_LAT]), float(
+                xmp_data[xmp_tags.HOMEPOINT_LON]
+            )
         else:
             raise KeyError()
     except KeyError:
