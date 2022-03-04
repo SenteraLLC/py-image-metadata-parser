@@ -3,7 +3,7 @@ python: 3.8
 
 install:
   - pip install poetry
-  - poetry install
+  - poetry install -E tzfinder
 
 script:
   - poetry run pre-commit run --all-files
