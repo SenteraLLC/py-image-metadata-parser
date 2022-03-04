@@ -152,7 +152,9 @@ def get_timestamp(image_path, exif_data=None, format_string="%Y:%m:%d %H:%M:%S")
             print(
                 "Module timezonefinder is required for retrieving timestamps from DJI sensors."
             )
-            print("Please execute `poetry install -E tzfinder` to install this module.")
+            print(
+                "Please execute `poetry install -E dji_timestamps` to install this module."
+            )
             raise
 
         datetime_obj = timezone.localize(datetime_obj)

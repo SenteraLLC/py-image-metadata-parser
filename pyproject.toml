@@ -28,7 +28,7 @@ imgparse = "imgparse.cli:cli"
 
 [tool.poetry.extras]
 metadata_csv = ["pandas"]
-tzfinder = ["timezonefinder"]
+dji_timestamps = ["timezonefinder"]
 
 [tool.isort]
 line_length = 88
