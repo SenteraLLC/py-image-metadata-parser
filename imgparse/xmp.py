@@ -36,6 +36,8 @@ class SenteraTags(SensorTags):
     WAVELENGTH_CENTRAL = "Camera:CentralWavelength"
     WAVELENGTH_FWHM = "Camera:WavelengthFWHM"
     BANDNAME = "Camera:BandName"
+    HOMEPOINT_LAT = "SENTERA:HomePointLatitude"
+    HOMEPOINT_LON = "SENTERA:HomePointLongitude"
 
 
 class DJITags(SensorTags):

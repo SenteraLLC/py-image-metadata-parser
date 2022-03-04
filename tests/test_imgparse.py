@@ -44,6 +44,14 @@ def dji_homepoint_image_data():
 
 
 @pytest.fixture
+def sentera_homepoint_image_data():
+    image_path = os.path.join(base_path, "data", "IMG_00001.jpg")
+    exif_data = imgparse.get_exif_data(image_path)
+    xmp_data = imgparse.get_xmp_data(image_path)
+    return [image_path, exif_data, xmp_data]
+
+
+@pytest.fixture
 def sentera_6x_image_data():
     sentera_6x_image_path = os.path.join(base_path, "data", "sentera_6x.tif")
     sentera_6x_exif_data = imgparse.get_exif_data(sentera_6x_image_path)
@@ -363,7 +371,7 @@ def test_get_wavelength_data(sentera_6x_image_data, sentera_quad_image_data):
     assert fwhm2 == [125, 160, 130]
 
 
-def test_terrain_elevation(dji_homepoint_image_data, requests_mock):
+def test_dji_terrain_elevation(dji_homepoint_image_data, requests_mock):
     mock = requests_mock.get(
         imgparse.imgparse.TERRAIN_URL,
         [
@@ -392,6 +400,38 @@ def test_terrain_elevation(dji_homepoint_image_data, requests_mock):
     with pytest.raises(ParsingError):
         imgparse.get_relative_altitude(
             dji_homepoint_image_data[0], alt_source="terrain", fallback=False
+        )
+
+
+def test_sentera_terrain_elevation(sentera_homepoint_image_data, requests_mock):
+    mock = requests_mock.get(
+        imgparse.imgparse.TERRAIN_URL,
+        [
+            {"json": {"status": "OK", "results": [{"elevation": 50}]}},
+            {"json": {"status": "OK", "results": [{"elevation": 0}]}},
+        ],
+    )
+    alt = imgparse.get_relative_altitude(
+        sentera_homepoint_image_data[0], alt_source="terrain"
+    )
+    assert alt == pytest.approx(114.45, 0.01)
+
+    alt = imgparse.get_relative_altitude(
+        sentera_homepoint_image_data[0], alt_source="terrain"
+    )
+    assert alt == pytest.approx(114.45, 0.01)
+    # Make sure home point only requested once
+    assert len(mock.request_history) == 3
+
+    requests_mock.get(imgparse.imgparse.TERRAIN_URL, json={"status": "ERROR"})
+    alt2 = imgparse.get_relative_altitude(
+        sentera_homepoint_image_data[0], alt_source="terrain"
+    )
+    assert alt2 == pytest.approx(64.45, 0.01)
+
+    with pytest.raises(ParsingError):
+        imgparse.get_relative_altitude(
+            sentera_homepoint_image_data[0], alt_source="terrain", fallback=False
         )
 
 
