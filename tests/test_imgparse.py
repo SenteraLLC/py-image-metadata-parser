@@ -420,8 +420,14 @@ def test_sentera_terrain_elevation(sentera_homepoint_image_data, requests_mock):
         sentera_homepoint_image_data[0], alt_source="terrain"
     )
     assert alt == pytest.approx(114.45, 0.01)
+
+    alt = imgparse.get_relative_altitude(
+        sentera_homepoint_image_data[0], alt_source="terrain", fallback=False
+    )
+    assert alt == pytest.approx(114.45, 0.01)
+
     # Make sure home point only requested once
-    assert len(mock.request_history) == 3
+    assert len(mock.request_history) == 4
 
     requests_mock.get(imgparse.imgparse.TERRAIN_URL, json={"status": "ERROR"})
     alt2 = imgparse.get_relative_altitude(
