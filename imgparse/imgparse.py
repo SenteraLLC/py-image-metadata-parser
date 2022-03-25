@@ -667,5 +667,5 @@ def get_home_point(image_path, exif_data=None, xmp_data=None):
         else:
             raise KeyError()
     except KeyError:
-        logger.error("Couldn't parse home point. Sensor might not be supported")
+        logger.warning("Couldn't parse home point. Sensor might not be supported")
         raise ParsingError("Couldn't parse home point. Sensor might not be supported")
