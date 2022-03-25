@@ -540,6 +540,7 @@ def get_gsd(
     corrected_alt=None,
     use_calibrated_focal_length=False,
     alt_source="default",
+    terrain_api_key=None,
 ):
     """
     Get the gsd of the image (in meters/pixel).
@@ -549,7 +550,8 @@ def get_gsd(
     :param xmp_data: used internally for memoization. Not necessary to supply.
     :param corrected_alt: corrected relative altitude (optional)
     :param use_calibrated_focal_length: enable to use calibrated focal length if available
-    :param alt_source: Set to "lrf" to use laser range finder
+    :param alt_source: See `get_relative_altitude()`
+    :param terrain_api_key: Required if `alt_source` set to "terrain". API key to access google elevation api.
     :return: **gsd** - the ground sample distance of the image in meters
     :raises: ParsingError
     """
@@ -559,7 +561,9 @@ def get_gsd(
     if corrected_alt:
         alt = corrected_alt
     else:
-        alt = get_relative_altitude(image_path, exif_data, xmp_data, alt_source)
+        alt = get_relative_altitude(
+            image_path, exif_data, xmp_data, alt_source, terrain_api_key=terrain_api_key
+        )
 
     gsd = pitch * alt / focal
     if gsd <= 0:
