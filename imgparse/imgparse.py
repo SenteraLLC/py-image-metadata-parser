@@ -342,10 +342,12 @@ def get_relative_altitude(
             )
 
     if alt_source != "default" and not fallback:
-        logger.error(
-            "Fallback disabled. Couldn't parse relative altitude for given alt_source"
+        logger.warning(
+            f"Fallback disabled. Couldn't parse relative altitude for given alt_source: {alt_source}"
         )
-        raise ParsingError("Couldn't parse relative altitude for given alt_source")
+        raise ParsingError(
+            f"Couldn't parse relative altitude for given alt_source: {alt_source}"
+        )
 
     try:
         return float(xmp_data[xmp_tags.RELATIVE_ALT]) + terrain_alt
@@ -667,5 +669,9 @@ def get_home_point(image_path, exif_data=None, xmp_data=None):
         else:
             raise KeyError()
     except KeyError:
-        logger.warning("Couldn't parse home point. Sensor might not be supported")
-        raise ParsingError("Couldn't parse home point. Sensor might not be supported")
+        logger.warning(
+            "Couldn't parse home point. Sensor might not be supported for TIP"
+        )
+        raise ParsingError(
+            "Couldn't parse home point. Sensor might not be supported for TIP"
+        )
