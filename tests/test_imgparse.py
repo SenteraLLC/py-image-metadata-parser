@@ -131,6 +131,21 @@ def test_parse_session_alt(sentera_image_data):
 
 def test_get_relative_altitude_invalid(bad_data, dji_image_data):
     with pytest.raises(ParsingError):
+        imgparse.get_relative_altitude_exif(
+            bad_data[0], exif_data=bad_data[1], xmp_data=bad_data[2]
+        )
+
+    with pytest.raises(ParsingError):
+        imgparse.get_relative_altitude_exif(
+            dji_image_data[0], exif_data=dji_image_data[1], xmp_data=bad_data[2]
+        )
+
+    with pytest.raises(ParsingError):
+        imgparse.get_relative_altitude_exif(
+            dji_image_data[0], exif_data=bad_data[1], xmp_data=dji_image_data[2]
+        )
+    
+    with pytest.raises(ParsingError):
         imgparse.get_relative_altitude(
             bad_data[0], exif_data=bad_data[1], xmp_data=bad_data[2]
         )
@@ -148,22 +163,33 @@ def test_get_relative_altitude_invalid(bad_data, dji_image_data):
 
 def test_get_relative_altitude_sentera(sentera_image_data, sentera_quad_image_data):
     alt1 = imgparse.get_relative_altitude(sentera_image_data[0])
-    alt2 = imgparse.get_relative_altitude(sentera_image_data[0], alt_source="lrf")
+    alt2 = imgparse.get_relative_altitude_lrf(sentera_image_data[0])
+    alt3, success3 = imgparse.get_relative_altitude(sentera_image_data[0], alt_source="lrf")
 
-    alt3 = imgparse.get_relative_altitude(sentera_quad_image_data[0])
-    alt4 = imgparse.get_relative_altitude(sentera_quad_image_data[0], alt_source="lrf")
+    alt4 = imgparse.get_relative_altitude(sentera_quad_image_data[0])
+    alt5 = imgparse.get_relative_altitude_lrf(sentera_quad_image_data[0])
+    alt6, success6 = imgparse.get_relative_altitude(sentera_quad_image_data[0], alt_source="lrf")
 
     assert alt1 == 51.042
     assert alt2 == 52.041  # AltimeterCalculatedAGL
-    assert alt3 == pytest.approx(41.55, abs=1e-03)
-    assert alt4 == 42.46  # AltimeterCalcuatedAGL
+    assert alt3 == 52.041  # AltimeterCalculatedAGL
+    assert success3
+    assert alt4 == pytest.approx(41.55, abs=1e-03)
+    assert alt5 == 42.46  # AltimeterCalcuatedAGL
+    assert alt6 == 42.46  # AltimeterCalcuatedAGL
+    assert success6
 
 
 def test_get_relative_altitude_dji(dji_image_data):
-    alt1 = imgparse.get_relative_altitude(dji_image_data[0])
-    alt2 = imgparse.get_relative_altitude(dji_image_data[0], alt_source="lrf")
+    alt1 = imgparse.get_relative_altitude_exif(dji_image_data[0])
+    alt2, success2 = imgparse.get_relative_altitude(dji_image_data[0], alt_source="lrf")
+    alt3 = imgparse.get_relative_altitude(dji_image_data[0])
     assert alt1 == 15.2
     assert alt2 == 15.2
+    assert not success2
+    assert alt3 == 15.2
+    with pytest.raises(ParsingError):
+        imgparse.get_relative_altitude_lrf(dji_image_data[0])
 
 
 def test_get_altitude_msl_invalid(bad_data):
@@ -379,28 +405,37 @@ def test_dji_terrain_elevation(dji_homepoint_image_data, requests_mock):
             {"json": {"status": "OK", "results": [{"elevation": 0}]}},
         ],
     )
-    alt = imgparse.get_relative_altitude(
+    alt, success = imgparse.get_relative_altitude(
         dji_homepoint_image_data[0], alt_source="terrain"
     )
     assert alt == 171.4
+    assert success
 
-    alt = imgparse.get_relative_altitude(
+    alt, success = imgparse.get_relative_altitude(
         dji_homepoint_image_data[0], alt_source="terrain"
     )
     assert alt == 171.4
+    assert success
     # Make sure home point only requested once
     assert len(mock.request_history) == 3
 
     requests_mock.get(imgparse.imgparse.TERRAIN_URL, json={"status": "ERROR"})
-    alt2 = imgparse.get_relative_altitude(
+    alt2, success2 = imgparse.get_relative_altitude(
         dji_homepoint_image_data[0], alt_source="terrain"
     )
     assert alt2 == 121.4
+    assert not success2
 
     with pytest.raises(ParsingError):
-        imgparse.get_relative_altitude(
-            dji_homepoint_image_data[0], alt_source="terrain", fallback=False
+        imgparse.get_relative_altitude_terrain(
+            dji_homepoint_image_data[0]
         )
+    
+    alt3, success = imgparse.get_relative_altitude(
+        dji_homepoint_image_data[0], alt_source="terrain"
+    )
+    assert alt3 == 121.4
+    assert not success
 
 
 def test_sentera_terrain_elevation(sentera_homepoint_image_data, requests_mock):
@@ -411,28 +446,36 @@ def test_sentera_terrain_elevation(sentera_homepoint_image_data, requests_mock):
             {"json": {"status": "OK", "results": [{"elevation": 0}]}},
         ],
     )
-    alt = imgparse.get_relative_altitude(
+    alt, success = imgparse.get_relative_altitude(
         sentera_homepoint_image_data[0], alt_source="terrain"
     )
     assert alt == pytest.approx(114.45, 0.01)
+    assert success
 
-    alt = imgparse.get_relative_altitude(
+    alt, success = imgparse.get_relative_altitude(
         sentera_homepoint_image_data[0], alt_source="terrain"
     )
     assert alt == pytest.approx(114.45, 0.01)
+    assert success
     # Make sure home point only requested once
     assert len(mock.request_history) == 3
 
     requests_mock.get(imgparse.imgparse.TERRAIN_URL, json={"status": "ERROR"})
-    alt2 = imgparse.get_relative_altitude(
+    alt2, success2 = imgparse.get_relative_altitude(
         sentera_homepoint_image_data[0], alt_source="terrain"
     )
     assert alt2 == pytest.approx(64.45, 0.01)
+    assert not success2
 
     with pytest.raises(ParsingError):
-        imgparse.get_relative_altitude(
-            sentera_homepoint_image_data[0], alt_source="terrain", fallback=False
+        imgparse.get_relative_altitude_terrain(
+            sentera_homepoint_image_data[0],
         )
+    
+    alt, success = imgparse.get_relative_altitude(
+        sentera_homepoint_image_data[0], alt_source="terrain",
+    )
+    assert not success
 
 
 def test_get_homepoint_invalid(sentera_image_data):

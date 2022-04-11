@@ -244,6 +244,43 @@ def parse_session_alt(image_path):
     return float(session_alt)
 
 
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
+@get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
+def get_relative_altitude_exif(
+    image_path,
+    exif_data=None,
+    xmp_data=None,
+):
+    """
+    Get the relative altitude of the sensor above the ground (in meters) when the image was taken from the image EXIF/XMP.
+
+    :param image_path: the full path to the image
+    :param exif_data: used internally for memoization. Not necessary to supply.
+    :param xmp_data: used internally for memoization. Not necessary to supply.
+    :return: **relative_alt** - the relative altitude of the camera above the ground
+    :raises: ParsingError
+    """
+    make, model = get_make_and_model(image_path, exif_data)
+    xmp_tags = xmp.get_tags(make)
+    try:
+        return float(xmp_data[xmp_tags.RELATIVE_ALT])
+    except KeyError:
+        if make == "Sentera":
+            logger.warning(
+                "Relative altitude not found in XMP. Attempting to parse from session.txt file"
+            )
+            abs_alt = get_altitude_msl(image_path)
+            session_alt = parse_session_alt(image_path)
+            return abs_alt - session_alt
+        else:
+            logger.error(
+                "Couldn't parse relative altitude from xmp data. Sensor may not be supported"
+            )
+            raise ParsingError(
+                "Couldn't parse relative altitude from xmp data. Sensor may not be supported"
+            )
+
+
 def _compute_terrain_offset(image_path, exif_data, xmp_data, api_key):
     """
     Get relative terrain elevation for the image from google's terrain api.
@@ -286,13 +323,84 @@ def _get_home_point_elevation(lat, lon, api_key):
 
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
 @get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
+def get_relative_altitude_lrf(
+    image_path,
+    exif_data=None,
+    xmp_data=None,
+):
+    """
+    Get the relative altitude of the sensor above the ground (in meters) when the image was taken using laser range finder data.
+
+    :param image_path: the full path to the image
+    :param exif_data: used internally for memoization. Not necessary to supply.
+    :param xmp_data: used internally for memoization. Not necessary to supply.
+    :return: **relative_alt** - the relative altitude of the camera above the ground
+    :raises: ParsingError
+    """
+    make, model = get_make_and_model(image_path, exif_data)
+    xmp_tags = xmp.get_tags(make)
+    try:
+        try:
+            return float(xmp_data[xmp_tags.LRF_ALT])
+        except KeyError:
+            # Specific logic to handle quad v1.0.0 incorrect tag
+            return float(xmp_data[xmp_tags.LRF_ALT2])
+    except KeyError:
+        logger.error(
+            "Altimeter calculated altitude not found in XMP."
+        )
+        raise ParsingError(
+            "Altimeter calculated altitude not found in XMP."
+        )
+
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
+@get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
+def get_relative_altitude_terrain(
+    image_path,
+    exif_data=None,
+    xmp_data=None,
+    terrain_api_key=None,
+):
+    """
+    Get the relative altitude of the sensor above the ground (in meters) when the image was taken using terrain API.
+
+    :param image_path: the full path to the image
+    :param exif_data: used internally for memoization. Not necessary to supply.
+    :param xmp_data: used internally for memoization. Not necessary to supply.
+    :param terrain_api_key: Required if `alt_source` set to "terrain". API key to access google elevation api.
+    :return: **relative_alt** - the relative altitude of the camera above the ground
+    :raises: ParsingError
+    """
+    make, model = get_make_and_model(image_path, exif_data)
+    xmp_tags = xmp.get_tags(make)
+    try:
+        terrain_alt = _compute_terrain_offset(
+            image_path, exif_data, xmp_data, terrain_api_key
+        )
+    except ParsingError:
+        logger.error(
+            "Couldn't determine terrain elevation."
+        )
+        raise
+    try:
+        relative_alt =  float(xmp_data[xmp_tags.RELATIVE_ALT])
+    except KeyError:
+        logger.error(
+            "Relative altitude not found in XMP."
+        )
+        raise ParsingError(
+            "Relative altitude not found in XMP."
+        )
+    return relative_alt + terrain_alt
+
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
+@get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
 def get_relative_altitude(
     image_path,
     exif_data=None,
     xmp_data=None,
     alt_source="default",
     terrain_api_key=None,
-    fallback=True,
 ):
     """
     Get the relative altitude of the sensor above the ground (in meters) when the image was taken.
@@ -300,69 +408,53 @@ def get_relative_altitude(
     `alt_source` by default will grab the relative altitude stored in the image's xmp data. Other options are `lrf` to
     use the altitude detected from a laser range finder or `terrain` to use google's terrain api to correct the relative
     altitude with the terrain elevation change from the home point. If a non-default `alt_source` is specified and
-    fails, the function will "fallback" and return the default xmp relative altitude instead. To disable this fallback
-    and raise an error if the specified `alt_source` isn't available, set `fallback` to False.
-
-    There is an additional fallback if the image is from an older firmware Sentera sensor. For older Sentera sensor's,
-    this xmp tag will not exist, and instead the relative altitude must be computed using the `session.txt` file
-    associated with the image instead.
+    fails, the function will "fallback" and return the default xmp relative altitude instead.
 
     :param image_path: the full path to the image
     :param exif_data: used internally for memoization. Not necessary to supply.
     :param xmp_data: used internally for memoization. Not necessary to supply.
     :param alt_source: Set to "lrf" for laser range finder. "terrain" for terrain aware altitude.
     :param terrain_api_key: Required if `alt_source` set to "terrain". API key to access google elevation api.
-    :param fallback: If disabled and the specified `alt_source` fails, will throw an error instead of falling back.
-    :return: **relative_alt** - the relative altitude of the camera above the ground
+    :return: **relative_alt** - The relative altitude of the camera above the ground
+    :return: **success** - A boolean of whether `alt_source` was successful. None if `alt_source` is "default".
     :raises: ParsingError
+    :raises: ValueError
     """
-    make, model = get_make_and_model(image_path, exif_data)
-    xmp_tags = xmp.get_tags(make)
-    terrain_alt = 0
-    if alt_source == "lrf":
+    if alt_source != "default":
         try:
-            try:
-                return float(xmp_data[xmp_tags.LRF_ALT])
-            except KeyError:
-                # Specific logic to handle quad v1.0.0 incorrect tag
-                return float(xmp_data[xmp_tags.LRF_ALT2])
-        except KeyError:
-            logger.warning(
-                "Altimeter calculated altitude not found in XMP. Defaulting to relative altitude"
-            )
-    elif alt_source == "terrain":
-        try:
-            terrain_alt = _compute_terrain_offset(
-                image_path, exif_data, xmp_data, terrain_api_key
-            )
+            if alt_source == "lrf":
+                relative_alt = get_relative_altitude_lrf(
+                    image_path,
+                    exif_data=exif_data,
+                    xmp_data=xmp_data,
+                )
+            elif alt_source == "terrain":
+                relative_alt = get_relative_altitude_terrain(
+                    image_path,
+                    exif_data=exif_data,
+                    xmp_data=xmp_data,
+                    terrain_api_key=terrain_api_key,
+                )
+            else:
+                error_string = "Unsupported value for `alt_source` parameter: {}".format(alt_source)
+                logger.warning(error_string)
+                raise ValueError(error_string)
+            alt_source_success = True
         except ParsingError:
-            logger.warning(
-                "Couldn't determine terrain elevation. Defaulting to relative altitude"
+            logger.warning("Altitude from `{}` failed: falling back to EXIF/XMP.")
+            relative_alt = get_relative_altitude_exif(
+                image_path,
+                exif_data=exif_data,
+                xmp_data=xmp_data,
             )
-
-    if alt_source != "default" and not fallback:
-        logger.error(
-            "Fallback disabled. Couldn't parse relative altitude for given alt_source"
+            alt_source_success = False
+        return relative_alt, alt_source_success
+    else:
+        return get_relative_altitude_exif(
+            image_path,
+            exif_data=exif_data,
+            xmp_data=xmp_data,
         )
-        raise ParsingError("Couldn't parse relative altitude for given alt_source")
-
-    try:
-        return float(xmp_data[xmp_tags.RELATIVE_ALT]) + terrain_alt
-    except KeyError:
-        if make == "Sentera":
-            logger.warning(
-                "Relative altitude not found in XMP. Attempting to parse from session.txt file"
-            )
-            abs_alt = get_altitude_msl(image_path)
-            session_alt = parse_session_alt(image_path)
-            return abs_alt - session_alt
-        else:
-            logger.error(
-                "Couldn't parse relative altitude from xmp data. Sensor may not be supported"
-            )
-            raise ParsingError(
-                "Couldn't parse relative altitude from xmp data. Sensor may not be supported"
-            )
 
 
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
