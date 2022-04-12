@@ -144,7 +144,7 @@ def test_get_relative_altitude_invalid(bad_data, dji_image_data):
         imgparse.get_relative_altitude_exif(
             dji_image_data[0], exif_data=bad_data[1], xmp_data=dji_image_data[2]
         )
-    
+
     with pytest.raises(ParsingError):
         imgparse.get_relative_altitude(
             bad_data[0], exif_data=bad_data[1], xmp_data=bad_data[2]
@@ -164,11 +164,15 @@ def test_get_relative_altitude_invalid(bad_data, dji_image_data):
 def test_get_relative_altitude_sentera(sentera_image_data, sentera_quad_image_data):
     alt1 = imgparse.get_relative_altitude(sentera_image_data[0])
     alt2 = imgparse.get_relative_altitude_lrf(sentera_image_data[0])
-    alt3, success3 = imgparse.get_relative_altitude(sentera_image_data[0], alt_source="lrf")
+    alt3, success3 = imgparse.get_relative_altitude(
+        sentera_image_data[0], alt_source="lrf"
+    )
 
     alt4 = imgparse.get_relative_altitude(sentera_quad_image_data[0])
     alt5 = imgparse.get_relative_altitude_lrf(sentera_quad_image_data[0])
-    alt6, success6 = imgparse.get_relative_altitude(sentera_quad_image_data[0], alt_source="lrf")
+    alt6, success6 = imgparse.get_relative_altitude(
+        sentera_quad_image_data[0], alt_source="lrf"
+    )
 
     assert alt1 == 51.042
     assert alt2 == 52.041  # AltimeterCalculatedAGL
@@ -427,10 +431,8 @@ def test_dji_terrain_elevation(dji_homepoint_image_data, requests_mock):
     assert not success2
 
     with pytest.raises(ParsingError):
-        imgparse.get_relative_altitude_terrain(
-            dji_homepoint_image_data[0]
-        )
-    
+        imgparse.get_relative_altitude_terrain(dji_homepoint_image_data[0])
+
     alt3, success = imgparse.get_relative_altitude(
         dji_homepoint_image_data[0], alt_source="terrain"
     )
@@ -471,9 +473,10 @@ def test_sentera_terrain_elevation(sentera_homepoint_image_data, requests_mock):
         imgparse.get_relative_altitude_terrain(
             sentera_homepoint_image_data[0],
         )
-    
+
     alt, success = imgparse.get_relative_altitude(
-        sentera_homepoint_image_data[0], alt_source="terrain",
+        sentera_homepoint_image_data[0],
+        alt_source="terrain",
     )
     assert not success
 

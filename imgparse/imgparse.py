@@ -346,12 +346,9 @@ def get_relative_altitude_lrf(
             # Specific logic to handle quad v1.0.0 incorrect tag
             return float(xmp_data[xmp_tags.LRF_ALT2])
     except KeyError:
-        logger.error(
-            "Altimeter calculated altitude not found in XMP."
-        )
-        raise ParsingError(
-            "Altimeter calculated altitude not found in XMP."
-        )
+        logger.error("Altimeter calculated altitude not found in XMP.")
+        raise ParsingError("Altimeter calculated altitude not found in XMP.")
+
 
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
 @get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
@@ -378,20 +375,15 @@ def get_relative_altitude_terrain(
             image_path, exif_data, xmp_data, terrain_api_key
         )
     except ParsingError:
-        logger.error(
-            "Couldn't determine terrain elevation."
-        )
+        logger.error("Couldn't determine terrain elevation.")
         raise
     try:
-        relative_alt =  float(xmp_data[xmp_tags.RELATIVE_ALT])
+        relative_alt = float(xmp_data[xmp_tags.RELATIVE_ALT])
     except KeyError:
-        logger.error(
-            "Relative altitude not found in XMP."
-        )
-        raise ParsingError(
-            "Relative altitude not found in XMP."
-        )
+        logger.error("Relative altitude not found in XMP.")
+        raise ParsingError("Relative altitude not found in XMP.")
     return relative_alt + terrain_alt
+
 
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
 @get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
@@ -436,7 +428,11 @@ def get_relative_altitude(
                     terrain_api_key=terrain_api_key,
                 )
             else:
-                error_string = "Unsupported value for `alt_source` parameter: {}".format(alt_source)
+                error_string = (
+                    "Unsupported value for `alt_source` parameter: {}".format(
+                        alt_source
+                    )
+                )
                 logger.warning(error_string)
                 raise ValueError(error_string)
             alt_source_success = True
