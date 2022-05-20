@@ -10,7 +10,7 @@ import requests
 
 from imgparse import xmp
 from imgparse.decorators import get_if_needed, memoize
-from imgparse.exceptions import ParsingError
+from imgparse.exceptions import ParsingError, TerrainAPIError
 from imgparse.getters import get_exif_data, get_xmp_data
 from imgparse.pixel_pitches import PIXEL_PITCHES
 
@@ -269,7 +269,7 @@ def _get_terrain_elevation(lat, lon, api_key):
     response = requests.request("GET", TERRAIN_URL, params=params).json()
     if response["status"] != "OK":
         logger.warning("Couldn't access google terrain api")
-        raise ParsingError("Couldn't access google terrain api")
+        raise TerrainAPIError("Couldn't access google terrain api")
     return response["results"][0]["elevation"]
 
 
@@ -340,6 +340,9 @@ def get_relative_altitude(
             logger.warning(
                 "Couldn't determine terrain elevation. Defaulting to relative altitude"
             )
+        except TerrainAPIError:
+            if not fallback:
+                raise
 
     if alt_source != "default" and not fallback:
         logger.warning(
@@ -677,8 +680,8 @@ def get_home_point(image_path, exif_data=None, xmp_data=None):
             raise KeyError()
     except KeyError:
         logger.warning(
-            "Couldn't parse home point. Sensor might not be supported for TIP"
+            "Couldn't parse home point. Sensor might not be supported for terrain informed processing"
         )
         raise ParsingError(
-            "Couldn't parse home point. Sensor might not be supported for TIP"
+            "Couldn't parse home point. Sensor might not be supported for terrain informed processing"
         )
