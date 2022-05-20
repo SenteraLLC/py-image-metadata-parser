@@ -6,7 +6,7 @@ import pytest
 import pytz
 
 import imgparse
-from imgparse import ParsingError
+from imgparse import ParsingError, TerrainAPIError
 
 base_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -397,7 +397,7 @@ def test_dji_terrain_elevation(dji_homepoint_image_data, requests_mock):
     )
     assert alt2 == 121.4
 
-    with pytest.raises(ParsingError):
+    with pytest.raises(TerrainAPIError):
         imgparse.get_relative_altitude(
             dji_homepoint_image_data[0], alt_source="terrain", fallback=False
         )
@@ -435,7 +435,7 @@ def test_sentera_terrain_elevation(sentera_homepoint_image_data, requests_mock):
     )
     assert alt2 == pytest.approx(64.45, 0.01)
 
-    with pytest.raises(ParsingError):
+    with pytest.raises(TerrainAPIError):
         imgparse.get_relative_altitude(
             sentera_homepoint_image_data[0], alt_source="terrain", fallback=False
         )
