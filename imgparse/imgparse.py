@@ -17,6 +17,7 @@ from imgparse.pixel_pitches import PIXEL_PITCHES
 logger = logging.getLogger(__name__)
 
 TERRAIN_URL = "https://maps.googleapis.com/maps/api/elevation/json"
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 
 def _convert_to_degrees(tag):
@@ -77,7 +78,6 @@ def get_firmware_version(image_path, exif_data=None):
             raise KeyError()
         major, minor, patch = version_match.group(0).split(".")
     except KeyError or ValueError:
-        logger.error("Couldn't parse sensor version. Sensor might not be supported")
         raise ParsingError(
             "Couldn't parse sensor version. Sensor might not be supported"
         )
@@ -102,9 +102,6 @@ def get_autoexposure(image_path, exif_data=None):
         iso = exif_data["EXIF ISOSpeedRatings"].values[0]
         integration_time = _convert_to_float(exif_data["EXIF ExposureTime"])
     except KeyError:
-        logger.error(
-            "Couldn't parse either ISO or exposure time. Sensor might not be supported"
-        )
         raise ParsingError(
             "Couldn't parse either ISO or exposure time. Sensor might not be supported"
         )
@@ -131,12 +128,10 @@ def get_timestamp(image_path, exif_data=None, format_string="%Y:%m:%d %H:%M:%S")
             exif_data["EXIF DateTimeOriginal"].values, format_string
         )
     except KeyError:
-        logger.error("Couldn't parse image timestamp. Sensor might not be supported")
         raise ParsingError(
             "Couldn't parse image timestamp. Sensor might not be supported"
         )
     except ValueError:
-        logger.error("Couldn't parse found timestamp with given format string")
         raise ParsingError("Couldn't parse found timestamp with given format string")
 
     make, model = get_make_and_model(image_path, exif_data)
@@ -149,10 +144,8 @@ def get_timestamp(image_path, exif_data=None, format_string="%Y:%m:%d %H:%M:%S")
 
             timezone = pytz.timezone(TimezoneFinder().timezone_at(lng=lon, lat=lat))
         except ImportError:
-            print(
+            logger.warning(
                 "Module timezonefinder is required for retrieving timestamps from DJI sensors."
-            )
-            print(
                 "Please execute `poetry install -E dji_timestamps` to install this module."
             )
             raise
@@ -182,7 +175,6 @@ def get_pixel_pitch(image_path, exif_data=None):
         else:
             pixel_pitch = PIXEL_PITCHES[make][model]
     except KeyError:
-        logger.error("Couldn't parse pixel pitch. Sensor might not be supported")
         raise ParsingError("Couldn't parse pixel pitch. Sensor might not be supported")
 
     return pixel_pitch
@@ -226,19 +218,12 @@ def parse_session_alt(image_path):
     imagery_dir = os.path.dirname(image_path)
     session_path = os.path.join(imagery_dir, "session.txt")
     if not os.path.isfile(session_path):
-        logger.error(
-            "Couldn't find session.txt file in image directory: %s", imagery_dir
-        )
         raise ParsingError("Couldn't find session.txt file in image directory")
 
     session_file = open(session_path, "r")
     session_alt = session_file.readline().split("\n")[0].split("=")[1]
     session_file.close()
     if not session_alt:
-        logger.error(
-            "Couldn't parse session altitude from session.txt for image: %s",
-            image_path,
-        )
         raise ParsingError("Couldn't parse session altitude from session.txt")
 
     return float(session_alt)
@@ -253,6 +238,9 @@ def _compute_terrain_offset(image_path, exif_data, xmp_data, api_key):
     altitude of the drone above the ground at each image location. We add the relative terrain elevation
     to the relative altitude to get the actual altitude of the drone above the ground.
     """
+    if api_key is None:
+        api_key = GOOGLE_API_KEY
+
     home_lat, home_lon = get_home_point(image_path, exif_data, xmp_data)
     image_lat, image_lon = get_lat_lon(image_path, exif_data)
     home_elevation = _get_home_point_elevation(home_lat, home_lon, api_key)
@@ -345,11 +333,8 @@ def get_relative_altitude(
                 raise
 
     if alt_source != "default" and not fallback:
-        logger.warning(
-            f"Fallback disabled. Couldn't parse relative altitude for given alt_source: {alt_source}"
-        )
         raise ParsingError(
-            f"Couldn't parse relative altitude for given alt_source: {alt_source}"
+            f"Fallback disabled. Couldn't parse relative altitude for given alt_source: {alt_source}"
         )
 
     try:
@@ -363,9 +348,6 @@ def get_relative_altitude(
             session_alt = parse_session_alt(image_path)
             return abs_alt - session_alt
         else:
-            logger.error(
-                "Couldn't parse relative altitude from xmp data. Sensor may not be supported"
-            )
             raise ParsingError(
                 "Couldn't parse relative altitude from xmp data. Sensor may not be supported"
             )
@@ -387,7 +369,6 @@ def get_lat_lon(image_path, exif_data=None):
         gps_longitude = exif_data["GPS GPSLongitude"]
         gps_longitude_ref = exif_data["GPS GPSLongitudeRef"]
     except KeyError:
-        logger.error("Couldn't parse lat/lon. Sensor might not be supported")
         raise ParsingError("Couldn't parse lat/lon. Sensor might not be supported")
 
     lat = _convert_to_degrees(gps_latitude)
@@ -414,7 +395,6 @@ def get_altitude_msl(image_path, exif_data=None):
     try:
         return _convert_to_float(exif_data["GPS GPSAltitude"])
     except KeyError:
-        logger.error("Couldn't parse altitude msl. Sensor might not be supported")
         raise ParsingError("Couldn't parse altitude msl. Sensor might not be supported")
 
 
@@ -441,7 +421,6 @@ def get_roll_pitch_yaw(image_path, exif_data=None, xmp_data=None):
             # Bring pitch into aircraft pov
             pitch += 90
     except KeyError:
-        logger.error("Couldn't parse roll/pitch/yaw. Sensor might not be supported")
         raise ParsingError(
             "Couldn't parse roll/pitch/yaw. Sensor might not be supported"
         )
@@ -475,7 +454,6 @@ def get_focal_length(image_path, exif_data=None, xmp_data=None, use_calibrated=F
     try:
         return _convert_to_float(exif_data["EXIF FocalLength"]) / 1000
     except KeyError:
-        logger.error("Couldn't parse the focal length. Sensor might not be supported")
         raise ParsingError(
             "Couldn't parse the focal length. Sensor might not be supported"
         )
@@ -494,7 +472,6 @@ def get_make_and_model(image_path, exif_data=None):
     try:
         return exif_data["Image Make"].values, exif_data["Image Model"].values
     except KeyError:
-        logger.error("Couldn't parse the make and model. Sensor might not be supported")
         raise ParsingError(
             "Couldn't parse the make and model. Sensor might not be supported"
         )
@@ -528,9 +505,6 @@ def get_dimensions(image_path, exif_data=None):
                 f"Image format {ext} isn't supported for parsing height/width"
             )
     except KeyError:
-        logger.error(
-            "Couldn't parse the height and width of the image. Sensor might not be supported"
-        )
         raise ParsingError(
             "Couldn't parse the height and width of the image. Sensor might not be supported"
         )
@@ -601,7 +575,6 @@ def get_ils(image_path, exif_data=None, xmp_data=None):
         xmp_tags = xmp.get_tags(make)
         return _parse_seq(xmp_data[xmp_tags.ILS], float)
     except KeyError:
-        logger.error("Couldn't parse ILS value. Sensor might not be supported")
         raise ParsingError("Couldn't parse ILS value. Sensor might not be supported")
 
 
@@ -625,7 +598,6 @@ def get_wavelength_data(image_path, exif_data=None, xmp_data=None):
         wavelength_fwhm = _parse_seq(xmp_data[xmp_tags.WAVELENGTH_FWHM], int)
         return central_wavelength, wavelength_fwhm
     except KeyError:
-        logger.error("Couldn't parse wavelength data. Sensor might not be supported")
         raise ParsingError(
             "Couldn't parse wavelength data. Sensor might not be supported"
         )
@@ -648,7 +620,6 @@ def get_bandnames(image_path, exif_data=None, xmp_data=None):
         xmp_tags = xmp.get_tags(make)
         return _parse_seq(xmp_data[xmp_tags.BANDNAME])
     except KeyError:
-        logger.error("Couldn't parse bandnames. Sensor might not be supported")
         raise ParsingError("Couldn't parse bandnames. Sensor might not be supported")
 
 
