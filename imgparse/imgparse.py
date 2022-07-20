@@ -653,8 +653,8 @@ def get_home_point(image_path, exif_data=None, xmp_data=None):
             raise KeyError()
     except KeyError:
         logger.warning(
-            "Couldn't parse home point. Sensor might not be supported for terrain informed processing"
+            "Couldn't parse home point. Sensor might not be supported for terrain elevation parsing"
         )
         raise ParsingError(
-            "Couldn't parse home point. Sensor might not be supported for terrain informed processing"
+            "Couldn't parse home point. Sensor might not be supported for terrain elevation parsing"
         )
