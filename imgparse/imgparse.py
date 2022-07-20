@@ -323,6 +323,8 @@ def get_relative_altitude(
             terrain_alt = _compute_terrain_offset(
                 image_path, exif_data, xmp_data, terrain_api_key
             )
+            # We set alt source to default here if successfully parsed terrain altitude
+            # to avoid incorrectly failing below if fallback is set to False
             alt_source = "default"
         except ParsingError:
             logger.warning(
