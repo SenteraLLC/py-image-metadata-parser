@@ -229,12 +229,12 @@ def create_metadata_csv(imagery_dir):  # noqa: D301
     images = [
         os.path.join(imagery_dir, image)
         for image in os.listdir(imagery_dir)
-        if os.path.splitext(image)[1].lower() == ".jpg"
+        if os.path.splitext(image)[1].lower() in [".jpg", ".tiff", ".tif"]
     ]
 
     if not images:
-        logger.error("No jpgs found in imagery dir.")
-        raise ValueError("No jpgs found in imagery dir")
+        logger.error("No images found in imagery dir.")
+        raise ValueError("No images found in imagery dir")
 
     metadata_csv = os.path.join(imagery_dir, "analytics-metadata.csv")
     with open(metadata_csv, "w") as f:
