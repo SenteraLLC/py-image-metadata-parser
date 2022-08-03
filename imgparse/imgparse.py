@@ -203,24 +203,22 @@ def get_camera_params(
     return focal_length, pixel_pitch
 
 
-def parse_session_alt(image_path, session_path=None):
+def parse_session_alt(image_path):
     """
     Get the session ground altitude (meters above msl) from a `session.txt` file.
 
     Used for Sentera cameras since relative altitude isn't stored in exif or xmp tags, and instead the session ground
-    altitude is written as a text file that needs to be read.  If not provided explicitely, the `session.txt` must be
-    in the same directory as the image in order to be read.
+    altitude is written as a text file that needs to be read.  The `session.txt` must be in the same directory as the
+    image in order to be read.
 
     :param image_path: the full path to the image
-    :param session_path: the full path to the session.txt file. If not provided, will look for session.txt in the image directory.
     :return: **ground_alt** - the session ground altitude, used to calculate relative altitude.
     :raises: ParsingError
     """
-    if not session_path:
-        imagery_dir = os.path.dirname(image_path)
-        session_path = os.path.join(imagery_dir, "session.txt")
-        if not os.path.isfile(session_path):
-            raise ParsingError("Couldn't find session.txt file in image directory")
+    imagery_dir = os.path.dirname(image_path)
+    session_path = os.path.join(imagery_dir, "session.txt")
+    if not os.path.isfile(session_path):
+        raise ParsingError("Couldn't find session.txt file in image directory")
 
     session_file = open(session_path, "r")
     session_alt = session_file.readline().split("\n")[0].split("=")[1]
@@ -283,7 +281,6 @@ def get_relative_altitude(
     alt_source="default",
     terrain_api_key=None,
     fallback=True,
-    session_path=None,
 ):
     """
     Get the relative altitude of the sensor above the ground (in meters) when the image was taken.
@@ -304,7 +301,6 @@ def get_relative_altitude(
     :param alt_source: Set to "lrf" for laser range finder. "terrain" for terrain aware altitude.
     :param terrain_api_key: Required if `alt_source` set to "terrain". API key to access google elevation api.
     :param fallback: If disabled and the specified `alt_source` fails, will throw an error instead of falling back.
-    :param session_path: Optionally provide the path to the session.txt file. This is only used by older Sentera sensors
     :return: **relative_alt** - the relative altitude of the camera above the ground
     :raises: ParsingError
     """
@@ -351,7 +347,7 @@ def get_relative_altitude(
                 "Relative altitude not found in XMP. Attempting to parse from session.txt file"
             )
             abs_alt = get_altitude_msl(image_path)
-            session_alt = parse_session_alt(image_path, session_path)
+            session_alt = parse_session_alt(image_path)
             return abs_alt - session_alt
         else:
             raise ParsingError(
@@ -527,7 +523,6 @@ def get_gsd(
     alt_source="default",
     terrain_api_key=None,
     fallback=True,
-    session_path=None,
 ):
     """
     Get the gsd of the image (in meters/pixel).
@@ -540,7 +535,6 @@ def get_gsd(
     :param alt_source: See `get_relative_altitude()`
     :param terrain_api_key: Required if `alt_source` set to "terrain". API key to access google elevation api.
     :param fallback: Raise an error if the specified `alt_source` can't be accessed
-    :param session_path: Optionally provide the path to the session.txt file. This is only used by older Sentera sensors
     :return: **gsd** - the ground sample distance of the image in meters
     :raises: ParsingError
     """
@@ -557,7 +551,6 @@ def get_gsd(
             alt_source,
             terrain_api_key=terrain_api_key,
             fallback=fallback,
-            session_path=session_path,
         )
 
     gsd = pitch * alt / focal
