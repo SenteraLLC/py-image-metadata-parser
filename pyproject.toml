@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "imgparse"
-version = "1.12.4"
+version = "1.12.5"
 description = "Python image-metadata-parser utilities"
 authors = []
 
@@ -11,8 +11,8 @@ click = "*"
 decorator = "*"
 xmltodict = "*"
 requests = "*"
+pytz = "*"
 
-pandas = {version = "*", optional = true}
 timezonefinder = {version = "^5.2.0", optional = true}
 
 [tool.poetry.dev-dependencies]
@@ -27,14 +27,13 @@ requests-mock = "*"
 imgparse = "imgparse.cli:cli"
 
 [tool.poetry.extras]
-metadata_csv = ["pandas"]
 dji_timestamps = ["timezonefinder"]
 
 [tool.isort]
 line_length = 88
 multi_line_output = 3
 include_trailing_comma = true
-known_third_party = ["click", "decorator", "exifread", "pandas", "pytest", "pytz", "requests", "xmltodict"]
+known_third_party = ["click", "decorator", "exifread", "pytest", "pytz", "requests", "xmltodict"]
 
 [build-system]
 requires = ["poetry-core"]

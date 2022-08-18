@@ -7,7 +7,7 @@ Run ``imgparse --help`` on the command line to see all available CLI commands th
 """
 
 from imgparse._version import __version__
-from imgparse.exceptions import ParsingError
+from imgparse.exceptions import ParsingError, TerrainAPIError
 from imgparse.getters import get_exif_data, get_xmp_data
 from imgparse.imgparse import (
     get_altitude_msl,
@@ -55,4 +55,5 @@ __all__ = [
     "get_bandnames",
     "get_ils",
     "get_home_point",
+    "TerrainAPIError",
 ]

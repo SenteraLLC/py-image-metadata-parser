@@ -1,15 +1,29 @@
 """Functions for generic metadata retrieval."""
 
-from typing import Callable, NamedTuple
+import inspect
+from dataclasses import dataclass
+from typing import Callable
 
 import imgparse
 
 
-class Metadata(NamedTuple):
+@dataclass
+class Metadata:
     """Struct-like type representing a type of metadata, and the method to retrieve it."""
 
     name: str
     method: Callable
+
+    def parse(self, image_path, **kwargs):
+        """
+        Parse metadata for an image using the instantiated method.
+
+        Optional kwargs to the underlying parsing method can be provided. Will only pass
+        kwargs that are in the parsing method's args.
+        """
+        args = inspect.getfullargspec(self.method).args
+        kwarg_dict = {arg: kwargs[arg] for arg in args if arg in kwargs}
+        return self.method(image_path, **kwarg_dict)
 
 
 AUTOEXPOSURE = Metadata(name="Autoexposure", method=imgparse.get_autoexposure)
@@ -37,7 +51,7 @@ BANDNAME = Metadata(name="BandName", method=imgparse.get_bandnames)
 ILS = Metadata(name="ILS", method=imgparse.get_ils)
 
 
-def get_metadata(image_path: str, *metadata: Metadata):
+def get_metadata(image_path: str, *metadata: Metadata, **kwargs):
     """
     Get a selection of supported metadata from the image.
 
@@ -51,4 +65,4 @@ def get_metadata(image_path: str, *metadata: Metadata):
     :param metadata: variable number of Metadata arguments
     :return: **parsed_metadata** -- A tuple of values of all requested metadata
     """
-    return (metadata_type.method(image_path) for metadata_type in metadata)
+    return (metadata_type.parse(image_path, **kwargs) for metadata_type in metadata)

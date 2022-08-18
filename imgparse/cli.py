@@ -1,10 +1,10 @@
 """CLI wrappers for metadata parsing functions."""
 
+import csv
 import logging
 import os
 
 import click
-import pandas
 
 from imgparse import metadata
 
@@ -229,43 +229,46 @@ def create_metadata_csv(imagery_dir):  # noqa: D301
     images = [
         os.path.join(imagery_dir, image)
         for image in os.listdir(imagery_dir)
-        if os.path.splitext(image)[1].lower() == ".jpg"
+        if os.path.splitext(image)[1].lower() in [".jpg", ".tiff", ".tif"]
     ]
 
     if not images:
-        logger.error("No jpgs found in imagery dir.")
-        raise ValueError("No jpgs found in imagery dir")
-
-    data_frame = pandas.DataFrame(
-        columns=[
-            "File Name",
-            "Lat (decimal degrees)",
-            "Lon (decimal degrees)",
-            "Alt (meters MSL)",
-            "Roll (decimal degrees)",
-            "Pitch (decimal degrees)",
-            "Yaw (decimal degrees)",
-            "Alt (meters AGL)",
-            "Focal Length (pixels)",
-        ]
-    )
-
-    for image_path in images:
-        logger.info("Parsing image: %s", image_path)
-        exif_data = imgparse.get_exif_data(image_path)
-        xmp_data = imgparse.get_xmp_data(image_path)
-        fl, pp = imgparse.get_camera_params(image_path)
-
-        data_frame.loc[len(data_frame)] = [
-            os.path.split(image_path)[1],
-            *imgparse.get_lat_lon(image_path, exif_data),
-            imgparse.get_altitude_msl(image_path, exif_data),
-            *imgparse.get_roll_pitch_yaw(image_path, exif_data, xmp_data),
-            imgparse.get_relative_altitude(image_path, exif_data, xmp_data),
-            fl / pp,
-        ]
+        logger.error("No images found in imagery dir.")
+        raise ValueError("No images found in imagery dir")
 
     metadata_csv = os.path.join(imagery_dir, "analytics-metadata.csv")
-    data_frame.to_csv(metadata_csv, index=False)
+    with open(metadata_csv, "w") as f:
+        writer = csv.writer(f)
+        # Write header
+        writer.writerow(
+            [
+                "File Name",
+                "Lat (decimal degrees)",
+                "Lon (decimal degrees)",
+                "Alt (meters MSL)",
+                "Roll (decimal degrees)",
+                "Pitch (decimal degrees)",
+                "Yaw (decimal degrees)",
+                "Alt (meters AGL)",
+                "Focal Length (pixels)",
+            ]
+        )
+
+        for image_path in images:
+            logger.info("Parsing image: %s", image_path)
+            exif_data = imgparse.get_exif_data(image_path)
+            xmp_data = imgparse.get_xmp_data(image_path)
+            fl, pp = imgparse.get_camera_params(image_path)
+
+            writer.writerow(
+                [
+                    os.path.split(image_path)[1],
+                    *imgparse.get_lat_lon(image_path, exif_data),
+                    imgparse.get_altitude_msl(image_path, exif_data),
+                    *imgparse.get_roll_pitch_yaw(image_path, exif_data, xmp_data),
+                    imgparse.get_relative_altitude(image_path, exif_data, xmp_data),
+                    fl / pp,
+                ]
+            )
 
     logger.info("Metadata csv saved at: %s", metadata_csv)

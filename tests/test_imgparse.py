@@ -6,7 +6,7 @@ import pytest
 import pytz
 
 import imgparse
-from imgparse import ParsingError
+from imgparse import ParsingError, TerrainAPIError
 
 base_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -397,7 +397,7 @@ def test_dji_terrain_elevation(dji_homepoint_image_data, requests_mock):
     )
     assert alt2 == 121.4
 
-    with pytest.raises(ParsingError):
+    with pytest.raises(TerrainAPIError):
         imgparse.get_relative_altitude(
             dji_homepoint_image_data[0], alt_source="terrain", fallback=False
         )
@@ -420,8 +420,14 @@ def test_sentera_terrain_elevation(sentera_homepoint_image_data, requests_mock):
         sentera_homepoint_image_data[0], alt_source="terrain"
     )
     assert alt == pytest.approx(114.45, 0.01)
+
+    alt = imgparse.get_relative_altitude(
+        sentera_homepoint_image_data[0], alt_source="terrain", fallback=False
+    )
+    assert alt == pytest.approx(114.45, 0.01)
+
     # Make sure home point only requested once
-    assert len(mock.request_history) == 3
+    assert len(mock.request_history) == 4
 
     requests_mock.get(imgparse.imgparse.TERRAIN_URL, json={"status": "ERROR"})
     alt2 = imgparse.get_relative_altitude(
@@ -429,7 +435,7 @@ def test_sentera_terrain_elevation(sentera_homepoint_image_data, requests_mock):
     )
     assert alt2 == pytest.approx(64.45, 0.01)
 
-    with pytest.raises(ParsingError):
+    with pytest.raises(TerrainAPIError):
         imgparse.get_relative_altitude(
             sentera_homepoint_image_data[0], alt_source="terrain", fallback=False
         )

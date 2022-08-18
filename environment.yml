@@ -10,7 +10,6 @@ dependencies:
   - pre_commit
   # main dependencies
   - exifread
-  - pandas
   - click
   - decorator
   - timezonefinder
