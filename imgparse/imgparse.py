@@ -510,12 +510,12 @@ def get_dimensions(image_path, exif_data=None):
     except KeyError:
         # Workaround for Sentera sensors missing the tags
         if make == "Sentera":
-            if model == "21030-00_65MP-65-0001":
+            if model.startswith("21030-"):
                 # 65R
                 return (7000, 9344)
-            elif model == "6X-MODEL_PLACEHOLDER":
-                # 6X
-                return (height, width)
+            elif model.startswith("21214-"):
+                # 6X RGB
+                return (3888, 5184)
         raise ParsingError(
             "Couldn't parse the height and width of the image. Sensor might not be supported"
         )
