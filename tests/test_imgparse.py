@@ -60,11 +60,31 @@ def sentera_6x_image_data():
 
 
 @pytest.fixture
+def sentera_6x_rgb_image_data():
+    sentera_6x_rgb_image_path = os.path.join(base_path, "data", "sentera_6x_rgb.jpg")
+    sentera_6x_rgb_exif_data = imgparse.get_exif_data(sentera_6x_rgb_image_path)
+    sentera_6x_rgb_xmp_data = imgparse.get_xmp_data(sentera_6x_rgb_image_path)
+    return [
+        sentera_6x_rgb_image_path,
+        sentera_6x_rgb_exif_data,
+        sentera_6x_rgb_xmp_data,
+    ]
+
+
+@pytest.fixture
 def sentera_quad_image_data():
     sentera_quad_image_path = os.path.join(base_path, "data", "sentera_quad.jpg")
     sentera_quad_exif_data = imgparse.get_exif_data(sentera_quad_image_path)
     sentera_quad_xmp_data = imgparse.get_xmp_data(sentera_quad_image_path)
     return [sentera_quad_image_path, sentera_quad_exif_data, sentera_quad_xmp_data]
+
+
+@pytest.fixture
+def sentera_65r_image_data():
+    sentera_65r_image_path = os.path.join(base_path, "data", "sentera_65r.jpg")
+    sentera_65r_exif_data = imgparse.get_exif_data(sentera_65r_image_path)
+    sentera_65r_xmp_data = imgparse.get_xmp_data(sentera_65r_image_path)
+    return [sentera_65r_image_path, sentera_65r_exif_data, sentera_65r_xmp_data]
 
 
 def test_get_camera_params_invalid(bad_data):
@@ -253,6 +273,16 @@ def test_get_dimensions_sentera(sentera_image_data):
 def test_get_dimensions_6x(sentera_6x_image_data):
     height, width = imgparse.get_dimensions(sentera_6x_image_data[0])
     assert [height, width] == [1464, 1952]
+
+
+def test_get_dimensions_6x_rgb(sentera_6x_rgb_image_data):
+    height, width = imgparse.get_dimensions(sentera_6x_rgb_image_data[0])
+    assert [height, width] == [3888, 5184]
+
+
+def test_get_dimensions_65r(sentera_65r_image_data):
+    height, width = imgparse.get_dimensions(sentera_65r_image_data[0])
+    assert [height, width] == [7000, 9344]
 
 
 def test_get_dimensions_dji(dji_image_data):
