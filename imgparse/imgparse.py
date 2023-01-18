@@ -489,6 +489,7 @@ def get_dimensions(image_path, exif_data=None):
     :return: **height**, **width** - the height and width of the image
     :raises: ParsingError
     """
+    make, model = get_make_and_model(image_path, exif_data)
     ext = os.path.splitext(image_path)[-1].lower()
 
     try:
@@ -507,6 +508,14 @@ def get_dimensions(image_path, exif_data=None):
                 f"Image format {ext} isn't supported for parsing height/width"
             )
     except KeyError:
+        # Workaround for Sentera sensors missing the tags
+        if make == "Sentera":
+            if model.startswith("21030-"):
+                # 65R
+                return (7000, 9344)
+            elif model.startswith("21214-"):
+                # 6X RGB
+                return (3888, 5184)
         raise ParsingError(
             "Couldn't parse the height and width of the image. Sensor might not be supported"
         )
