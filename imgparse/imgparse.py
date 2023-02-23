@@ -410,7 +410,7 @@ def get_roll_pitch_yaw(image_path, exif_data=None, xmp_data=None, standardize=Tr
     :param image_path: the full path to the image
     :param exif_data: used internally for memoization. Not necessary to supply.
     :param xmp_data: used internally for memoization. Not necessary to supply.
-    :param standardize: defaults to True. Standardizes roll, pitch, yaw to common reference frame with well defined singularities
+    :param standardize: defaults to True. Standardizes roll, pitch, yaw to common reference frame (camera pointing down is pitch = 0)
     :return: **roll, pitch, yaw** - the orientation (degrees) of the camera with respect to the NED frame
     :raises: ParsingError
     """
@@ -423,12 +423,13 @@ def get_roll_pitch_yaw(image_path, exif_data=None, xmp_data=None, standardize=Tr
         yaw = float(xmp_data[xmp_tags.YAW])
 
         if standardize:
-            pitch_offset = 0
             if make == "DJI" or make == "Hasselblad":
-                pitch_offset = 90
-            roll, pitch, yaw = apply_rotational_offset(
-                Euler(roll, pitch, yaw), Euler(0, pitch_offset, 0)
-            )
+                # DJI describes orientation in terms of the gimbal reference frame
+                # Thus camera pointing down is pitch = -90
+                # Apply pitch rotation of +90 to convert to standard reference frame
+                roll, pitch, yaw = apply_rotational_offset(
+                    Euler(roll, pitch, yaw), Euler(0, 90, 0)
+                )
     except KeyError:
         raise ParsingError(
             "Couldn't parse roll/pitch/yaw. Sensor might not be supported"
