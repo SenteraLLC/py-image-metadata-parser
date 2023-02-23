@@ -124,9 +124,12 @@ def get_altitude_msl(image_path):
 
 @cli.command()
 @click.argument("image_path", required=True)
-def get_roll_pitch_yaw(image_path):
+@click.option("--no_standardize", is_flag=True, default=False)
+def get_roll_pitch_yaw(image_path, no_standardize):
     """Parse the roll, pitch, yaw from metadata."""
-    roll, pitch, yaw = imgparse.get_roll_pitch_yaw(image_path)
+    roll, pitch, yaw = imgparse.get_roll_pitch_yaw(
+        image_path, standardize=not no_standardize
+    )
     print("Roll (degrees):", roll)
     print("Pitch (degrees):", pitch)
     print("Yaw (degrees):", yaw)

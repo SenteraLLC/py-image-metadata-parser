@@ -13,7 +13,7 @@ from imgparse.decorators import get_if_needed, memoize
 from imgparse.exceptions import ParsingError, TerrainAPIError
 from imgparse.getters import get_exif_data, get_xmp_data
 from imgparse.pixel_pitches import PIXEL_PITCHES
-from imgparse.rotations import constrain_roll_pitch_yaw
+from imgparse.rotations import Euler, apply_rotational_offset
 
 logger = logging.getLogger(__name__)
 
@@ -403,13 +403,14 @@ def get_altitude_msl(image_path, exif_data=None):
 
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
 @get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
-def get_roll_pitch_yaw(image_path, exif_data=None, xmp_data=None):
+def get_roll_pitch_yaw(image_path, exif_data=None, xmp_data=None, standardize=True):
     """
     Get the orientation of the sensor (roll, pitch, yaw in degrees) when the image was taken.
 
     :param image_path: the full path to the image
     :param exif_data: used internally for memoization. Not necessary to supply.
     :param xmp_data: used internally for memoization. Not necessary to supply.
+    :param standardize: defaults to True. Standardizes roll, pitch, yaw to common reference frame with well defined singularities
     :return: **roll, pitch, yaw** - the orientation (degrees) of the camera with respect to the NED frame
     :raises: ParsingError
     """
@@ -420,10 +421,14 @@ def get_roll_pitch_yaw(image_path, exif_data=None, xmp_data=None):
         roll = float(xmp_data[xmp_tags.ROLL])
         pitch = float(xmp_data[xmp_tags.PITCH])
         yaw = float(xmp_data[xmp_tags.YAW])
-        roll, pitch, yaw = constrain_roll_pitch_yaw(roll, pitch, yaw)
-        if make == "DJI" or make == "Hasselblad":
-            # Bring pitch into aircraft pov
-            pitch += 90
+
+        if standardize:
+            pitch_offset = 0
+            if make == "DJI" or make == "Hasselblad":
+                pitch_offset = 90
+            roll, pitch, yaw = apply_rotational_offset(
+                Euler(roll, pitch, yaw), Euler(0, pitch_offset, 0)
+            )
     except KeyError:
         raise ParsingError(
             "Couldn't parse roll/pitch/yaw. Sensor might not be supported"
