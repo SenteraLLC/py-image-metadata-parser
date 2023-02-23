@@ -71,5 +71,8 @@ def constrain_roll_pitch_yaw(roll, pitch, yaw):
     At pitch = +-90, a singularity can occur (multiple solutions for the same orientation).
     We convert the euler angles to quaternions and back to ensure a well defined output
     around these singularity values.
+
+    It should be noted that this phenomenon will pretty much only occur for DJI sensors
+    where they store the pitch in the gimbal POV, which is centered around -90.
     """
     return quaternion_to_euler(euler_to_quaternion(roll, pitch, yaw))
