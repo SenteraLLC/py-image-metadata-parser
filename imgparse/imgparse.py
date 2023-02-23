@@ -13,6 +13,7 @@ from imgparse.decorators import get_if_needed, memoize
 from imgparse.exceptions import ParsingError, TerrainAPIError
 from imgparse.getters import get_exif_data, get_xmp_data
 from imgparse.pixel_pitches import PIXEL_PITCHES
+from imgparse.rotations import constrain_roll_pitch_yaw
 
 logger = logging.getLogger(__name__)
 
@@ -419,6 +420,7 @@ def get_roll_pitch_yaw(image_path, exif_data=None, xmp_data=None):
         roll = float(xmp_data[xmp_tags.ROLL])
         pitch = float(xmp_data[xmp_tags.PITCH])
         yaw = float(xmp_data[xmp_tags.YAW])
+        roll, pitch, yaw = constrain_roll_pitch_yaw(roll, pitch, yaw)
         if make == "DJI" or make == "Hasselblad":
             # Bring pitch into aircraft pov
             pitch += 90
