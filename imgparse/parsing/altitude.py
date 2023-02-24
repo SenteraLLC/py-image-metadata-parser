@@ -9,12 +9,13 @@ from imgparse.exceptions import ParsingError, TerrainAPIError
 from imgparse.getters import get_exif_data, get_xmp_data
 from imgparse.util import convert_to_float
 
-from .parser import get_make_and_model, get_lat_lon, get_focal_length
+from .parser import get_focal_length, get_lat_lon, get_make_and_model
 
 logger = logging.getLogger(__name__)
 
 TERRAIN_URL = "https://maps.googleapis.com/maps/api/elevation/json"
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+
 
 def _parse_session_alt(image_path):
     """
@@ -243,9 +244,7 @@ def get_gsd(
     :return: **gsd** - the ground sample distance of the image in meters
     :raises: ParsingError
     """
-    focal_length = get_focal_length(
-        image_path, exif_data, xmp_data, calibrated_fl
-    )
+    focal_length = get_focal_length(image_path, exif_data, xmp_data, calibrated_fl)
     if corrected_alt:
         alt = corrected_alt
     else:

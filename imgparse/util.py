@@ -1,5 +1,6 @@
 """Image parsing utility functions."""
 
+
 def convert_to_degrees(tag):
     """Convert the `exifread` GPS coordinate IfdTag object to degrees in float format."""
     degrees = convert_to_float(tag, 0)

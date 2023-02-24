@@ -13,7 +13,7 @@ from imgparse.exceptions import ParsingError
 from imgparse.getters import get_exif_data, get_xmp_data
 from imgparse.pixel_pitches import PIXEL_PITCHES
 from imgparse.rotations import Euler, apply_rotational_offset
-from imgparse.util import convert_to_float, convert_to_degrees
+from imgparse.util import convert_to_degrees, convert_to_float
 
 logger = logging.getLogger(__name__)
 
@@ -150,7 +150,7 @@ def get_dimensions(image_path, exif_data=None):
         raise ParsingError(
             "Couldn't parse the height and width of the image. Sensor might not be supported"
         )
-    
+
 
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
 def get_lat_lon(image_path, exif_data=None):
@@ -215,7 +215,7 @@ def get_roll_pitch_yaw(image_path, exif_data=None, xmp_data=None, standardize=Tr
         )
 
     return roll, pitch, yaw
-    
+
 
 def _get_pixel_pitch_m(image_path, exif_data):
     """
@@ -236,7 +236,9 @@ def _get_pixel_pitch_m(image_path, exif_data):
     return pixel_pitch
 
 
-def _get_focal_length_m(image_path, exif_data=None, xmp_data=None, use_calibrated=False):
+def _get_focal_length_m(
+    image_path, exif_data=None, xmp_data=None, use_calibrated=False
+):
     """
     Get the focal length (in meters) of the sensor that took the image.
     """
@@ -260,9 +262,7 @@ def _get_focal_length_m(image_path, exif_data=None, xmp_data=None, use_calibrate
 
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
 @get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
-def get_focal_length(
-    image_path, exif_data=None, xmp_data=None, calibrated_fl=False
-):
+def get_focal_length(image_path, exif_data=None, xmp_data=None, calibrated_fl=False):
     """
     Get the focal length and pixel pitch (in meters) of the sensor that took the image.
 
@@ -273,9 +273,7 @@ def get_focal_length(
     :return: **focal_length, pixel_pitch** - the camera parameters in meters
     :raises: ParsingError
     """
-    focal_length_m = _get_focal_length_m(
-        image_path, exif_data, xmp_data, calibrated_fl
-    )
+    focal_length_m = _get_focal_length_m(image_path, exif_data, xmp_data, calibrated_fl)
     pixel_pitch_m = _get_pixel_pitch_m(image_path, exif_data)
 
     return focal_length_m / pixel_pitch_m

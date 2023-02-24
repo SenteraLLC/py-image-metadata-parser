@@ -1,8 +1,8 @@
 from imgparse import xmp
 from imgparse.decorators import get_if_needed
-from imgparse.getters import get_exif_data, get_xmp_data
 from imgparse.exceptions import ParsingError
-from imgparse.util import parse_seq, convert_to_float
+from imgparse.getters import get_exif_data, get_xmp_data
+from imgparse.util import convert_to_float, parse_seq
 
 from .parser import get_make_and_model
 
