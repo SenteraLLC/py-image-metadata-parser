@@ -613,8 +613,12 @@ def get_wavelength_data(image_path, exif_data=None, xmp_data=None):
     try:
         make, model = get_make_and_model(image_path, exif_data)
         xmp_tags = xmp.get_tags(make)
-        central_wavelength = _parse_seq(xmp_data[xmp_tags.WAVELENGTH_CENTRAL], int)
-        wavelength_fwhm = _parse_seq(xmp_data[xmp_tags.WAVELENGTH_FWHM], int)
+        try:
+            central_wavelength = _parse_seq(xmp_data[xmp_tags.WAVELENGTH_CENTRAL], int)
+            wavelength_fwhm = _parse_seq(xmp_data[xmp_tags.WAVELENGTH_FWHM], int)
+        except TypeError:
+            central_wavelength = xmp_data[xmp_tags.WAVELENGTH_CENTRAL]
+            wavelength_fwhm = xmp_data[xmp_tags.WAVELENGTH_FWHM]
         return central_wavelength, wavelength_fwhm
     except KeyError:
         raise ParsingError(
@@ -637,7 +641,10 @@ def get_bandnames(image_path, exif_data=None, xmp_data=None):
     try:
         make, model = get_make_and_model(image_path, exif_data)
         xmp_tags = xmp.get_tags(make)
-        return _parse_seq(xmp_data[xmp_tags.BANDNAME])
+        try:
+            return _parse_seq(xmp_data[xmp_tags.BANDNAME])
+        except TypeError:
+            return xmp_data[xmp_tags.BANDNAME]
     except KeyError:
         raise ParsingError("Couldn't parse bandnames. Sensor might not be supported")
 

@@ -49,6 +49,18 @@ class DJITags(SensorTags):
     YAW = "drone-dji:GimbalYawDegree"
     FOCAL_LEN = "drone-dji:CalibratedFocalLength"
     SELF_DATA = "drone-dji:SelfData"
+    WAVELENGTH_CENTRAL = "Camera:CentralWavelength"
+    WAVELENGTH_FWHM = "Camera:WavelengthFWHM"
+    BANDNAME = "Camera:BandName"
+
+
+class MicaSenseTags(SensorTags):
+    """MicaSense XMP Tags."""
+
+    WAVELENGTH_CENTRAL = "Camera:CentralWavelength"
+    WAVELENGTH_FWHM = "Camera:WavelengthFWHM"
+    BANDNAME = "Camera:BandName"
+    FOCAL_LEN = "Camera:PerspectiveFocalLength"
 
 
 def get_tags(make):
@@ -57,5 +69,7 @@ def get_tags(make):
         return SenteraTags
     elif make == "DJI" or make == "Hasselblad":
         return DJITags
+    elif make == "MicaSense":
+        return MicaSenseTags
     else:
         return SensorTags
