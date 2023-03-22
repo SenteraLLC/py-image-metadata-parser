@@ -1,10 +1,8 @@
 """Math used to handle gimbal lock/singularity."""
 
-from collections import namedtuple
 from math import asin, atan2, cos, pi, sin
 
-Quaternion = namedtuple("Quaternion", "q0 q1 q2 q3")
-Euler = namedtuple("Euler", "r p y")
+from .types import Euler, Quaternion
 
 
 def euler_to_quaternion(e: Euler):
@@ -68,7 +66,7 @@ def quaternion_to_euler(q: Quaternion):
     return Euler(r, p, y)
 
 
-def multiply_quaternions(q_a, q_b):
+def multiply_quaternions(q_a: Quaternion, q_b: Quaternion):
     """
     Multiply two quaternions together.
 

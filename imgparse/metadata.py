@@ -39,6 +39,9 @@ AUTOEXPOSURE = Metadata(name="Autoexposure", method=imgparse.get_autoexposure)
 TIMESTAMP = Metadata(name="Timestamp", method=imgparse.get_timestamp)
 PIXEL_PITCH = Metadata(name="Pixel pitch (m)", method=imgparse.get_pixel_pitch)
 FOCAL_LENGTH = Metadata(name="Focal length (m)", method=imgparse.get_focal_length)
+FOCAL_LENGTH_PIXELS = Metadata(
+    name="Focal length (pix)", method=imgparse.get_focal_length_pixels
+)
 CAMERA_PARAMS = Metadata(
     name="(Focal length (m), Pixel pitch (m))", method=imgparse.get_camera_params
 )
