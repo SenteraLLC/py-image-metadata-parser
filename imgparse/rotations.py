@@ -8,14 +8,14 @@ from .types import Euler, Quaternion
 def euler_to_quaternion(e: Euler):
     """Convert Euler angles to quaternions."""
     # Intermediate calculations for 'cos(x/2)' of Euler angles.
-    cos_y = cos((e.y * pi) / 360.0)
-    cos_p = cos((e.p * pi) / 360.0)
-    cos_r = cos((e.r * pi) / 360.0)
+    cos_y = cos((e.yaw * pi) / 360.0)
+    cos_p = cos((e.pitch * pi) / 360.0)
+    cos_r = cos((e.roll * pi) / 360.0)
 
     # Intermediate calculations for 'sin(x/2)' of Euler angles.
-    sin_y = sin((e.y * pi) / 360.0)
-    sin_p = sin((e.p * pi) / 360.0)
-    sin_r = sin((e.r * pi) / 360.0)
+    sin_y = sin((e.yaw * pi) / 360.0)
+    sin_p = sin((e.pitch * pi) / 360.0)
+    sin_r = sin((e.roll * pi) / 360.0)
 
     q0 = cos_r * cos_p * cos_y + sin_r * sin_p * sin_y
     q1 = sin_r * cos_p * cos_y - cos_r * sin_p * sin_y
