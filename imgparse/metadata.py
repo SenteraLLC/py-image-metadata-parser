@@ -76,8 +76,9 @@ def get_metadata(
     or non-existent metadata types.
 
     :param image_path: the full path to the image
-    :param metadata: variable number of Metadata arguments
-    :return: **parsed_metadata** -- A tuple of values of all requested metadata
+    :param metadata_list: variable number of Metadata arguments
+    :param ignore_errors: if set, will return None for metadata that raised errors. If not set, will reraise errors
+    :return: **parsed_metadata** -- A list of values of all requested metadata
     """
     return [
         metadata_type.parse(image_path, ignore_errors, **kwargs)
