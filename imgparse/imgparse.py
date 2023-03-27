@@ -13,7 +13,9 @@ from imgparse.decorators import get_if_needed, memoize
 from imgparse.exceptions import ParsingError, TerrainAPIError
 from imgparse.getters import get_exif_data, get_xmp_data
 from imgparse.pixel_pitches import PIXEL_PITCHES
-from imgparse.rotations import Euler, apply_rotational_offset
+from imgparse.rotations import apply_rotational_offset
+from imgparse.types import Coords, Dimensions, Euler, Version
+from imgparse.util import convert_to_degrees, convert_to_float, parse_seq
 
 logger = logging.getLogger(__name__)
 
@@ -21,41 +23,22 @@ TERRAIN_URL = "https://maps.googleapis.com/maps/api/elevation/json"
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 
-def _convert_to_degrees(tag):
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
+def get_make_and_model(image_path, exif_data=None):
     """
-    Convert the `exifread` GPS coordinate IfdTag object to degrees in float format.
+    Get the make and model of the sensor that took the image.
 
-    :param tag:
-    :type tag: exifread.classes.IfdTag
-    :rtype: float
+    :param image_path: the full path to the image
+    :param exif_data: used internally for memoization. Not necessary to supply.
+    :return: **make**, **model** - the make and model of the camera
+    :raises: ParsingError
     """
-    degrees = _convert_to_float(tag, 0)
-    minutes = _convert_to_float(tag, 1)
-    seconds = _convert_to_float(tag, 2)
-
-    return degrees + (minutes / 60.0) + (seconds / 3600.0)
-
-
-def _convert_to_float(tag, index=0):
-    """
-    Convert `exifread` IfdTag object to float.
-
-    :param tag:
-    :param index:
-    :return:
-    """
-    return float(tag.values[index].num) / float(tag.values[index].den)
-
-
-def _parse_seq(tag, type_cast_func=None):
-    """Parse an xml sequence."""
-    seq = tag["rdf:Seq"]["rdf:li"]
-    if not isinstance(seq, list):
-        seq = [seq]
-    if type_cast_func is not None:
-        seq = [type_cast_func(item) for item in seq]
-
-    return seq
+    try:
+        return exif_data["Image Make"].values, exif_data["Image Model"].values
+    except KeyError:
+        raise ParsingError(
+            "Couldn't parse the make and model. Sensor might not be supported"
+        )
 
 
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
@@ -83,31 +66,7 @@ def get_firmware_version(image_path, exif_data=None):
             "Couldn't parse sensor version. Sensor might not be supported"
         )
 
-    return int(major), int(minor), int(patch)
-
-
-@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
-def get_autoexposure(image_path, exif_data=None):
-    """
-    Get the autoexposure value of the sensor when the image was taken.
-
-    Autoexposure is derived from the integration time and gain of the sensor, which are stored in
-    separate tags. This function retrieves those values and performs the calculation.
-
-    :param image_path: the full path to the image
-    :param exif_data: used internally for memoization. Not necessary to supply.
-    :return: **autoexposure** - image autoexposure value
-    :raises: ParsingError
-    """
-    try:
-        iso = exif_data["EXIF ISOSpeedRatings"].values[0]
-        integration_time = _convert_to_float(exif_data["EXIF ExposureTime"])
-    except KeyError:
-        raise ParsingError(
-            "Couldn't parse either ISO or exposure time. Sensor might not be supported"
-        )
-
-    return iso * integration_time
+    return Version(int(major), int(minor), int(patch))
 
 
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
@@ -156,6 +115,51 @@ def get_timestamp(image_path, exif_data=None, format_string="%Y:%m:%d %H:%M:%S")
     return datetime_obj
 
 
+## Intrinsics
+
+
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
+def get_dimensions(image_path, exif_data=None):
+    """
+    Get the height and width (in pixels) of the image.
+
+    :param image_path: the full path to the image
+    :param exif_data: used internally for memoization. Not necessary to supply.
+    :return: **height**, **width** - the height and width of the image
+    :raises: ParsingError
+    """
+    make, model = get_make_and_model(image_path, exif_data)
+    ext = os.path.splitext(image_path)[-1].lower()
+
+    try:
+        if ext in [".jpg", ".jpeg"]:
+            return Dimensions(
+                exif_data["EXIF ExifImageLength"].values[0],
+                exif_data["EXIF ExifImageWidth"].values[0],
+            )
+        elif ext in [".tif", ".tiff"]:
+            return Dimensions(
+                exif_data["Image ImageLength"].values[0],
+                exif_data["Image ImageWidth"].values[0],
+            )
+        else:
+            raise ParsingError(
+                f"Image format {ext} isn't supported for parsing height/width"
+            )
+    except KeyError:
+        # Workaround for Sentera sensors missing the tags
+        if make == "Sentera":
+            if model.startswith("21030-"):
+                # 65R
+                return Dimensions(7000, 9344)
+            elif model.startswith("21214-"):
+                # 6X RGB
+                return Dimensions(3888, 5184)
+        raise ParsingError(
+            "Couldn't parse the height and width of the image. Sensor might not be supported"
+        )
+
+
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
 def get_pixel_pitch(image_path, exif_data=None):
     """
@@ -172,13 +176,44 @@ def get_pixel_pitch(image_path, exif_data=None):
     make, model = get_make_and_model(image_path, exif_data)
     try:
         if make == "Sentera":
-            return 1 / _convert_to_float(exif_data["EXIF FocalPlaneXResolution"]) / 100
+            return 1 / convert_to_float(exif_data["EXIF FocalPlaneXResolution"]) / 100
         else:
             pixel_pitch = PIXEL_PITCHES[make][model]
     except KeyError:
         raise ParsingError("Couldn't parse pixel pitch. Sensor might not be supported")
 
     return pixel_pitch
+
+
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
+@get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
+def get_focal_length(image_path, exif_data=None, xmp_data=None, use_calibrated=False):
+    """
+    Get the focal length (in meters) of the sensor that took the image.
+
+    :param image_path: the full path to the image
+    :param exif_data: used internally for memoization. Not necessary to supply.
+    :param xmp_data: used internally for memoization. Not necessary to supply.
+    :param use_calibrated: enable to use calibrated focal length if available
+    :return: **focal_length** - the focal length of the camera in meters
+    :raises: ParsingError
+    """
+    if use_calibrated:
+        try:
+            make, model = get_make_and_model(image_path, exif_data)
+            xmp_tags = xmp.get_tags(make)
+            return float(xmp_data[xmp_tags.FOCAL_LEN]) / 1000
+        except KeyError:
+            logger.warning(
+                "Calibrated focal length not found in XMP. Defaulting to uncalibrated focal length"
+            )
+
+    try:
+        return convert_to_float(exif_data["EXIF FocalLength"]) / 1000
+    except KeyError:
+        raise ParsingError(
+            "Couldn't parse the focal length. Sensor might not be supported"
+        )
 
 
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
@@ -202,6 +237,100 @@ def get_camera_params(
     pixel_pitch = get_pixel_pitch(image_path, exif_data)
 
     return focal_length, pixel_pitch
+
+
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
+@get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
+def get_focal_length_pixels(
+    image_path, exif_data=None, xmp_data=None, use_calibrated_focal_length=False
+):
+    """
+    Get the focal length (in pixels) of the sensor that took the image.
+
+    :param image_path: the full path to the image
+    :param exif_data: used internally for memoization. Not necessary to supply.
+    :param xmp_data: used internally for memoization. Not necessary to supply.
+    :param use_calibrated_focal_length: enable to use calibrated focal length if available
+    :return: **focal_length, pixel_pitch** - the camera parameters in meters
+    :raises: ParsingError
+    """
+    focal_length, pixel_pitch = get_camera_params(
+        image_path, exif_data, xmp_data, use_calibrated_focal_length
+    )
+
+    return focal_length / pixel_pitch
+
+
+## Extrinsics
+
+
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
+def get_lat_lon(image_path, exif_data=None):
+    """
+    Get the latitude and longitude of the sensor when the image was taken.
+
+    :param image_path: the full path to the image
+    :param exif_data: used internally for memoization. Not necessary to supply.
+    :return: **latitude, longitude** - the location of where the image was taken
+    :raises: ParsingError
+    """
+    try:
+        gps_latitude = exif_data["GPS GPSLatitude"]
+        gps_latitude_ref = exif_data["GPS GPSLatitudeRef"]
+        gps_longitude = exif_data["GPS GPSLongitude"]
+        gps_longitude_ref = exif_data["GPS GPSLongitudeRef"]
+    except KeyError:
+        raise ParsingError("Couldn't parse lat/lon. Sensor might not be supported")
+
+    lat = convert_to_degrees(gps_latitude)
+    if gps_latitude_ref.values[0] != "N":
+        lat = 0 - lat
+
+    lon = convert_to_degrees(gps_longitude)
+    if gps_longitude_ref.values[0] != "E":
+        lon = 0 - lon
+
+    return Coords(lat, lon)
+
+
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
+@get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
+def get_roll_pitch_yaw(image_path, exif_data=None, xmp_data=None, standardize=True):
+    """
+    Get the orientation of the sensor (roll, pitch, yaw in degrees) when the image was taken.
+
+    :param image_path: the full path to the image
+    :param exif_data: used internally for memoization. Not necessary to supply.
+    :param xmp_data: used internally for memoization. Not necessary to supply.
+    :param standardize: defaults to True. Standardizes roll, pitch, yaw to common reference frame (camera pointing down is pitch = 0)
+    :return: **roll, pitch, yaw** - the orientation (degrees) of the camera with respect to the NED frame
+    :raises: ParsingError
+    """
+    make, model = get_make_and_model(image_path, exif_data)
+    xmp_tags = xmp.get_tags(make)
+
+    try:
+        rotation = Euler(
+            float(xmp_data[xmp_tags.ROLL]),
+            float(xmp_data[xmp_tags.PITCH]),
+            float(xmp_data[xmp_tags.YAW]),
+        )
+
+        if standardize:
+            if make == "DJI" or make == "Hasselblad":
+                # DJI describes orientation in terms of the gimbal reference frame
+                # Thus camera pointing down is pitch = -90
+                # Apply pitch rotation of +90 to convert to standard reference frame
+                rotation = apply_rotational_offset(rotation, Euler(0, 90, 0))
+    except KeyError:
+        raise ParsingError(
+            "Couldn't parse roll/pitch/yaw. Sensor might not be supported"
+        )
+
+    return rotation
+
+
+## Altitude
 
 
 def parse_session_alt(image_path):
@@ -228,6 +357,41 @@ def parse_session_alt(image_path):
         raise ParsingError("Couldn't parse session altitude from session.txt")
 
     return float(session_alt)
+
+
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
+@get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
+def get_home_point(image_path, exif_data=None, xmp_data=None):
+    """
+    Get the flight home point. Used for `get_relative_altitude(alt_source=terrain)`.
+
+    :param image_path: the full path to the image
+    :param exif_data: used internally for memoization. Not necessary to supply.
+    :param xmp_data: used internally for memoization. Not necessary to supply.
+    :return: **lat**, **lon** - coordinates of flight home point
+    """
+    try:
+        make, model = get_make_and_model(image_path, exif_data)
+        xmp_tags = xmp.get_tags(make)
+        if make == "DJI":
+            self_data = xmp_data[xmp_tags.SELF_DATA].split("|")
+            if len(self_data) == 4:
+                return float(self_data[0]), float(self_data[1])
+            else:
+                raise KeyError()
+        elif make == "Sentera":
+            return float(xmp_data[xmp_tags.HOMEPOINT_LAT]), float(
+                xmp_data[xmp_tags.HOMEPOINT_LON]
+            )
+        else:
+            raise KeyError()
+    except KeyError:
+        logger.warning(
+            "Couldn't parse home point. Sensor might not be supported for terrain elevation parsing"
+        )
+        raise ParsingError(
+            "Couldn't parse home point. Sensor might not be supported for terrain elevation parsing"
+        )
 
 
 def _compute_terrain_offset(image_path, exif_data, xmp_data, api_key):
@@ -357,35 +521,6 @@ def get_relative_altitude(
 
 
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
-def get_lat_lon(image_path, exif_data=None):
-    """
-    Get the latitude and longitude of the sensor when the image was taken.
-
-    :param image_path: the full path to the image
-    :param exif_data: used internally for memoization. Not necessary to supply.
-    :return: **latitude, longitude** - the location of where the image was taken
-    :raises: ParsingError
-    """
-    try:
-        gps_latitude = exif_data["GPS GPSLatitude"]
-        gps_latitude_ref = exif_data["GPS GPSLatitudeRef"]
-        gps_longitude = exif_data["GPS GPSLongitude"]
-        gps_longitude_ref = exif_data["GPS GPSLongitudeRef"]
-    except KeyError:
-        raise ParsingError("Couldn't parse lat/lon. Sensor might not be supported")
-
-    lat = _convert_to_degrees(gps_latitude)
-    if gps_latitude_ref.values[0] != "N":
-        lat = 0 - lat
-
-    lon = _convert_to_degrees(gps_longitude)
-    if gps_longitude_ref.values[0] != "E":
-        lon = 0 - lon
-
-    return lat, lon
-
-
-@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
 def get_altitude_msl(image_path, exif_data=None):
     """
     Get the absolute altitude (meters above msl) of the sensor when the image was taken.
@@ -396,137 +531,9 @@ def get_altitude_msl(image_path, exif_data=None):
     :raises: ParsingError
     """
     try:
-        return _convert_to_float(exif_data["GPS GPSAltitude"])
+        return convert_to_float(exif_data["GPS GPSAltitude"])
     except KeyError:
         raise ParsingError("Couldn't parse altitude msl. Sensor might not be supported")
-
-
-@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
-@get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
-def get_roll_pitch_yaw(image_path, exif_data=None, xmp_data=None, standardize=True):
-    """
-    Get the orientation of the sensor (roll, pitch, yaw in degrees) when the image was taken.
-
-    :param image_path: the full path to the image
-    :param exif_data: used internally for memoization. Not necessary to supply.
-    :param xmp_data: used internally for memoization. Not necessary to supply.
-    :param standardize: defaults to True. Standardizes roll, pitch, yaw to common reference frame (camera pointing down is pitch = 0)
-    :return: **roll, pitch, yaw** - the orientation (degrees) of the camera with respect to the NED frame
-    :raises: ParsingError
-    """
-    make, model = get_make_and_model(image_path, exif_data)
-    xmp_tags = xmp.get_tags(make)
-
-    try:
-        roll = float(xmp_data[xmp_tags.ROLL])
-        pitch = float(xmp_data[xmp_tags.PITCH])
-        yaw = float(xmp_data[xmp_tags.YAW])
-
-        if standardize:
-            if make == "DJI" or make == "Hasselblad":
-                # DJI describes orientation in terms of the gimbal reference frame
-                # Thus camera pointing down is pitch = -90
-                # Apply pitch rotation of +90 to convert to standard reference frame
-                roll, pitch, yaw = apply_rotational_offset(
-                    Euler(roll, pitch, yaw), Euler(0, 90, 0)
-                )
-    except KeyError:
-        raise ParsingError(
-            "Couldn't parse roll/pitch/yaw. Sensor might not be supported"
-        )
-
-    return roll, pitch, yaw
-
-
-@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
-@get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
-def get_focal_length(image_path, exif_data=None, xmp_data=None, use_calibrated=False):
-    """
-    Get the focal length (in meters) of the sensor that took the image.
-
-    :param image_path: the full path to the image
-    :param exif_data: used internally for memoization. Not necessary to supply.
-    :param xmp_data: used internally for memoization. Not necessary to supply.
-    :param use_calibrated: enable to use calibrated focal length if available
-    :return: **focal_length** - the focal length of the camera in meters
-    :raises: ParsingError
-    """
-    if use_calibrated:
-        try:
-            make, model = get_make_and_model(image_path, exif_data)
-            xmp_tags = xmp.get_tags(make)
-            return float(xmp_data[xmp_tags.FOCAL_LEN]) / 1000
-        except KeyError:
-            logger.warning(
-                "Calibrated focal length not found in XMP. Defaulting to uncalibrated focal length"
-            )
-
-    try:
-        return _convert_to_float(exif_data["EXIF FocalLength"]) / 1000
-    except KeyError:
-        raise ParsingError(
-            "Couldn't parse the focal length. Sensor might not be supported"
-        )
-
-
-@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
-def get_make_and_model(image_path, exif_data=None):
-    """
-    Get the make and model of the sensor that took the image.
-
-    :param image_path: the full path to the image
-    :param exif_data: used internally for memoization. Not necessary to supply.
-    :return: **make**, **model** - the make and model of the camera
-    :raises: ParsingError
-    """
-    try:
-        return exif_data["Image Make"].values, exif_data["Image Model"].values
-    except KeyError:
-        raise ParsingError(
-            "Couldn't parse the make and model. Sensor might not be supported"
-        )
-
-
-@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
-def get_dimensions(image_path, exif_data=None):
-    """
-    Get the height and width (in pixels) of the image.
-
-    :param image_path: the full path to the image
-    :param exif_data: used internally for memoization. Not necessary to supply.
-    :return: **height**, **width** - the height and width of the image
-    :raises: ParsingError
-    """
-    make, model = get_make_and_model(image_path, exif_data)
-    ext = os.path.splitext(image_path)[-1].lower()
-
-    try:
-        if ext in [".jpg", ".jpeg"]:
-            return (
-                exif_data["EXIF ExifImageLength"].values[0],
-                exif_data["EXIF ExifImageWidth"].values[0],
-            )
-        elif ext in [".tif", ".tiff"]:
-            return (
-                exif_data["Image ImageLength"].values[0],
-                exif_data["Image ImageWidth"].values[0],
-            )
-        else:
-            raise ParsingError(
-                f"Image format {ext} isn't supported for parsing height/width"
-            )
-    except KeyError:
-        # Workaround for Sentera sensors missing the tags
-        if make == "Sentera":
-            if model.startswith("21030-"):
-                # 65R
-                return (7000, 9344)
-            elif model.startswith("21214-"):
-                # 6X RGB
-                return (3888, 5184)
-        raise ParsingError(
-            "Couldn't parse the height and width of the image. Sensor might not be supported"
-        )
 
 
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
@@ -555,7 +562,7 @@ def get_gsd(
     :return: **gsd** - the ground sample distance of the image in meters
     :raises: ParsingError
     """
-    focal, pitch = get_camera_params(
+    focal_length = get_focal_length_pixels(
         image_path, exif_data, xmp_data, use_calibrated_focal_length
     )
     if corrected_alt:
@@ -570,11 +577,37 @@ def get_gsd(
             fallback=fallback,
         )
 
-    gsd = pitch * alt / focal
-    if gsd <= 0:
+    if alt <= 0:
         raise ValueError("Parsed gsd is less than or equal to 0")
 
-    return gsd
+    return alt / focal_length
+
+
+## Radiometry
+
+
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
+def get_autoexposure(image_path, exif_data=None):
+    """
+    Get the autoexposure value of the sensor when the image was taken.
+
+    Autoexposure is derived from the integration time and gain of the sensor, which are stored in
+    separate tags. This function retrieves those values and performs the calculation.
+
+    :param image_path: the full path to the image
+    :param exif_data: used internally for memoization. Not necessary to supply.
+    :return: **autoexposure** - image autoexposure value
+    :raises: ParsingError
+    """
+    try:
+        iso = exif_data["EXIF ISOSpeedRatings"].values[0]
+        integration_time = convert_to_float(exif_data["EXIF ExposureTime"])
+    except KeyError:
+        raise ParsingError(
+            "Couldn't parse either ISO or exposure time. Sensor might not be supported"
+        )
+
+    return iso * integration_time
 
 
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
@@ -592,7 +625,7 @@ def get_ils(image_path, exif_data=None, xmp_data=None):
     try:
         make, model = get_make_and_model(image_path, exif_data)
         xmp_tags = xmp.get_tags(make)
-        return _parse_seq(xmp_data[xmp_tags.ILS], float)
+        return parse_seq(xmp_data[xmp_tags.ILS], float)
     except KeyError:
         raise ParsingError("Couldn't parse ILS value. Sensor might not be supported")
 
@@ -613,8 +646,8 @@ def get_wavelength_data(image_path, exif_data=None, xmp_data=None):
     try:
         make, model = get_make_and_model(image_path, exif_data)
         xmp_tags = xmp.get_tags(make)
-        central_wavelength = _parse_seq(xmp_data[xmp_tags.WAVELENGTH_CENTRAL], int)
-        wavelength_fwhm = _parse_seq(xmp_data[xmp_tags.WAVELENGTH_FWHM], int)
+        central_wavelength = parse_seq(xmp_data[xmp_tags.WAVELENGTH_CENTRAL], int)
+        wavelength_fwhm = parse_seq(xmp_data[xmp_tags.WAVELENGTH_FWHM], int)
         return central_wavelength, wavelength_fwhm
     except KeyError:
         raise ParsingError(
@@ -637,41 +670,6 @@ def get_bandnames(image_path, exif_data=None, xmp_data=None):
     try:
         make, model = get_make_and_model(image_path, exif_data)
         xmp_tags = xmp.get_tags(make)
-        return _parse_seq(xmp_data[xmp_tags.BANDNAME])
+        return parse_seq(xmp_data[xmp_tags.BANDNAME])
     except KeyError:
         raise ParsingError("Couldn't parse bandnames. Sensor might not be supported")
-
-
-@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
-@get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
-def get_home_point(image_path, exif_data=None, xmp_data=None):
-    """
-    Get the flight home point. Used for `get_relative_altitude(alt_source=terrain)`.
-
-    :param image_path: the full path to the image
-    :param exif_data: used internally for memoization. Not necessary to supply.
-    :param xmp_data: used internally for memoization. Not necessary to supply.
-    :return: **lat**, **lon** - coordinates of flight home point
-    """
-    try:
-        make, model = get_make_and_model(image_path, exif_data)
-        xmp_tags = xmp.get_tags(make)
-        if make == "DJI":
-            self_data = xmp_data[xmp_tags.SELF_DATA].split("|")
-            if len(self_data) == 4:
-                return float(self_data[0]), float(self_data[1])
-            else:
-                raise KeyError()
-        elif make == "Sentera":
-            return float(xmp_data[xmp_tags.HOMEPOINT_LAT]), float(
-                xmp_data[xmp_tags.HOMEPOINT_LON]
-            )
-        else:
-            raise KeyError()
-    except KeyError:
-        logger.warning(
-            "Couldn't parse home point. Sensor might not be supported for terrain elevation parsing"
-        )
-        raise ParsingError(
-            "Couldn't parse home point. Sensor might not be supported for terrain elevation parsing"
-        )

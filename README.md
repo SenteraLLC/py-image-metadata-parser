@@ -39,10 +39,3 @@
 
 Run ``imgparse --help`` to see a list of all CLI commands available.  Make sure you are in the correct conda 
 environment/poetry shell.
-   
-## Documentation
-
-This library is documented using Sphinx. To generate documentation, navigate to the *docs/* subfolder,
-and run ``make html``.  Make sure you are in the correct conda environment/poetry shell.  Open 
-*docs/\_build/html/index.html* with a browser to get more in depth information on the various modules 
-and functions within the library.
