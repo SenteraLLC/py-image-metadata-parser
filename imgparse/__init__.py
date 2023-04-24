@@ -22,6 +22,7 @@ from imgparse.imgparse import (
     get_home_point,
     get_ils,
     get_lat_lon,
+    get_lens_model,
     get_make_and_model,
     get_pixel_pitch,
     get_relative_altitude,
@@ -58,4 +59,5 @@ __all__ = [
     "get_ils",
     "get_home_point",
     "TerrainAPIError",
+    "get_lens_model",
 ]

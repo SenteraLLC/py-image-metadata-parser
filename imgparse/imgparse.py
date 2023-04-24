@@ -697,7 +697,12 @@ def get_lens_model(image_path, exif_data=None):
         make, model = get_make_and_model(image_path, exif_data)
         if make == "Sentera":
             # Exif LensModel is Single and D4K. Images LensModel is 6x
-            return exif_data[exif_data.get("Exif LensModel", "Image LensModel")].values
+            return (
+                exif_data.get("Image LensModel").values
+                if exif_data.get("Image LensModel")
+                # will return KeyError if both are not found
+                else exif_data["EXIF LensModel"].values
+            )
 
         else:
             raise KeyError()
