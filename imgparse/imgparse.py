@@ -682,3 +682,19 @@ def get_home_point(image_path, exif_data=None, xmp_data=None):
         raise ParsingError(
             "Couldn't parse home point. Sensor might not be supported for terrain elevation parsing"
         )
+
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
+def get_lens_model(image_path, exif_data=None):
+    try:
+        make, model = get_make_and_model(image_path, exif_data)
+        if make == "Sentera":
+            # Exif LensModel is Single and D4K. Images LensModel is 6x
+            exif_data[exif_data.get("Exif LensModel","Image LensModel")].values
+        
+        else:
+            raise KeyError()
+            
+    except KeyError:
+        raise ParsingError(
+            "Couldn't parse lens model. Sensor might not be supported"
+        )
