@@ -645,9 +645,14 @@ def get_wavelength_data(image_path, exif_data=None, xmp_data=None):
     """
     try:
         make, model = get_make_and_model(image_path, exif_data)
-        xmp_tags = xmp.get_tags(make)
-        central_wavelength = parse_seq(xmp_data[xmp_tags.WAVELENGTH_CENTRAL], int)
-        wavelength_fwhm = parse_seq(xmp_data[xmp_tags.WAVELENGTH_FWHM], int)
+        xmp_tags = xmp.get_tags(make) 
+        try:
+            central_wavelength = parse_seq(xmp_data[xmp_tags.WAVELENGTH_CENTRAL], int)
+            wavelength_fwhm = parse_seq(xmp_data[xmp_tags.WAVELENGTH_FWHM], int)
+        except TypeError:
+            central_wavelength = xmp_data[xmp_tags.WAVELENGTH_CENTRAL]
+            wavelength_fwhm = xmp_data[xmp_tags.WAVELENGTH_FWHM]
+
         return central_wavelength, wavelength_fwhm
     except KeyError:
         raise ParsingError(
@@ -670,6 +675,26 @@ def get_bandnames(image_path, exif_data=None, xmp_data=None):
     try:
         make, model = get_make_and_model(image_path, exif_data)
         xmp_tags = xmp.get_tags(make)
-        return parse_seq(xmp_data[xmp_tags.BANDNAME])
+        try:
+            return parse_seq(xmp_data[xmp_tags.BANDNAME])
+        except TypeError:
+            return xmp_data[xmp_tags.BANDNAME]
     except KeyError:
         raise ParsingError("Couldn't parse bandnames. Sensor might not be supported")
+
+
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
+def get_lens_model(image_path, exif_data=None):
+    try:
+        make, model = get_make_and_model(image_path, exif_data)
+        if make == "Sentera":
+            # Exif LensModel is Single and D4K. Images LensModel is 6x
+            return exif_data[exif_data.get("Exif LensModel","Image LensModel")].values
+
+        else:
+            raise KeyError()
+
+    except KeyError:
+        raise ParsingError(
+            "Couldn't parse lens model. Sensor might not be supported"
+        )
