@@ -56,6 +56,7 @@ class DJITags(SensorTags):
 
 class MicaSenseTags(SensorTags):
     """MicaSense XMP Tags."""
+
     ROLL = "Camera:Roll"
     PITCH = "Camera:Pitch"
     YAW = "Camera:Yaw"
