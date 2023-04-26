@@ -96,14 +96,7 @@ def get_timestamp(image_path, exif_data=None, format_string="%Y:%m:%d %H:%M:%S")
         raise ParsingError("Couldn't parse found timestamp with given format string")
         
     lat, lon = get_lat_lon(image_path, exif_data)
-    try:
-        timezone = pytz.timezone(TimezoneFinder().timezone_at(lng=lon, lat=lat))
-    except ImportError:
-        logger.warning(
-            "Module timezonefinder is required for retrieving timestamps."
-            "Please execute `poetry install -E dji_timestamps` to install this module."
-        )
-        raise
+    timezone = pytz.timezone(TimezoneFinder().timezone_at(lng=lon, lat=lat))
     
     make, model = get_make_and_model(image_path, exif_data)
     if make == "Sentera":
