@@ -94,18 +94,17 @@ def get_timestamp(image_path, exif_data=None, format_string="%Y:%m:%d %H:%M:%S")
         )
     except ValueError:
         raise ParsingError("Couldn't parse found timestamp with given format string")
-        
+
     lat, lon = get_lat_lon(image_path, exif_data)
     timezone = pytz.timezone(TimezoneFinder().timezone_at(lng=lon, lat=lat))
-    
-    make, model = get_make_and_model(image_path, exif_data)
+
+    make, _ = get_make_and_model(image_path, exif_data)
     if make == "Sentera":
         datetime_obj = pytz.utc.localize(datetime_obj)
+        # convert time to local timezone
+        datetime_obj = datetime_obj.astimezone(timezone)
     else:
         datetime_obj = timezone.localize(datetime_obj)
-
-    # convert time to local timezone
-    datetime_obj = datetime_obj.astimezone(timezone)
 
     return datetime_obj
 
