@@ -99,7 +99,7 @@ def get_timestamp(image_path, exif_data=None, format_string="%Y:%m:%d %H:%M:%S")
     timezone = pytz.timezone(TimezoneFinder().timezone_at(lng=lon, lat=lat))
 
     make, _ = get_make_and_model(image_path, exif_data)
-    if make == "Sentera":
+    if make in ["Sentera", "MicaSense"]:
         datetime_obj = pytz.utc.localize(datetime_obj)
         # convert time to local timezone
         datetime_obj = datetime_obj.astimezone(timezone)
