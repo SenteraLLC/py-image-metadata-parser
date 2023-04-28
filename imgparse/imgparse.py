@@ -88,7 +88,7 @@ def get_timestamp(image_path, exif_data=None, format_string="%Y:%m:%d %H:%M:%S")
     except ImportError:
         logger.warning(
             "Module timezonefinder is required for retrieving timestamps."
-            "Please execute `poetry install -E dji_timestamps` to install this module."
+            "Please execute `poetry install -E timestamps` to install this module."
         )
         raise
 

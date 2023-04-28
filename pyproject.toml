@@ -24,7 +24,7 @@ requests-mock = "*"
 imgparse = "imgparse.cli:cli"
 
 [tool.poetry.extras]
-dji_timestamps = ["timezonefinder"]
+timestamps = ["timezonefinder"]
 
 [tool.isort]
 line_length = 88
