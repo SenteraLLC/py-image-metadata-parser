@@ -29,7 +29,7 @@
         git clone git@github.com:SenteraLLC/py-image-metadata-parser.git
         cd py-image-metadata-parser
         pyenv install $(cat .python-version)
-        poetry install -E dji_timestamps
+        poetry install -E timestamps
         
 4) Set up ``pre-commit`` to ensure all commits to adhere to **black** and **PEP8** style conventions.
 

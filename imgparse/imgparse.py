@@ -84,6 +84,15 @@ def get_timestamp(image_path, exif_data=None, format_string="%Y:%m:%d %H:%M:%S")
     :raises: ParsingError
     """
     try:
+        from timezonefinder import TimezoneFinder
+    except ImportError:
+        logger.warning(
+            "Module timezonefinder is required for retrieving timestamps."
+            "Please execute `poetry install -E timestamps` to install this module."
+        )
+        raise
+
+    try:
         datetime_obj = datetime.strptime(
             exif_data["EXIF DateTimeOriginal"].values, format_string
         )
@@ -94,22 +103,15 @@ def get_timestamp(image_path, exif_data=None, format_string="%Y:%m:%d %H:%M:%S")
     except ValueError:
         raise ParsingError("Couldn't parse found timestamp with given format string")
 
-    make, model = get_make_and_model(image_path, exif_data)
-    if make == "Sentera":
+    lat, lon = get_lat_lon(image_path, exif_data)
+
+    timezone = pytz.timezone(TimezoneFinder().timezone_at(lng=lon, lat=lat))
+    make, _ = get_make_and_model(image_path, exif_data)
+    if make in ["Sentera", "MicaSense"]:
         datetime_obj = pytz.utc.localize(datetime_obj)
+        # convert time to local timezone
+        datetime_obj = datetime_obj.astimezone(timezone)
     else:
-        lat, lon = get_lat_lon(image_path, exif_data)
-        try:
-            from timezonefinder import TimezoneFinder
-
-            timezone = pytz.timezone(TimezoneFinder().timezone_at(lng=lon, lat=lat))
-        except ImportError:
-            logger.warning(
-                "Module timezonefinder is required for retrieving timestamps from DJI sensors."
-                "Please execute `poetry install -E dji_timestamps` to install this module."
-            )
-            raise
-
         datetime_obj = timezone.localize(datetime_obj)
 
     return datetime_obj
@@ -646,8 +648,13 @@ def get_wavelength_data(image_path, exif_data=None, xmp_data=None):
     try:
         make, model = get_make_and_model(image_path, exif_data)
         xmp_tags = xmp.get_tags(make)
-        central_wavelength = parse_seq(xmp_data[xmp_tags.WAVELENGTH_CENTRAL], int)
-        wavelength_fwhm = parse_seq(xmp_data[xmp_tags.WAVELENGTH_FWHM], int)
+        try:
+            central_wavelength = parse_seq(xmp_data[xmp_tags.WAVELENGTH_CENTRAL], int)
+            wavelength_fwhm = parse_seq(xmp_data[xmp_tags.WAVELENGTH_FWHM], int)
+        except TypeError:
+            central_wavelength = [int(xmp_data[xmp_tags.WAVELENGTH_CENTRAL])]
+            wavelength_fwhm = [int(xmp_data[xmp_tags.WAVELENGTH_FWHM])]
+
         return central_wavelength, wavelength_fwhm
     except KeyError:
         raise ParsingError(
@@ -670,6 +677,37 @@ def get_bandnames(image_path, exif_data=None, xmp_data=None):
     try:
         make, model = get_make_and_model(image_path, exif_data)
         xmp_tags = xmp.get_tags(make)
-        return parse_seq(xmp_data[xmp_tags.BANDNAME])
+        try:
+            return parse_seq(xmp_data[xmp_tags.BANDNAME])
+        except TypeError:
+            return [xmp_data[xmp_tags.BANDNAME]]
     except KeyError:
         raise ParsingError("Couldn't parse bandnames. Sensor might not be supported")
+
+
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
+def get_lens_model(image_path, exif_data=None):
+    """
+    Get the Lens Model of an image from a Sentera Camera.
+
+    :param image_path: the full path to the image
+    :param exif_data: used internally for memoization. Not necessary to supply.
+    :return: LensModel
+    :raises: ParsingError
+    """
+    try:
+        make, model = get_make_and_model(image_path, exif_data)
+        if make == "Sentera":
+            # Exif LensModel is Single and D4K. Images LensModel is 6x
+            return (
+                exif_data.get("Image LensModel").values
+                if exif_data.get("Image LensModel")
+                # will return KeyError if both are not found
+                else exif_data["EXIF LensModel"].values
+            )
+
+        else:
+            raise KeyError()
+
+    except KeyError:
+        raise ParsingError("Couldn't parse lens model. Sensor might not be supported")

@@ -1,18 +1,17 @@
 [tool.poetry]
 name = "imgparse"
-version = "1.13.0"
+version = "1.14.0"
 description = "Python image-metadata-parser utilities"
 authors = []
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.8"
 exifread = "*"
 click = "*"
 decorator = "*"
 xmltodict = "*"
 requests = "*"
 pytz = "*"
-
 timezonefinder = {version = "^5.2.0", optional = true}
 
 [tool.poetry.dev-dependencies]
@@ -25,7 +24,7 @@ requests-mock = "*"
 imgparse = "imgparse.cli:cli"
 
 [tool.poetry.extras]
-dji_timestamps = ["timezonefinder"]
+timestamps = ["timezonefinder"]
 
 [tool.isort]
 line_length = 88
