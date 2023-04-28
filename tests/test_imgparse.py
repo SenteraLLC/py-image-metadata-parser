@@ -42,6 +42,7 @@ def dji_homepoint_image_data():
     dji_xmp_data = imgparse.get_xmp_data(dji_image_path)
     return [dji_image_path, dji_exif_data, dji_xmp_data]
 
+
 @pytest.fixture
 def dji_ms_image_data():
     dji_ms_image_path = os.path.join(base_path, "data", "DJI_ms.tif")
@@ -49,12 +50,14 @@ def dji_ms_image_data():
     dji_ms_xmp_data = imgparse.get_xmp_data(dji_ms_image_path)
     return [dji_ms_image_path, dji_ms_exif_data, dji_ms_xmp_data]
 
+
 @pytest.fixture
 def micasense_ms_image_data():
     micasense_ms_image_path = os.path.join(base_path, "data", "MicaSense_ms.tif")
     micasense_ms_exif_data = imgparse.get_exif_data(micasense_ms_image_path)
     micasense_ms_xmp_data = imgparse.get_xmp_data(micasense_ms_image_path)
     return [micasense_ms_image_path, micasense_ms_exif_data, micasense_ms_xmp_data]
+
 
 @pytest.fixture
 def sentera_homepoint_image_data():
@@ -155,11 +158,13 @@ def test_get_make_and_model_sentera(sentera_image_data):
 def test_get_lens_model_invalid(dji_image_data):
     with pytest.raises(ParsingError):
         imgparse.get_lens_model(dji_image_data[0])
-        
 
-def test_get_lens_model_sentera(sentera_image_data, sentera_6x_image_data,sentera_65r_image_data):
+
+def test_get_lens_model_sentera(
+    sentera_image_data, sentera_6x_image_data, sentera_65r_image_data
+):
     lens_model1 = imgparse.get_lens_model(sentera_image_data[0])
-    lens_model2= imgparse.get_lens_model(sentera_6x_image_data[0])
+    lens_model2 = imgparse.get_lens_model(sentera_6x_image_data[0])
     lens_model3 = imgparse.get_lens_model(sentera_65r_image_data[0])
     assert lens_model1 == "25.0mm-0001_0008"
     assert lens_model2 == "8.00mm-0005_0020"
@@ -410,12 +415,16 @@ def test_invalid_wavelength_data(dji_image_data):
         imgparse.get_wavelength_data(dji_image_data[0])
 
 
-def test_get_bandnames(sentera_6x_image_data, sentera_quad_image_data, dji_ms_image_data, micasense_ms_image_data):
+def test_get_bandnames(
+    sentera_6x_image_data,
+    sentera_quad_image_data,
+    dji_ms_image_data,
+    micasense_ms_image_data,
+):
     bandnames1 = imgparse.get_bandnames(sentera_6x_image_data[0])
     bandnames2 = imgparse.get_bandnames(sentera_quad_image_data[0])
     bandnames3 = imgparse.get_bandnames(dji_ms_image_data[0])
     bandnames4 = imgparse.get_bandnames(micasense_ms_image_data[0])
-
 
     assert bandnames1 == ["Blue"]
     assert bandnames2 == ["Red", "Green", "Blue"]
@@ -423,7 +432,12 @@ def test_get_bandnames(sentera_6x_image_data, sentera_quad_image_data, dji_ms_im
     assert bandnames4 == ["Blue"]
 
 
-def test_get_wavelength_data(sentera_6x_image_data, sentera_quad_image_data, dji_ms_image_data, micasense_ms_image_data):
+def test_get_wavelength_data(
+    sentera_6x_image_data,
+    sentera_quad_image_data,
+    dji_ms_image_data,
+    micasense_ms_image_data,
+):
     central1, fwhm1 = imgparse.get_wavelength_data(sentera_6x_image_data[0])
     central2, fwhm2 = imgparse.get_wavelength_data(sentera_quad_image_data[0])
     central3, fwhm3 = imgparse.get_wavelength_data(dji_ms_image_data[0])
