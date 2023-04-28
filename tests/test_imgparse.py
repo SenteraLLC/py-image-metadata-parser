@@ -152,7 +152,7 @@ def test_get_make_and_model_sentera(sentera_image_data):
     assert [make, model] == ["Sentera", "21022-06_12MP-ERS-0001"]
 
 
-def test_get_lens_model(dji_image_data):
+def test_get_lens_model_invalid(dji_image_data):
     with pytest.raises(ParsingError):
         imgparse.get_lens_model(dji_image_data[0])
         
