@@ -57,10 +57,6 @@ class DJITags(SensorTags):
 class MicaSenseTags(SensorTags):
     """MicaSense XMP Tags."""
 
-    ROLL = "Camera:Roll"
-    PITCH = "Camera:Pitch"
-    YAW = "Camera:Yaw"
-    FOCAL_LEN = "Camera:PerspectiveFocalLength"
     WAVELENGTH_CENTRAL = "Camera:CentralWavelength"
     WAVELENGTH_FWHM = "Camera:WavelengthFWHM"
     BANDNAME = "Camera:BandName"

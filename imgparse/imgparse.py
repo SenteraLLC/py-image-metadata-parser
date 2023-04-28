@@ -7,7 +7,6 @@ from datetime import datetime
 
 import pytz
 import requests
-from timezonefinder import TimezoneFinder
 
 from imgparse import xmp
 from imgparse.decorators import get_if_needed, memoize
@@ -85,6 +84,15 @@ def get_timestamp(image_path, exif_data=None, format_string="%Y:%m:%d %H:%M:%S")
     :raises: ParsingError
     """
     try:
+        from timezonefinder import TimezoneFinder
+    except ImportError:
+        logger.warning(
+            "Module timezonefinder is required for retrieving timestamps."
+            "Please execute `poetry install -E dji_timestamps` to install this module."
+        )
+        raise
+
+    try:
         datetime_obj = datetime.strptime(
             exif_data["EXIF DateTimeOriginal"].values, format_string
         )
@@ -96,8 +104,8 @@ def get_timestamp(image_path, exif_data=None, format_string="%Y:%m:%d %H:%M:%S")
         raise ParsingError("Couldn't parse found timestamp with given format string")
 
     lat, lon = get_lat_lon(image_path, exif_data)
-    timezone = pytz.timezone(TimezoneFinder().timezone_at(lng=lon, lat=lat))
 
+    timezone = pytz.timezone(TimezoneFinder().timezone_at(lng=lon, lat=lat))
     make, _ = get_make_and_model(image_path, exif_data)
     if make in ["Sentera", "MicaSense"]:
         datetime_obj = pytz.utc.localize(datetime_obj)

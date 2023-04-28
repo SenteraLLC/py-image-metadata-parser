@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "imgparse"
-version = "1.13.1"
+version = "1.14.0"
 description = "Python image-metadata-parser utilities"
 authors = []
 
@@ -12,7 +12,7 @@ decorator = "*"
 xmltodict = "*"
 requests = "*"
 pytz = "*"
-timezonefinder = "^5.2.0"
+timezonefinder = {version = "^5.2.0", optional = true}
 
 [tool.poetry.dev-dependencies]
 pytest = "*"
