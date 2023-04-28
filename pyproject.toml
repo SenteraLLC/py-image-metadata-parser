@@ -5,7 +5,7 @@ description = "Python image-metadata-parser utilities"
 authors = []
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.8"
 exifread = "*"
 click = "*"
 decorator = "*"
@@ -30,7 +30,7 @@ dji_timestamps = ["timezonefinder"]
 line_length = 88
 multi_line_output = 3
 include_trailing_comma = true
-known_third_party = ["click", "decorator", "exifread", "pytest", "pytz", "requests", "timezonefinder", "xmltodict"]
+known_third_party = ["click", "decorator", "exifread", "pytest", "pytz", "requests", "xmltodict"]
 
 [build-system]
 requires = ["poetry-core"]
