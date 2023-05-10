@@ -649,8 +649,8 @@ def get_wavelength_data(image_path, exif_data=None, xmp_data=None):
         make, model = get_make_and_model(image_path, exif_data)
         xmp_tags = xmp.get_tags(make)
         try:
-            central_wavelength = parse_seq(xmp_data[xmp_tags.WAVELENGTH_CENTRAL], float)
-            wavelength_fwhm = parse_seq(xmp_data[xmp_tags.WAVELENGTH_FWHM], float)
+            central_wavelength = parse_seq(xmp_data[xmp_tags.WAVELENGTH_CENTRAL], int)
+            wavelength_fwhm = parse_seq(xmp_data[xmp_tags.WAVELENGTH_FWHM], int)
         except TypeError:
             central_wavelength = [float(xmp_data[xmp_tags.WAVELENGTH_CENTRAL])]
             wavelength_fwhm = [float(xmp_data[xmp_tags.WAVELENGTH_FWHM])]
