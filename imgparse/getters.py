@@ -2,12 +2,18 @@
 
 import logging
 import re
+from io import BytesIO
 
 import exifread
 import xmltodict
 
 from imgparse.decorators import memoize
 from imgparse.exceptions import ParsingError
+
+try:
+    import boto3
+except ImportError:
+    boto3 = None
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +34,9 @@ def get_xmp_data(image_path):
     :return: **xmp_data** - XMP data of image, as a string dump of the original XML
     :raises: ParsingError, FileNotFoundError
     """
+    if image_path[:4] == "s3://":
+        raise ValueError("File needs to be local to read xmp data")
+
     with open(image_path, encoding="latin_1") as file:
         xmp_dict = xmltodict.parse(_find_xmp_string(file))
 
@@ -49,6 +58,20 @@ def get_xmp_data(image_path):
     return xmp_dict
 
 
+def read_exif_header_from_s3(image_path):
+    """Read exif header from s3."""
+    bucket, key = image_path[5:].split("/", 1)
+    obj = boto3.resource("s3").Object(bucket, key)
+    exif_start = obj.get(Range="bytes=0-11")["Body"].read().hex()
+    if exif_start[:8] == "ffd8ffe1" and exif_start[12:] == "457869660000":
+        size = int(exif_start[8:12], 16)
+    else:
+        logger.warning("S3 file doesn't match expected exif header format")
+        size = 65536
+
+    return BytesIO(obj.get(Range=f"bytes=0-{size}")["Body"].read())
+
+
 @memoize
 def get_exif_data(image_path):
     """
@@ -62,7 +85,13 @@ def get_exif_data(image_path):
     :return: **exif_data** - a dictionary of lookup keys/values for image exif data.
     :raises: ValueError, FileNotFoundError
     """
-    file = open(image_path, "rb")
+    if image_path[:5] == "s3://":
+        if boto3 is None:
+            raise ImportError("boto3 needs to be installed to read exif from s3")
+        file = read_exif_header_from_s3(image_path)
+    else:
+        file = open(image_path, "rb")
+
     exif_data = exifread.process_file(file, details=False)
     file.close()
 
