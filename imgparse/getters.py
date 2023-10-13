@@ -60,15 +60,22 @@ def get_xmp_data(image_path):
 
 def read_exif_header_from_s3(image_path):
     """Read exif header from s3."""
+    if boto3 is None:
+        raise ImportError("boto3 needs to be installed to read exif from s3")
+
     bucket, key = image_path[5:].split("/", 1)
     obj = boto3.resource("s3").Object(bucket, key)
+    # Read the first 12 bytes of the image to parse the header size
     exif_start = obj.get(Range="bytes=0-11")["Body"].read().hex()
+    # Check the header matches the format expected
+    # See here for more info: https://www.media.mit.edu/pia/Research/deepview/exif.html
     if exif_start[:8] == "ffd8ffe1" and exif_start[12:] == "457869660000":
         size = int(exif_start[8:12], 16)
     else:
         logger.warning("S3 file doesn't match expected exif header format")
         size = 65536
 
+    # Read the entire exif header for the image and return it to be parsed by exifread
     return BytesIO(obj.get(Range=f"bytes=0-{size}")["Body"].read())
 
 
@@ -86,8 +93,6 @@ def get_exif_data(image_path):
     :raises: ValueError, FileNotFoundError
     """
     if image_path[:5] == "s3://":
-        if boto3 is None:
-            raise ImportError("boto3 needs to be installed to read exif from s3")
         file = read_exif_header_from_s3(image_path)
     else:
         file = open(image_path, "rb")
