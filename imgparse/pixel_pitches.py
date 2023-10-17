@@ -25,6 +25,7 @@ DJI_PIXEL_PITCH = {
     "FC3170": 8e-07,  # Mavic Air 2
     "M3E": 3.28e-06,  # Mavic 3 Enterprise
     "FC6360": 3.0e-06,  # Phantom 4 Multispectral
+    "FC6310R": 2.41e-06,  # Phatom 4 Pro RTK
 }
 
 HASSELBLAD_PIXEL_PITCH = {
