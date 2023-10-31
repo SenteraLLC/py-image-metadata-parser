@@ -3,8 +3,10 @@ python: 3.10
 dist: focal
 
 install:
-  - pip install poetry
-  - poetry install -E timestamps
+  - curl -sSL https://install.python-poetry.org | python3 -
+  # Hack for strange error that appears will be fixed in poetry v1.7
+  # https://github.com/python-poetry/poetry/issues/1917
+  - PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring poetry install -E timestamps
 
 script:
   - poetry run pre-commit run --all-files
