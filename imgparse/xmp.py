@@ -62,6 +62,14 @@ class MicaSenseTags(SensorTags):
     BANDNAME = "Camera:BandName"
 
 
+class ParrotTags(SensorTags):
+    """Parrot XMP Tags."""
+
+    WAVELENGTH_CENTRAL = "Camera:CentralWavelength"
+    WAVELENGTH_FWHM = "Camera:WavelengthFWHM"
+    BANDNAME = "Camera:BandName"
+
+
 def get_tags(make):
     """Return the XMP tags based on sensor make."""
     if make == "Sentera":
@@ -70,5 +78,7 @@ def get_tags(make):
         return DJITags
     elif make == "MicaSense":
         return MicaSenseTags
+    elif make == "Parrot":
+        return ParrotTags
     else:
         return SensorTags
