@@ -28,6 +28,7 @@ from imgparse.imgparse import (
     get_relative_altitude,
     get_roll_pitch_yaw,
     get_timestamp,
+    get_unique_id,
     get_wavelength_data,
     parse_session_alt,
 )
@@ -60,4 +61,5 @@ __all__ = [
     "get_home_point",
     "TerrainAPIError",
     "get_lens_model",
+    "get_unique_id",
 ]
