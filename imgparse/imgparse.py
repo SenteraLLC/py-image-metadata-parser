@@ -237,13 +237,9 @@ def get_principal_point(
         xmp_tags = xmp.get_tags(make)
         pt = list(map(float, str(xmp_data[xmp_tags.PRINCIPAL_POINT]).split(",")))
         return PixelCoords(x=pt[0], y=pt[1])
-    except KeyError:
+    except (KeyError, ValueError):
         raise ParsingError(
             "Couldn't find the principal point tag. Sensor might not be supported"
-        )
-    except ValueError:
-        raise ParsingError(
-            "Couldn't parse the principal point tag. Sensor might not be supported"
         )
 
 
