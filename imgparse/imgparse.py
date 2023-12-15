@@ -217,9 +217,12 @@ def get_focal_length(image_path, exif_data=None, xmp_data=None, use_calibrated=F
             "Couldn't parse the focal length. Sensor might not be supported"
         )
 
+
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
 @get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
-def get_principal_point(image_path, exif_data=None, xmp_data=None, use_calibrated=False):
+def get_principal_point(
+    image_path, exif_data=None, xmp_data=None, use_calibrated=False
+):
     """
     Get the principal point (x, y) of the sensor that took the image.
 
@@ -233,7 +236,7 @@ def get_principal_point(image_path, exif_data=None, xmp_data=None, use_calibrate
         make, _ = get_make_and_model(image_path, exif_data)
         xmp_tags = xmp.get_tags(make)
         pt = list(map(float, str(xmp_data[xmp_tags.PRINCIPAL_POINT]).split(",")))
-        return PixelCoords(x=pt[0],y=pt[1])
+        return PixelCoords(x=pt[0], y=pt[1])
     except KeyError:
         raise ParsingError(
             "Couldn't find the principal point tag. Sensor might not be supported"
@@ -242,7 +245,6 @@ def get_principal_point(image_path, exif_data=None, xmp_data=None, use_calibrate
         raise ParsingError(
             "Couldn't parse the principal point tag. Sensor might not be supported"
         )
-
 
 
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
