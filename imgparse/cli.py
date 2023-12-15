@@ -83,6 +83,13 @@ def get_focal_length(image_path):
 
 @cli.command()
 @click.argument("image_path", required=True)
+def get_principal_point(image_path):
+    """Parse principal point from metadata."""
+    print("Principal Point (x,y): ", imgparse.get_principal_point(image_path))
+
+
+@cli.command()
+@click.argument("image_path", required=True)
 def get_camera_params(image_path):
     """Parse pixel pitch and focal length from metadata."""
     fl, pp = imgparse.get_camera_params(image_path)

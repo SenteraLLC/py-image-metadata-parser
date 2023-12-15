@@ -42,6 +42,7 @@ FOCAL_LENGTH = Metadata(name="Focal length (m)", method=imgparse.get_focal_lengt
 FOCAL_LENGTH_PIXELS = Metadata(
     name="Focal length (pix)", method=imgparse.get_focal_length_pixels
 )
+PRINCIPAL_POINT = Metadata(name="Principal Point", method=imgparse.get_principal_point)
 CAMERA_PARAMS = Metadata(
     name="(Focal length (m), Pixel pitch (m))", method=imgparse.get_camera_params
 )

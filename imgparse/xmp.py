@@ -30,6 +30,7 @@ class SenteraTags(SensorTags):
     PITCH = "Camera:Pitch"
     YAW = "Camera:Yaw"
     FOCAL_LEN = "Camera:PerspectiveFocalLength"
+    PRINCIPAL_POINT = "Camera:PrincipalPoint"
     ILS = "Camera:SunSensor"
     LRF_ALT = "Sentera:AltimeterCalculatedAGL"
     LRF_ALT2 = "Sentera:AltimeterCalcuatedAGL"  # l was left out in Quad v1.0.0
