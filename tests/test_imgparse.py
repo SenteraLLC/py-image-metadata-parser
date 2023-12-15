@@ -329,6 +329,10 @@ def test_get_dimensions_dji(dji_image_data):
     height, width = imgparse.get_dimensions(dji_image_data[0])
     assert [height, width] == [3648, 4864]
 
+def test_get_principal_point_65r(sentera_65r_image_data):
+    x, y = imgparse.get_principal_point(sentera_65r_image_data[0])
+    assert [x, y] == [14.916, 11.14]
+
 
 def test_get_autoexposure_sentera(sentera_image_data):
     autoexposure = imgparse.get_autoexposure(sentera_image_data[0])
