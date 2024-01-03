@@ -335,6 +335,11 @@ def test_get_principal_point_65r(sentera_65r_image_data):
     assert [x, y] == [14.916, 11.14]
 
 
+def test_get_distortion_params_65r(sentera_65r_image_data):
+    params = imgparse.get_distortion_parameters(sentera_65r_image_data[0])
+    assert params == [-0.127, 0.126, 0.097, 0.0, 0.0]
+
+
 def test_get_autoexposure_sentera(sentera_image_data):
     autoexposure = imgparse.get_autoexposure(sentera_image_data[0])
     assert autoexposure == pytest.approx(0.4105, rel=0.001)

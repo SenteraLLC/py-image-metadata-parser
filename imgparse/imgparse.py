@@ -221,7 +221,9 @@ def get_focal_length(image_path, exif_data=None, xmp_data=None, use_calibrated=F
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
 @get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
 def get_principal_point(
-    image_path, exif_data=None, xmp_data=None, use_calibrated=False
+    image_path,
+    exif_data=None,
+    xmp_data=None,
 ):
     """
     Get the principal point (x, y) of the sensor that took the image.
@@ -240,6 +242,32 @@ def get_principal_point(
     except (KeyError, ValueError):
         raise ParsingError(
             "Couldn't find the principal point tag. Sensor might not be supported"
+        )
+
+
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
+@get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
+def get_distortion_parameters(
+    image_path,
+    exif_data=None,
+    xmp_data=None,
+):
+    """
+    Get the radial distortion parameters of the sensor that took the image.
+
+    :param image_path: the full path to the image
+    :param exif_data: used internally for memoization. Not necessary to supply.
+    :param xmp_data: used internally for memoization. Not necessary to supply.
+    :return: **distortions** - a sequence of distortion parameters
+    :raises: ParsingError
+    """
+    try:
+        make, _ = get_make_and_model(image_path, exif_data)
+        xmp_tags = xmp.get_tags(make)
+        return list(map(float, str(xmp_data[xmp_tags.DISTORTION]).split(",")))
+    except (KeyError, ValueError):
+        raise ParsingError(
+            "Couldn't find the distortion tag. Sensor might not be supported"
         )
 
 
