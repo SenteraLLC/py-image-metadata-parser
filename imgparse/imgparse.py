@@ -14,7 +14,7 @@ from imgparse.exceptions import ParsingError, TerrainAPIError
 from imgparse.getters import get_exif_data, get_xmp_data
 from imgparse.pixel_pitches import PIXEL_PITCHES
 from imgparse.rotations import apply_rotational_offset
-from imgparse.types import Coords, Dimensions, Euler, SensorCoords, Version
+from imgparse.types import Coords, Dimensions, Euler, PixelCoords, Version
 from imgparse.util import convert_to_degrees, convert_to_float, parse_seq
 
 logger = logging.getLogger(__name__)
@@ -238,7 +238,13 @@ def get_principal_point(
         make, _ = get_make_and_model(image_path, exif_data)
         xmp_tags = xmp.get_tags(make)
         pt = list(map(float, str(xmp_data[xmp_tags.PRINCIPAL_POINT]).split(",")))
-        return SensorCoords(x=pt[0], y=pt[1])
+        pixel_pitch = get_pixel_pitch(image_path, exif_data)
+
+        # convert point from mm from origin to px from origin
+        ptx = pt[0] * 0.001 / pixel_pitch
+        pty = pt[1] * 0.001 / pixel_pitch
+
+        return PixelCoords(x=ptx, y=pty)
     except (KeyError, ValueError):
         raise ParsingError(
             "Couldn't find the principal point tag. Sensor might not be supported"
