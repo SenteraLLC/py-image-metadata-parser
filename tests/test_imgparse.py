@@ -332,7 +332,12 @@ def test_get_dimensions_dji(dji_image_data):
 
 def test_get_principal_point_65r(sentera_65r_image_data):
     x, y = imgparse.get_principal_point(sentera_65r_image_data[0])
-    assert [x, y] == [14.916, 11.14]
+    height, width = imgparse.get_dimensions(sentera_65r_image_data[0])
+
+    known_x_px_offset = -10.75  # checked with metashape camera calibration profile
+    known_y_px_offset = -18.75
+
+    assert [x, y] == [width / 2 + known_x_px_offset, height / 2 + known_y_px_offset]
 
 
 def test_get_distortion_params_65r(sentera_65r_image_data):

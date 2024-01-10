@@ -226,7 +226,7 @@ def get_principal_point(
     xmp_data=None,
 ):
     """
-    Get the principal point (x, y) of the sensor that took the image.
+    Get the principal point (x, y) in pixels of the sensor that took the image.
 
     :param image_path: the full path to the image
     :param exif_data: used internally for memoization. Not necessary to supply.
@@ -238,7 +238,13 @@ def get_principal_point(
         make, _ = get_make_and_model(image_path, exif_data)
         xmp_tags = xmp.get_tags(make)
         pt = list(map(float, str(xmp_data[xmp_tags.PRINCIPAL_POINT]).split(",")))
-        return PixelCoords(x=pt[0], y=pt[1])
+        pixel_pitch = get_pixel_pitch(image_path, exif_data)
+
+        # convert point from mm from origin to px from origin
+        ptx = pt[0] * 0.001 / pixel_pitch
+        pty = pt[1] * 0.001 / pixel_pitch
+
+        return PixelCoords(x=ptx, y=pty)
     except (KeyError, ValueError):
         raise ParsingError(
             "Couldn't find the principal point tag. Sensor might not be supported"
