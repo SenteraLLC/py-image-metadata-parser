@@ -226,12 +226,12 @@ def get_principal_point(
     xmp_data=None,
 ):
     """
-    Get the principal point (x, y) in mm of the sensor that took the image.
+    Get the principal point (x, y) in pixels of the sensor that took the image.
 
     :param image_path: the full path to the image
     :param exif_data: used internally for memoization. Not necessary to supply.
     :param xmp_data: used internally for memoization. Not necessary to supply.
-    :return: **principal_point** - a tuple of mm coordinates of the principal point
+    :return: **principal_point** - a tuple of pixel coordinates of the principal point
     :raises: ParsingError
     """
     try:
