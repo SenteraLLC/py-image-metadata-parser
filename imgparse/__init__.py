@@ -29,6 +29,7 @@ from imgparse.imgparse import (
     get_principal_point,
     get_relative_altitude,
     get_roll_pitch_yaw,
+    get_serial_number,
     get_timestamp,
     get_wavelength_data,
     parse_session_alt,
@@ -62,6 +63,7 @@ __all__ = [
     "get_bandnames",
     "get_ils",
     "get_home_point",
+    "get_serial_number",
     "TerrainAPIError",
     "get_lens_model",
 ]

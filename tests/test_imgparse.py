@@ -396,6 +396,21 @@ def test_get_version_sentera(sentera_image_data):
     assert version == (0, 22, 3)
 
 
+def test_get_serial_no_sentera(sentera_6x_image_data):
+    serial_no = imgparse.get_serial_number(sentera_6x_image_data[0])
+    assert serial_no == 1
+
+
+def test_get_serial_non_numeric(sentera_65r_image_data):
+    with pytest.raises(ParsingError):
+        serial_no = imgparse.get_serial_number(sentera_65r_image_data[0])
+
+
+def test_get_serial_does_not_exist(sentera_quad_image_data):
+    with pytest.raises(ParsingError):
+        serial_no = imgparse.get_serial_number(sentera_quad_image_data[0])
+
+
 def test_bad_version(dji_image_data):
     exif_data = deepcopy(dji_image_data[1])
     exif_data["Image Software"].values = "Bad Version"

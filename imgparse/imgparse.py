@@ -70,6 +70,29 @@ def get_firmware_version(image_path, exif_data=None):
 
 
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
+def get_serial_number(image_path, exif_data=None):
+    """
+    Get the firmware version of the sensor.
+
+    Expects camera firmware version to be in semver format (i.e. MAJOR.MINOR.PATCH), with an optional 'v'
+    at the beginning.
+
+    :param image_path: the full path to the image
+    :param exif_data: used internally for memoization. Not necessary to supply.
+    :return: **major**, **minor**, **patch** - sensor software version
+    :raises: ParsingError
+    """
+    try:
+        serial_no = int(exif_data["Image BodySerialNumber"].values)
+    except (KeyError, ValueError):
+        raise ParsingError(
+            "Couldn't parse sensor version. Sensor might not be supported"
+        )
+
+    return serial_no
+
+
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
 def get_timestamp(image_path, exif_data=None, format_string="%Y:%m:%d %H:%M:%S"):
     """
     Get the time stamp of an image and parse it into a `datetime` object with the given format string.
