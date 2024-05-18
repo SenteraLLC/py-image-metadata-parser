@@ -72,14 +72,13 @@ def get_firmware_version(image_path, exif_data=None):
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
 def get_serial_number(image_path, exif_data=None):
     """
-    Get the firmware version of the sensor.
+    Get the serial number of the sensor.
 
-    Expects camera firmware version to be in semver format (i.e. MAJOR.MINOR.PATCH), with an optional 'v'
-    at the beginning.
+    Expects serial number to be parsable as an integer.
 
     :param image_path: the full path to the image
     :param exif_data: used internally for memoization. Not necessary to supply.
-    :return: **major**, **minor**, **patch** - sensor software version
+    :return: **serial_no** - sensor serial version
     :raises: ParsingError
     """
     try:
