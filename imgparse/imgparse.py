@@ -792,3 +792,27 @@ def get_lens_model(image_path, exif_data=None):
 
     except KeyError:
         raise ParsingError("Couldn't parse lens model. Sensor might not be supported")
+
+
+@get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
+def get_unique_id(image_path, xmp_data=None):
+    """
+    Get the unique image id in the form <session_id>_<image_id>.
+
+    :param image_path: the full path to the image
+    :param xmp_data: used internally for memoization. Not necessary to supply.
+    :return: unique image id in the form <session_id>_<image_id>
+    """
+    # These field names were changed in a 6x firmware update
+    try:
+        # Firmware version >=2.1.0
+        return f"{xmp_data['Camera:FlightUUID']}_{xmp_data['Camera:CaptureUUID']}"
+    except KeyError:
+        try:
+            # Firmware version <2.1.0
+            return f"{xmp_data['Camera:FlightUniqueID']}_{xmp_data['Camera:ImageUniqueID']}"
+        except KeyError:
+            logger.warning(
+                "Couldn't determine unique id. Parsing image ID from file name."
+            )
+            return re.findall(r"IMG_(\d+)", os.path.basename(image_path))[0]

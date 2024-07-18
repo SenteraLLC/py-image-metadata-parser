@@ -31,6 +31,7 @@ from imgparse.imgparse import (
     get_roll_pitch_yaw,
     get_serial_number,
     get_timestamp,
+    get_unique_id,
     get_wavelength_data,
     parse_session_alt,
 )
@@ -66,4 +67,5 @@ __all__ = [
     "get_serial_number",
     "TerrainAPIError",
     "get_lens_model",
+    "get_unique_id",
 ]
