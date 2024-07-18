@@ -42,6 +42,10 @@ FOCAL_LENGTH = Metadata(name="Focal length (m)", method=imgparse.get_focal_lengt
 FOCAL_LENGTH_PIXELS = Metadata(
     name="Focal length (pix)", method=imgparse.get_focal_length_pixels
 )
+PRINCIPAL_POINT = Metadata(name="Principal Point", method=imgparse.get_principal_point)
+DISTORTION_PARAMS = Metadata(
+    name="Radial Distortions", method=imgparse.get_distortion_parameters
+)
 CAMERA_PARAMS = Metadata(
     name="(Focal length (m), Pixel pitch (m))", method=imgparse.get_camera_params
 )
@@ -56,6 +60,7 @@ MAKE_AND_MODEL = Metadata(name="(Make, Model)", method=imgparse.get_make_and_mod
 DIMENSIONS = Metadata(name="Dimensions", method=imgparse.get_dimensions)
 GSD = Metadata(name="Gsd (m)", method=imgparse.get_gsd)
 FIRMWARE = Metadata(name="Firmware version", method=imgparse.get_firmware_version)
+SERIAL = Metadata(name="Serial Number", method=imgparse.get_serial_number)
 WAVELENGTH = Metadata(
     name="Central Wavelength, WavelengthFWHM", method=imgparse.get_wavelength_data
 )

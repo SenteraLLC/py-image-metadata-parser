@@ -14,7 +14,7 @@ from imgparse.exceptions import ParsingError, TerrainAPIError
 from imgparse.getters import get_exif_data, get_xmp_data
 from imgparse.pixel_pitches import PIXEL_PITCHES
 from imgparse.rotations import apply_rotational_offset
-from imgparse.types import Coords, Dimensions, Euler, Version
+from imgparse.types import Coords, Dimensions, Euler, PixelCoords, Version
 from imgparse.util import convert_to_degrees, convert_to_float, parse_seq
 
 logger = logging.getLogger(__name__)
@@ -67,6 +67,28 @@ def get_firmware_version(image_path, exif_data=None):
         )
 
     return Version(int(major), int(minor), int(patch))
+
+
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
+def get_serial_number(image_path, exif_data=None):
+    """
+    Get the serial number of the sensor.
+
+    Expects serial number to be parsable as an integer.
+
+    :param image_path: the full path to the image
+    :param exif_data: used internally for memoization. Not necessary to supply.
+    :return: **serial_no** - sensor serial version
+    :raises: ParsingError
+    """
+    try:
+        serial_no = int(exif_data["Image BodySerialNumber"].values)
+    except (KeyError, ValueError):
+        raise ParsingError(
+            "Couldn't parse sensor version. Sensor might not be supported"
+        )
+
+    return serial_no
 
 
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
@@ -202,7 +224,7 @@ def get_focal_length(image_path, exif_data=None, xmp_data=None, use_calibrated=F
     """
     if use_calibrated:
         try:
-            make, model = get_make_and_model(image_path, exif_data)
+            make, _ = get_make_and_model(image_path, exif_data)
             xmp_tags = xmp.get_tags(make)
             return float(xmp_data[xmp_tags.FOCAL_LEN]) / 1000
         except KeyError:
@@ -215,6 +237,65 @@ def get_focal_length(image_path, exif_data=None, xmp_data=None, use_calibrated=F
     except KeyError:
         raise ParsingError(
             "Couldn't parse the focal length. Sensor might not be supported"
+        )
+
+
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
+@get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
+def get_principal_point(
+    image_path,
+    exif_data=None,
+    xmp_data=None,
+):
+    """
+    Get the principal point (x, y) in pixels of the sensor that took the image.
+
+    :param image_path: the full path to the image
+    :param exif_data: used internally for memoization. Not necessary to supply.
+    :param xmp_data: used internally for memoization. Not necessary to supply.
+    :return: **principal_point** - a tuple of pixel coordinates of the principal point
+    :raises: ParsingError
+    """
+    try:
+        make, _ = get_make_and_model(image_path, exif_data)
+        xmp_tags = xmp.get_tags(make)
+        pt = list(map(float, str(xmp_data[xmp_tags.PRINCIPAL_POINT]).split(",")))
+        pixel_pitch = get_pixel_pitch(image_path, exif_data)
+
+        # convert point from mm from origin to px from origin
+        ptx = pt[0] * 0.001 / pixel_pitch
+        pty = pt[1] * 0.001 / pixel_pitch
+
+        return PixelCoords(x=ptx, y=pty)
+    except (KeyError, ValueError):
+        raise ParsingError(
+            "Couldn't find the principal point tag. Sensor might not be supported"
+        )
+
+
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
+@get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
+def get_distortion_parameters(
+    image_path,
+    exif_data=None,
+    xmp_data=None,
+):
+    """
+    Get the radial distortion parameters of the sensor that took the image.
+
+    :param image_path: the full path to the image
+    :param exif_data: used internally for memoization. Not necessary to supply.
+    :param xmp_data: used internally for memoization. Not necessary to supply.
+    :return: **distortions** - a sequence of distortion parameters
+    :raises: ParsingError
+    """
+    try:
+        make, _ = get_make_and_model(image_path, exif_data)
+        xmp_tags = xmp.get_tags(make)
+        return list(map(float, str(xmp_data[xmp_tags.DISTORTION]).split(",")))
+    except (KeyError, ValueError):
+        raise ParsingError(
+            "Couldn't find the distortion tag. Sensor might not be supported"
         )
 
 

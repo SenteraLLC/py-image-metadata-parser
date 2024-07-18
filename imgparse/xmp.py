@@ -30,6 +30,8 @@ class SenteraTags(SensorTags):
     PITCH = "Camera:Pitch"
     YAW = "Camera:Yaw"
     FOCAL_LEN = "Camera:PerspectiveFocalLength"
+    PRINCIPAL_POINT = "Camera:PrincipalPoint"
+    DISTORTION = "Camera:PerspectiveDistortion"
     ILS = "Camera:SunSensor"
     LRF_ALT = "Sentera:AltimeterCalculatedAGL"
     LRF_ALT2 = "Sentera:AltimeterCalcuatedAGL"  # l was left out in Quad v1.0.0
@@ -62,6 +64,14 @@ class MicaSenseTags(SensorTags):
     BANDNAME = "Camera:BandName"
 
 
+class ParrotTags(SensorTags):
+    """Parrot XMP Tags."""
+
+    WAVELENGTH_CENTRAL = "Camera:CentralWavelength"
+    WAVELENGTH_FWHM = "Camera:WavelengthFWHM"
+    BANDNAME = "Camera:BandName"
+
+
 def get_tags(make):
     """Return the XMP tags based on sensor make."""
     if make == "Sentera":
@@ -70,5 +80,7 @@ def get_tags(make):
         return DJITags
     elif make == "MicaSense":
         return MicaSenseTags
+    elif make == "Parrot":
+        return ParrotTags
     else:
         return SensorTags

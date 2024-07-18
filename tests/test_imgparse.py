@@ -60,6 +60,14 @@ def micasense_ms_image_data():
 
 
 @pytest.fixture
+def parrot_ms_image_data():
+    parrot_ms_image_path = os.path.join(base_path, "data", "Parrot_ms.TIF")
+    parrot_ms_exif_data = imgparse.get_exif_data(parrot_ms_image_path)
+    parrot_ms_xmp_data = imgparse.get_xmp_data(parrot_ms_image_path)
+    return [parrot_ms_image_path, parrot_ms_exif_data, parrot_ms_xmp_data]
+
+
+@pytest.fixture
 def sentera_homepoint_image_data():
     image_path = os.path.join(base_path, "data", "IMG_00001.jpg")
     exif_data = imgparse.get_exif_data(image_path)
@@ -322,6 +330,21 @@ def test_get_dimensions_dji(dji_image_data):
     assert [height, width] == [3648, 4864]
 
 
+def test_get_principal_point_65r(sentera_65r_image_data):
+    x, y = imgparse.get_principal_point(sentera_65r_image_data[0])
+    height, width = imgparse.get_dimensions(sentera_65r_image_data[0])
+
+    known_x_px_offset = -10.75  # checked with metashape camera calibration profile
+    known_y_px_offset = -18.75
+
+    assert [x, y] == [width / 2 + known_x_px_offset, height / 2 + known_y_px_offset]
+
+
+def test_get_distortion_params_65r(sentera_65r_image_data):
+    params = imgparse.get_distortion_parameters(sentera_65r_image_data[0])
+    assert params == [-0.127, 0.126, 0.097, 0.0, 0.0]
+
+
 def test_get_autoexposure_sentera(sentera_image_data):
     autoexposure = imgparse.get_autoexposure(sentera_image_data[0])
     assert autoexposure == pytest.approx(0.4105, rel=0.001)
@@ -373,6 +396,21 @@ def test_get_version_sentera(sentera_image_data):
     assert version == (0, 22, 3)
 
 
+def test_get_serial_no_sentera(sentera_6x_image_data):
+    serial_no = imgparse.get_serial_number(sentera_6x_image_data[0])
+    assert serial_no == 1
+
+
+def test_get_serial_non_numeric(sentera_65r_image_data):
+    with pytest.raises(ParsingError):
+        serial_no = imgparse.get_serial_number(sentera_65r_image_data[0])
+
+
+def test_get_serial_does_not_exist(sentera_quad_image_data):
+    with pytest.raises(ParsingError):
+        serial_no = imgparse.get_serial_number(sentera_quad_image_data[0])
+
+
 def test_bad_version(dji_image_data):
     exif_data = deepcopy(dji_image_data[1])
     exif_data["Image Software"].values = "Bad Version"
@@ -420,16 +458,19 @@ def test_get_bandnames(
     sentera_quad_image_data,
     dji_ms_image_data,
     micasense_ms_image_data,
+    parrot_ms_image_data,
 ):
     bandnames1 = imgparse.get_bandnames(sentera_6x_image_data[0])
     bandnames2 = imgparse.get_bandnames(sentera_quad_image_data[0])
     bandnames3 = imgparse.get_bandnames(dji_ms_image_data[0])
     bandnames4 = imgparse.get_bandnames(micasense_ms_image_data[0])
+    bandnames5 = imgparse.get_bandnames(parrot_ms_image_data[0])
 
     assert bandnames1 == ["Blue"]
     assert bandnames2 == ["Red", "Green", "Blue"]
     assert bandnames3 == ["Blue"]
     assert bandnames4 == ["Blue"]
+    assert bandnames5 == ["Green"]
 
 
 def test_get_wavelength_data(
@@ -437,11 +478,13 @@ def test_get_wavelength_data(
     sentera_quad_image_data,
     dji_ms_image_data,
     micasense_ms_image_data,
+    parrot_ms_image_data,
 ):
     central1, fwhm1 = imgparse.get_wavelength_data(sentera_6x_image_data[0])
     central2, fwhm2 = imgparse.get_wavelength_data(sentera_quad_image_data[0])
     central3, fwhm3 = imgparse.get_wavelength_data(dji_ms_image_data[0])
     central4, fwhm4 = imgparse.get_wavelength_data(micasense_ms_image_data[0])
+    central5, fwhm5 = imgparse.get_wavelength_data(parrot_ms_image_data[0])
 
     assert central1 == [475]
     assert fwhm1 == [30]
@@ -451,6 +494,8 @@ def test_get_wavelength_data(
     assert fwhm3 == [16]
     assert central4 == [475]
     assert fwhm4 == [32]
+    assert central5 == [550]
+    assert fwhm5 == [40]
 
 
 def test_dji_terrain_elevation(dji_homepoint_image_data, requests_mock):
