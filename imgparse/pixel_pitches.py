@@ -1,5 +1,5 @@
 """
-Lookup tables for DJI, Sony, and Hasselblad pixel pitches.
+Lookup tables for DJI, Sony, Hasselblad, and Phase One pixel pitches.
 
 None of these camera types store the pixel pitch in xmp or exif tags, so they need to be manually coded and accessed.
 
@@ -40,8 +40,13 @@ SONY_PIXEL_PITCH = {
     "ILCE-7RM4A": 3.76e-06,  # Sony A7R IV (60.2MP)
 }
 
+PHASE_ONE_PITCH = {
+    "iXM-100": 3.76e-06,  # iXM-100 (120MP)
+}
+
 PIXEL_PITCHES = {
     "DJI": DJI_PIXEL_PITCH,
     "Hasselblad": HASSELBLAD_PIXEL_PITCH,
     "SONY": SONY_PIXEL_PITCH,
+    "PhaseOne": PHASE_ONE_PITCH,
 }
