@@ -709,7 +709,7 @@ def get_ils(image_path, exif_data=None, xmp_data=None):
         make, model = get_make_and_model(image_path, exif_data)
         xmp_tags = xmp.get_tags(make)
         if make == "DJI":
-            return float(xmp_data[xmp_tags.ILS])
+            return [float(xmp_data[xmp_tags.ILS])]
         else:
             return parse_seq(xmp_data[xmp_tags.ILS], float)
     except KeyError:
