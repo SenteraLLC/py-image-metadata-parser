@@ -34,6 +34,7 @@ from imgparse.imgparse import (
     get_unique_id,
     get_wavelength_data,
     parse_session_alt,
+    get_irradiance,
 )
 from imgparse.metadata import get_metadata
 
@@ -68,4 +69,5 @@ __all__ = [
     "TerrainAPIError",
     "get_lens_model",
     "get_unique_id",
+    "get_irradiance",
 ]
