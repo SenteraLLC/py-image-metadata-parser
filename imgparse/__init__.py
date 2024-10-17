@@ -22,6 +22,7 @@ from imgparse.imgparse import (
     get_gsd,
     get_home_point,
     get_ils,
+    get_irradiance,
     get_lat_lon,
     get_lens_model,
     get_make_and_model,
@@ -34,7 +35,6 @@ from imgparse.imgparse import (
     get_unique_id,
     get_wavelength_data,
     parse_session_alt,
-    get_irradiance,
 )
 from imgparse.metadata import get_metadata
 
