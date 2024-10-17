@@ -54,6 +54,8 @@ class DJITags(SensorTags):
     WAVELENGTH_CENTRAL = "Camera:CentralWavelength"
     WAVELENGTH_FWHM = "Camera:WavelengthFWHM"
     BANDNAME = "Camera:BandName"
+    ILS = "Camera:SunSensor"
+    IRRADIANCE = "Camera:Irradiance"
 
 
 class MicaSenseTags(SensorTags):
