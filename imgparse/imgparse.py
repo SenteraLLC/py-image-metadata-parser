@@ -708,7 +708,10 @@ def get_ils(image_path, exif_data=None, xmp_data=None):
     try:
         make, model = get_make_and_model(image_path, exif_data)
         xmp_tags = xmp.get_tags(make)
-        return parse_seq(xmp_data[xmp_tags.ILS], float)
+        if make == "DJI":
+            return float(xmp_data[xmp_tags.ILS])
+        else:
+            return parse_seq(xmp_data[xmp_tags.ILS], float)
     except KeyError:
         raise ParsingError("Couldn't parse ILS value. Sensor might not be supported")
     
@@ -728,7 +731,10 @@ def get_irradiance(image_path, exif_data=None, xmp_data=None):
     try:
         make, model = get_make_and_model(image_path, exif_data)
         xmp_tags = xmp.get_tags(make)
-        return parse_seq(xmp_data[xmp_tags.IRRADIANCE], float)
+        if make == "DJI":
+            return float(xmp_data[xmp_tags.IRRADIANCE])
+        else:
+            return parse_seq(xmp_data[xmp_tags.IRRADIANCE], float)
     except KeyError:
         raise ParsingError("Couldn't parse IRRADIANCE value. Sensor might not be supported")
 
