@@ -831,6 +831,16 @@ def get_unique_id(image_path, xmp_data=None):
     :param xmp_data: used internally for memoization. Not necessary to supply.
     :return: unique image id in the form <session_id>_<image_id>
     """
+    # DJI CaptureUUID
+    make, model = get_make_and_model(image_path)
+    if make == "DJI":
+        try:
+            return str(xmp_data["drone-dji:CaptureUUID"])
+        except KeyError:
+            logger.warning(
+                "Couldn't determine unique id. Parsing image ID from file name."
+            )
+            return os.path.basename(image_path).split(".")[0]
     # These field names were changed in a 6x firmware update
     try:
         # Firmware version >=2.1.0
