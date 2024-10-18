@@ -708,9 +708,37 @@ def get_ils(image_path, exif_data=None, xmp_data=None):
     try:
         make, model = get_make_and_model(image_path, exif_data)
         xmp_tags = xmp.get_tags(make)
-        return parse_seq(xmp_data[xmp_tags.ILS], float)
+        if make == "DJI":
+            return [float(xmp_data[xmp_tags.ILS])]
+        else:
+            return parse_seq(xmp_data[xmp_tags.ILS], float)
     except KeyError:
         raise ParsingError("Couldn't parse ILS value. Sensor might not be supported")
+
+
+@get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
+@get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
+def get_irradiance(image_path, exif_data=None, xmp_data=None):
+    """
+    Get the Irradiance value of an image captured by a sensor with an DLS module.
+
+    :param image_path: the full path to the image
+    :param exif_data: used internally for memoization. Not necessary to supply.
+    :param xmp_data: used internally for memoization. Not necessary to supply.
+    :return: **irradiance** - Irradiance value of image, as a floating point number
+    :raises: ParsingError
+    """
+    try:
+        make, model = get_make_and_model(image_path, exif_data)
+        xmp_tags = xmp.get_tags(make)
+        if make == "DJI":
+            return float(xmp_data[xmp_tags.IRRADIANCE])
+        else:
+            return parse_seq(xmp_data[xmp_tags.IRRADIANCE], float)
+    except KeyError:
+        raise ParsingError(
+            "Couldn't parse IRRADIANCE value. Sensor might not be supported"
+        )
 
 
 @get_if_needed("exif_data", getter=get_exif_data, getter_args=["image_path"])
@@ -803,6 +831,18 @@ def get_unique_id(image_path, xmp_data=None):
     :param xmp_data: used internally for memoization. Not necessary to supply.
     :return: unique image id in the form <session_id>_<image_id>
     """
+    # DJI CaptureUUID
+    make, model = get_make_and_model(image_path)
+    if make == "DJI":
+        try:
+            return str(xmp_data["drone-dji:CaptureUUID"])
+        except KeyError:
+            logger.warning(
+                "Couldn't determine unique id. Parsing image ID from file name."
+            )
+            img_name_split = os.path.basename(image_path).split("_")
+            return "_".join(img_name_split[0:3])
+
     # These field names were changed in a 6x firmware update
     try:
         # Firmware version >=2.1.0
