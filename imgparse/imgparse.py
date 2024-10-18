@@ -840,7 +840,9 @@ def get_unique_id(image_path, xmp_data=None):
             logger.warning(
                 "Couldn't determine unique id. Parsing image ID from file name."
             )
-            return os.path.basename(image_path).split(".")[0]
+            img_name_split = os.path.basename(image_path).split("_")
+            return "_".join(img_name_split[0:3])
+
     # These field names were changed in a 6x firmware update
     try:
         # Firmware version >=2.1.0
