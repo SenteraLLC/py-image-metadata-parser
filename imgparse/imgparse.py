@@ -720,12 +720,12 @@ def get_ils(image_path, exif_data=None, xmp_data=None):
 @get_if_needed("xmp_data", getter=get_xmp_data, getter_args=["image_path"])
 def get_irradiance(image_path, exif_data=None, xmp_data=None):
     """
-    Get the ILS value of an image captured by a sensor with an ILS module.
+    Get the Irradiance value of an image captured by a sensor with an DLS module.
 
     :param image_path: the full path to the image
     :param exif_data: used internally for memoization. Not necessary to supply.
     :param xmp_data: used internally for memoization. Not necessary to supply.
-    :return: **ils** - ILS value of image, as a floating point number
+    :return: **irradiance** - Irradiance value of image, as a floating point number
     :raises: ParsingError
     """
     try:
