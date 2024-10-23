@@ -1,38 +1,35 @@
 [tool.poetry]
 name = "imgparse"
-version = "1.17.1"
+version = "2.0.0"
 description = "Python image-metadata-parser utilities"
 authors = []
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.9"
 exifread = "*"
 click = "*"
-decorator = "*"
 xmltodict = "*"
 requests = "*"
-pytz = "*"
+s3path = "*"
+pytz = {version = "*", optional = true}
 timezonefinder = {version = "^5.2.0", optional = true}
 boto3 = {version = "*", optional = true}
 
 [tool.poetry.dev-dependencies]
 pytest = "*"
-pytest-coverage= "*"
+pytest-cov = "*"
 pre_commit = "*"
 requests-mock = "*"
+mypy = "*"
+types-requests = "*"
+types-pytz = "*"
 
 [tool.poetry.scripts]
 imgparse = "imgparse.cli:cli"
 
 [tool.poetry.extras]
-timestamps = ["timezonefinder"]
+timestamps = ["timezonefinder", "pytz"]
 s3 = ["boto3"]
-
-[tool.isort]
-line_length = 88
-multi_line_output = 3
-include_trailing_comma = true
-known_third_party = ["click", "decorator", "exifread", "pytest", "pytz", "requests", "xmltodict"]
 
 [build-system]
 requires = ["poetry-core"]

@@ -1,7 +1,11 @@
 """Utility functions for parsing metadata."""
 
+from typing import Any, Callable
 
-def convert_to_degrees(tag):
+from exifread.classes import IfdTag
+
+
+def convert_to_degrees(tag: IfdTag) -> float:
     """Convert the `exifread` GPS coordinate IfdTag object to degrees in float format."""
     degrees = convert_to_float(tag, 0)
     minutes = convert_to_float(tag, 1)
@@ -10,13 +14,16 @@ def convert_to_degrees(tag):
     return degrees + (minutes / 60.0) + (seconds / 3600.0)
 
 
-def convert_to_float(tag, index=0):
+def convert_to_float(tag: IfdTag, index: int = 0) -> float:
     """Convert `exifread` IfdTag object to float."""
     return float(tag.values[index].num) / float(tag.values[index].den)
 
 
-def parse_seq(tag, type_cast_func=None):
-    """Parse an xml sequence."""
+def parse_seq(
+    tag: dict[str, dict[str, list[str] | str]],
+    type_cast_func: Callable[[str], Any] | None = None,
+) -> list[Any]:
+    """Parse an XML sequence."""
     seq = tag["rdf:Seq"]["rdf:li"]
     if not isinstance(seq, list):
         seq = [seq]

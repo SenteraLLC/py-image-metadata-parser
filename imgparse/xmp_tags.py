@@ -1,28 +1,33 @@
 """Containers for xmp tags for various sensors."""
 
 
-class SensorTags:
+class XMPTags:
     """
-    Generic tags defaulting to None.
+    Generic tags defaulting to an empty string.
 
-    If a sensor isn't supported for a given tag, None will cause a KeyError to be thrown,
-    the same as if a valid tag wasn't found.
+    If a sensor isn't supported for a given tag, the empty string will cause a KeyError
+    to be thrown, the same as if a valid tag wasn't found.
     """
 
-    RELATIVE_ALT = None
-    ROLL = None
-    PITCH = None
-    YAW = None
-    FOCAL_LEN = None
-    LRF_ALT = None
-    LRF_ALT2 = None  # See SenteraTags below
-    ILS = None
-    WAVELENGTH_CENTRAL = None
-    WAVELENGTH_FWHM = None
-    BANDNAME = None
+    RELATIVE_ALT: str = ""
+    ROLL: str = ""
+    PITCH: str = ""
+    YAW: str = ""
+    FOCAL_LEN: str = ""
+    WAVELENGTH_CENTRAL: str = ""
+    WAVELENGTH_FWHM: str = ""
+    BANDNAME: str = ""
+    LRF_ALT: str = ""
+    LRF_ALT2: str = ""  # See SenteraTags below
+    ILS: str = ""
+    HOMEPOINT_LAT: str = ""
+    HOMEPOINT_LON: str = ""
+    PRINCIPAL_POINT: str = ""
+    DISTORTION: str = ""
+    SELF_DATA: str = ""
 
 
-class SenteraTags(SensorTags):
+class SenteraTags(XMPTags):
     """Sentera XMP tags."""
 
     RELATIVE_ALT = "Camera:AboveGroundAltitude"
@@ -30,19 +35,19 @@ class SenteraTags(SensorTags):
     PITCH = "Camera:Pitch"
     YAW = "Camera:Yaw"
     FOCAL_LEN = "Camera:PerspectiveFocalLength"
-    PRINCIPAL_POINT = "Camera:PrincipalPoint"
-    DISTORTION = "Camera:PerspectiveDistortion"
-    ILS = "Camera:SunSensor"
-    LRF_ALT = "Sentera:AltimeterCalculatedAGL"
-    LRF_ALT2 = "Sentera:AltimeterCalcuatedAGL"  # l was left out in Quad v1.0.0
     WAVELENGTH_CENTRAL = "Camera:CentralWavelength"
     WAVELENGTH_FWHM = "Camera:WavelengthFWHM"
     BANDNAME = "Camera:BandName"
+    LRF_ALT = "Sentera:AltimeterCalculatedAGL"
+    LRF_ALT2 = "Sentera:AltimeterCalcuatedAGL"  # l was left out in Quad v1.0.0
+    ILS = "Camera:SunSensor"
     HOMEPOINT_LAT = "SENTERA:HomePointLatitude"
     HOMEPOINT_LON = "SENTERA:HomePointLongitude"
+    PRINCIPAL_POINT = "Camera:PrincipalPoint"
+    DISTORTION = "Camera:PerspectiveDistortion"
 
 
-class DJITags(SensorTags):
+class DJITags(XMPTags):
     """DJI XMP tags."""
 
     RELATIVE_ALT = "drone-dji:RelativeAltitude"
@@ -50,13 +55,13 @@ class DJITags(SensorTags):
     PITCH = "drone-dji:GimbalPitchDegree"
     YAW = "drone-dji:GimbalYawDegree"
     FOCAL_LEN = "drone-dji:CalibratedFocalLength"
-    SELF_DATA = "drone-dji:SelfData"
     WAVELENGTH_CENTRAL = "Camera:CentralWavelength"
     WAVELENGTH_FWHM = "Camera:WavelengthFWHM"
     BANDNAME = "Camera:BandName"
+    SELF_DATA = "drone-dji:SelfData"
 
 
-class MicaSenseTags(SensorTags):
+class MicaSenseTags(XMPTags):
     """MicaSense XMP Tags."""
 
     WAVELENGTH_CENTRAL = "Camera:CentralWavelength"
@@ -64,23 +69,9 @@ class MicaSenseTags(SensorTags):
     BANDNAME = "Camera:BandName"
 
 
-class ParrotTags(SensorTags):
+class ParrotTags(XMPTags):
     """Parrot XMP Tags."""
 
     WAVELENGTH_CENTRAL = "Camera:CentralWavelength"
     WAVELENGTH_FWHM = "Camera:WavelengthFWHM"
     BANDNAME = "Camera:BandName"
-
-
-def get_tags(make):
-    """Return the XMP tags based on sensor make."""
-    if make == "Sentera":
-        return SenteraTags
-    elif make == "DJI" or make == "Hasselblad":
-        return DJITags
-    elif make == "MicaSense":
-        return MicaSenseTags
-    elif make == "Parrot":
-        return ParrotTags
-    else:
-        return SensorTags

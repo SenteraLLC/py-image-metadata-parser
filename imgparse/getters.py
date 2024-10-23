@@ -3,17 +3,14 @@
 import logging
 import re
 from io import BytesIO
+from pathlib import Path
+from typing import Any, BinaryIO, TextIO
 
 import exifread
 import xmltodict
+from s3path import S3Path
 
-from imgparse.decorators import memoize
 from imgparse.exceptions import ParsingError
-
-try:
-    import boto3
-except ImportError:
-    boto3 = None
 
 logger = logging.getLogger(__name__)
 
@@ -25,20 +22,18 @@ FULL_XMP = re.compile(r"<x:xmpmeta.*</x:xmpmeta>", re.DOTALL)
 XMP_END = re.compile(r"</x:xmpmeta>")
 
 
-@memoize
-def get_xmp_data(image_path):
+def get_xmp_data(image_path: Path | S3Path) -> dict[str, Any]:
     """
     Extract the xmp data of the provided image as a continuous string.
 
     :param image_path: full path to image to parse xmp from
     :return: **xmp_data** - XMP data of image, as a string dump of the original XML
-    :raises: ParsingError, FileNotFoundError
     """
-    if image_path[:4] == "s3://":
+    if isinstance(image_path, S3Path):
         raise ValueError("File needs to be local to read xmp data")
 
     with open(image_path, encoding="latin_1") as file:
-        xmp_dict = xmltodict.parse(_find_xmp_string(file))
+        xmp_dict: dict[str, Any] = xmltodict.parse(_find_xmp_string(file))
 
     try:
         xmp_dict = xmp_dict["x:xmpmeta"]["rdf:RDF"]["rdf:Description"]
@@ -58,37 +53,37 @@ def get_xmp_data(image_path):
     return xmp_dict
 
 
-def read_exif_header_from_s3(image_path):
+def read_exif_header_from_s3(image_path: S3Path) -> BytesIO:
     """Read exif header from s3."""
-    if boto3 is None:
+    try:
+        import boto3
+    except ImportError:
         raise ImportError("boto3 needs to be installed to read exif from s3")
 
-    bucket, key = image_path[5:].split("/", 1)
-    obj = boto3.resource("s3").Object(bucket, key)
+    obj = boto3.resource("s3").Object(image_path.bucket, image_path.key)
 
-    # Read the entire exif header for the image and return it to be parsed by exifread
+    # Read the entire exif header for the image and return it as a BytesIO object
     return BytesIO(obj.get(Range="bytes=0-65536")["Body"].read())
 
 
-@memoize
-def get_exif_data(image_path):
+def get_exif_data(image_path: Path | S3Path) -> dict[str, Any]:
     """
     Get a dictionary of lookup keys/values for the exif data of the provided image.
 
     This dictionary is an optional argument for the various ``imgparse`` functions to speed up processing by only
-    reading the exif data once per image.  Otherwise this function is used internally for ``imgparse`` functions to
+    reading the exif data once per image. Otherwise, this function is used internally for ``imgparse`` functions to
     extract the needed exif data.
 
     :param image_path: full path to image to parse exif from
     :return: **exif_data** - a dictionary of lookup keys/values for image exif data.
-    :raises: ValueError, FileNotFoundError
     """
-    if image_path[:5] == "s3://":
+    file: BinaryIO
+    if isinstance(image_path, S3Path):
         file = read_exif_header_from_s3(image_path)
     else:
-        file = open(image_path, "rb")
+        file = open(image_path, "rb")  # Open local file in binary mode
 
-    exif_data = exifread.process_file(file, details=False)
+    exif_data: dict[str, Any] = exifread.process_file(file, details=False)
     file.close()
 
     if not exif_data:
@@ -98,22 +93,21 @@ def get_exif_data(image_path):
     return exif_data
 
 
-def _find_xmp_string(file):
+def _find_xmp_string(file: TextIO) -> str:
     """
     Load chunks of an input image iteratively and search for the XMP data.
 
-    On each iteration, a new chunk of the file (of size specified by xmp.CHUNK_SIZE) is read and
+    On each iteration, a new chunk of the file (of size specified by CHUNK_SIZE) is read and
     appended to the already read portion of the file. The XMP regex is then matched against this string,
     and if the XMP data is found, returns the match. If no match is found, the function continues.
 
-    :param file: Handler to file open for reading
-    :return: **xmp_data**: XMP data of image, as string dump
+    :param file: Handler to file open for reading in binary mode
+    :return: **xmp_data**: XMP data of image, as a string dump
     """
     file_so_far = ""
     while True:
         chunk = file.read(CHUNK_SIZE)
 
-        # If at end of file, chunk will be None
         if not chunk:
             logger.error(
                 "Couldn't parse XMP string from the image file. The image may not have XMP information"
@@ -128,4 +122,5 @@ def _find_xmp_string(file):
         end_match = re.search(XMP_END, file_so_far[start_search_at:])
         # If we matched the end, we know `file_so_far` contains the whole XMP string
         if end_match:
-            return re.search(FULL_XMP, file_so_far).group(0)
+            match = re.search(FULL_XMP, file_so_far)
+            return match.group(0) if match else ""
