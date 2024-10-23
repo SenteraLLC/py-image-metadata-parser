@@ -1,0 +1,38 @@
+name: "Lint and Test"
+on: workflow_call
+
+jobs:
+  lint_and_test:
+    name: Lint and Test
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@dc588b651fe13675774614f8e6a936a468676387 # v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Install Python
+        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
+        with:
+          python-version: "3.10"
+
+      - name: Install Poetry
+        uses: snok/install-poetry@bafa4d4adfc54e5fba0da6c1eb34001a4fdbaa4c # v1.0
+        with:
+          version: 1.6.1
+
+      - name: Install Dependencies
+        run: poetry install
+
+      - name: Pre-Commit
+        run: poetry run pre-commit run --all-files
+
+      - name: CLI
+        run: poetry run imgparse --help
+
+      - name: Tests
+        run: poetry run pytest tests

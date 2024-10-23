@@ -6,7 +6,7 @@ from pathlib import Path
 
 import click
 
-from imgparse import AltitudeSource, MetadataParser
+from imgparse import AltitudeSource, MetadataParser, __version__
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
     default="INFO",
     help="Set logging level for both console and file",
 )
+@click.version_option(__version__)
 def cli(log_level: str) -> None:
     """CLI wrappers for metadata parsing functions."""
     logging.basicConfig(
