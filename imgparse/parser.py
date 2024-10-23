@@ -487,7 +487,11 @@ class MetadataParser:
         :return: **ils** - ILS value of image, as a floating point number
         """
         try:
-            return parse_seq(self.xmp_data[self.xmp_tags.ILS], float)
+            make, _ = self.get_make_and_model()
+            if make == "DJI":
+                return [float(self.xmp_data[self.xmp_tags.ILS])]
+            else:
+                return parse_seq(self.xmp_data[self.xmp_tags.ILS], float)
         except KeyError:
             raise ParsingError(
                 "Couldn't parse ILS value. Sensor might not be supported"
@@ -559,3 +563,53 @@ class MetadataParser:
             raise ParsingError(
                 "Couldn't parse lens model. Sensor might not be supported"
             )
+
+    def get_serial_number(self) -> int:
+        """
+        Get the serial number of the sensor.
+
+        Expects serial number to be parsable as an integer.
+
+        :return: **serial_no** - sensor serial version
+        """
+        try:
+            return int(self.exif_data["Image BodySerialNumber"].values)
+        except (KeyError, ValueError):
+            raise ParsingError(
+                "Couldn't parse sensor version. Sensor might not be supported"
+            )
+
+    def get_irradiance(self) -> float:
+        """
+        Get the Irradiance value of an image captured by a sensor with an DLS module.
+
+        :return: **irradiance** - Irradiance value of image, as a floating point number
+        """
+        try:
+            return float(self.xmp_data[self.xmp_tags.IRRADIANCE])
+        except KeyError:
+            raise ParsingError(
+                "Couldn't parse irradiance value. Sensor might not be supported"
+            )
+
+    def get_capture_id(self) -> str:
+        """
+        Get unique id for a single capture event.
+
+        This unique id is consistent across bands for multispectral cameras.
+
+        :return: **unique_id** - Unique id for the image
+        """
+        try:
+            make, _ = self.get_make_and_model()
+            if make == "Sentera":
+                try:
+                    # Firmware version >=2.1.0
+                    return f"{self.xmp_data['Camera:FlightUUID']}_{self.xmp_data['Camera:CaptureUUID']}"
+                except KeyError:
+                    # Firmware version <2.1.0
+                    return f"{self.xmp_data['Camera:FlightUniqueID']}_{self.xmp_data['Camera:ImageUniqueID']}"
+            else:
+                return str(self.xmp_data[self.xmp_tags.CAPTURE_UUID])
+        except KeyError:
+            raise ParsingError("Couldn't determine unique id")

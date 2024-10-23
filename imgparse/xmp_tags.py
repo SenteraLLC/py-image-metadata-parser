@@ -25,6 +25,9 @@ class XMPTags:
     PRINCIPAL_POINT: str = ""
     DISTORTION: str = ""
     SELF_DATA: str = ""
+    IRRADIANCE: str = ""
+    CAPTURE_UUID: str = ""
+    FLIGHT_UUID: str = ""
 
 
 class SenteraTags(XMPTags):
@@ -45,6 +48,8 @@ class SenteraTags(XMPTags):
     HOMEPOINT_LON = "SENTERA:HomePointLongitude"
     PRINCIPAL_POINT = "Camera:PrincipalPoint"
     DISTORTION = "Camera:PerspectiveDistortion"
+    CAPTURE_UUID = "Camera:CaptureUUID"
+    FLIGHT_UUID = "Camera:FlightUUID"
 
 
 class DJITags(XMPTags):
@@ -59,6 +64,9 @@ class DJITags(XMPTags):
     WAVELENGTH_FWHM = "Camera:WavelengthFWHM"
     BANDNAME = "Camera:BandName"
     SELF_DATA = "drone-dji:SelfData"
+    ILS = "Camera:SunSensor"
+    IRRADIANCE = "Camera:Irradiance"
+    CAPTURE_UUID = "drone-dji:CaptureUUID"
 
 
 class MicaSenseTags(XMPTags):
@@ -67,6 +75,7 @@ class MicaSenseTags(XMPTags):
     WAVELENGTH_CENTRAL = "Camera:CentralWavelength"
     WAVELENGTH_FWHM = "Camera:WavelengthFWHM"
     BANDNAME = "Camera:BandName"
+    CAPTURE_UUID = "MicaSense:CaptureId"
 
 
 class ParrotTags(XMPTags):
@@ -75,3 +84,4 @@ class ParrotTags(XMPTags):
     WAVELENGTH_CENTRAL = "Camera:CentralWavelength"
     WAVELENGTH_FWHM = "Camera:WavelengthFWHM"
     BANDNAME = "Camera:BandName"
+    CAPTURE_UUID = "Camera:CaptureUUID"

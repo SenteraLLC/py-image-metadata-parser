@@ -555,3 +555,45 @@ def test_sentera_terrain_elevation(
         sentera_homepoint_parser.get_relative_altitude(
             alt_source=AltitudeSource.terrain, fallback=False
         )
+
+
+def test_get_serial_num_sentera(sentera_6x_parser: MetadataParser) -> None:
+    serial_no = sentera_6x_parser.get_serial_number()
+    assert serial_no == 1
+
+
+def test_get_serial_bad(
+    sentera_65r_parser: MetadataParser, sentera_quad_parser: MetadataParser
+) -> None:
+    # Non-numeric
+    with pytest.raises(ParsingError):
+        sentera_65r_parser.get_serial_number()
+
+    # Doesn't exist
+    with pytest.raises(ParsingError):
+        sentera_quad_parser.get_serial_number()
+
+
+def test_get_irradiance(
+    dji_ms_parser: MetadataParser, sentera_parser: MetadataParser
+) -> None:
+    assert dji_ms_parser.get_irradiance() == 2281.688965
+
+    with pytest.raises(ParsingError):
+        sentera_parser.get_irradiance()
+
+
+def test_get_capture_id(
+    micasense_ms_parser: MetadataParser,
+    dji_ms_parser: MetadataParser,
+    sentera_6x_rgb_parser: MetadataParser,
+    parrot_ms_parser: MetadataParser,
+    sentera_parser: MetadataParser,
+) -> None:
+    assert micasense_ms_parser.get_capture_id() == "rbSiEyRnG1UCUY5EM20i"
+    assert dji_ms_parser.get_capture_id() == "576047cc8d7411ec87fda099c9f7f1f5"
+    assert sentera_6x_rgb_parser.get_capture_id() == "2022-11-10_22-03-47_8"
+    assert parrot_ms_parser.get_capture_id() == "15B9793D3A9597E2E348B932826B427B"
+
+    with pytest.raises(ParsingError):
+        sentera_parser.get_capture_id()

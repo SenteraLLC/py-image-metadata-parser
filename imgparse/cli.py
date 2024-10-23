@@ -171,6 +171,20 @@ def get_bandnames(image_path: str) -> None:
 
 
 @cli.command()
+@click.argument("image_path")
+def get_irradiance(image_path: str) -> None:
+    """Parse irradiance from metadata."""
+    print("Irradiance:", MetadataParser(image_path).get_irradiance())
+
+
+@cli.command()
+@click.argument("image_path")
+def get_capture_id(image_path: str) -> None:
+    """Parse capture id from metadata."""
+    print("Capture ID:", MetadataParser(image_path).get_capture_id())
+
+
+@cli.command()
 @click.argument("imagery_path", required=True)
 def create_metadata_csv(imagery_path: str) -> None:  # noqa: D301
     r"""
