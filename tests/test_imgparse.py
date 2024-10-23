@@ -53,7 +53,7 @@ def bad_dji_parser() -> MetadataParser:
         "Image Model": Tag("Blah"),
         "Image Software": Tag("Blah"),
     }
-    parser._xmp_data = {"Bad Key1": "Bad Value1"}
+    parser._xmp_data = {"Bad Key1": "Bad Value1", "drone-dji:SelfData": "Blah"}
     return parser
 
 
@@ -403,9 +403,13 @@ def test_get_timestamp_bad(
         sentera_parser.get_timestamp("BLAH")
 
 
-def test_get_ils_6x(sentera_6x_parser: MetadataParser) -> None:
+def test_get_ils(
+    sentera_6x_parser: MetadataParser, dji_ms_parser: MetadataParser
+) -> None:
     ils = sentera_6x_parser.get_ils()
     assert ils == [10532.165]
+
+    assert dji_ms_parser.get_ils() == [2281.689]
 
 
 def test_get_ils_bad(bad_sentera_parser: MetadataParser) -> None:
