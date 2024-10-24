@@ -36,7 +36,6 @@ class MetadataParser:
 
     def __init__(self, image_path: Path | str | S3Path, s3_role: str | None = None):
         """Initialize metadata parser."""
-        print(image_path)
         if isinstance(image_path, str):
             if image_path[:5] == "s3://":
                 image_path = S3Path.from_uri(image_path)
