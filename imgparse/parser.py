@@ -317,7 +317,7 @@ class MetadataParser:
 
         return rotation
 
-    def altitude_msl(self) -> float:
+    def global_altitude(self) -> float:
         """Get the absolute altitude (meters above msl) of the sensor when the image was taken."""
         try:
             return convert_to_float(self.exif_data["GPS GPSAltitude"])
@@ -372,7 +372,7 @@ class MetadataParser:
                 logger.warning(
                     "Relative altitude not found in XMP. Attempting to parse from session.txt file"
                 )
-                abs_alt = self.altitude_msl()
+                abs_alt = self.global_altitude()
                 session_alt = parse_session_alt(self.image_path)
                 return abs_alt - session_alt
             else:

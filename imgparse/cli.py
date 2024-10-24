@@ -98,7 +98,7 @@ def get_lat_lon(image_path: str) -> None:
 @click.argument("image_path", required=True)
 def get_altitude_msl(image_path: str) -> None:
     """Parse altitude msl from metadata."""
-    print("Altitude MSL (m):", MetadataParser(image_path).altitude_msl())
+    print("Altitude MSL (m):", MetadataParser(image_path).global_altitude())
 
 
 @cli.command()
@@ -242,7 +242,7 @@ def create_metadata_csv(imagery_path: str) -> None:  # noqa: D301
                 [
                     image_path.name,
                     *parser.coordinates(),
-                    parser.altitude_msl(),
+                    parser.global_altitude(),
                     *parser.rotation(),
                     parser.relative_altitude(),
                     parser.focal_length_pixels(),

@@ -253,18 +253,18 @@ def test_get_relative_altitude_bad(
 
 
 def test_get_altitude_msl_sentera(sentera_parser: MetadataParser) -> None:
-    alt = sentera_parser.altitude_msl()
+    alt = sentera_parser.global_altitude()
     assert alt == 50.592
 
 
 def test_get_altitude_msl_dji(dji_parser: MetadataParser) -> None:
-    alt = dji_parser.altitude_msl()
+    alt = dji_parser.global_altitude()
     assert alt == 282.401
 
 
 def test_get_altitude_msl_bad(bad_sentera_parser: MetadataParser) -> None:
     with pytest.raises(ParsingError):
-        bad_sentera_parser.altitude_msl()
+        bad_sentera_parser.global_altitude()
 
 
 def test_get_gsd_sentera(sentera_parser: MetadataParser) -> None:
