@@ -1,0 +1,48 @@
+name: Main branch
+on:
+  push:
+    branches: main
+
+jobs:
+  lint-test:
+    name: Lint and test
+    uses: ./.github/workflows/lint_and_test.yaml
+    secrets: inherit
+    
+  release:
+    name: Create GitHub Release
+    needs: lint-test
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          fetch-depth: 0
+
+      - name: TOML Reader
+        id: read_toml
+        uses: SebRollen/toml-action@2bd04b06a3ebc3e6a3eb6060de115710cad16cd6 #v1.0.2
+        with:
+          file: 'pyproject.toml'
+          field: 'tool.poetry.version'
+
+      - name: Define TAG
+        run: echo TAG="v${{ steps.read_toml.outputs.value }}" >> $GITHUB_ENV
+
+      - name: Create Release and Tag
+        uses: actions/github-script@v6
+        with:
+          result-encoding: string
+          retries: 3
+          script: |
+            github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: process.env.TAG,
+              target_commitish: context.sha,
+              name: process.env.TAG,
+              generate_release_notes: true
+            })

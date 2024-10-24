@@ -1,0 +1,11 @@
+name: Feature branch
+on:
+  push:
+    branches-ignore:
+      [main]
+
+jobs:
+  lint-test:
+    name: Lint and test
+    uses: ./.github/workflows/lint_and_test.yaml
+    secrets: inherit

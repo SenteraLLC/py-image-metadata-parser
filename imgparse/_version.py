@@ -1,3 +1,9 @@
-"""Defines package version.  Parsed by setup.py and imported by __init__.py."""
+"""Defines package version."""
 
-__version__ = "1.18.1"
+import importlib.metadata
+import os
+
+if os.environ.get("VERSION"):
+    __version__ = os.environ.get("VERSION")
+else:
+    __version__ = importlib.metadata.version("imgparse")

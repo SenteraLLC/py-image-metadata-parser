@@ -2,10 +2,10 @@
 
 from math import asin, atan2, cos, pi, sin
 
-from .types import Euler, Quaternion
+from imgparse.types import Euler, Quaternion
 
 
-def euler_to_quaternion(e: Euler):
+def euler_to_quaternion(e: Euler) -> Quaternion:
     """Convert Euler angles to quaternions."""
     # Intermediate calculations for 'cos(x/2)' of Euler angles.
     cos_y = cos((e.yaw * pi) / 360.0)
@@ -25,7 +25,7 @@ def euler_to_quaternion(e: Euler):
     return Quaternion(q0, q1, q2, q3)
 
 
-def quaternion_to_euler(q: Quaternion):
+def quaternion_to_euler(q: Quaternion) -> Euler:
     """Convert quaternions to Euler angles."""
     # Compute pitch sine term.
     sin_p = 2.0 * (q.q0 * q.q2 - q.q3 * q.q1)
@@ -66,7 +66,7 @@ def quaternion_to_euler(q: Quaternion):
     return Euler(r, p, y)
 
 
-def multiply_quaternions(q_a: Quaternion, q_b: Quaternion):
+def multiply_quaternions(q_a: Quaternion, q_b: Quaternion) -> Quaternion:
     """
     Multiply two quaternions together.
 
@@ -93,7 +93,7 @@ def multiply_quaternions(q_a: Quaternion, q_b: Quaternion):
     return Quaternion(q0, q1, q2, q3)
 
 
-def apply_rotational_offset(attitude_e: Euler, offset_e: Euler):
+def apply_rotational_offset(attitude_e: Euler, offset_e: Euler) -> Euler:
     """Rotate provided attitude by offsets."""
     offset_q = euler_to_quaternion(offset_e)
     attitude_q = euler_to_quaternion(attitude_e)
