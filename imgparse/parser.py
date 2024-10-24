@@ -14,11 +14,11 @@ from imgparse.rotations import apply_rotational_offset
 from imgparse.s3 import S3Path
 from imgparse.types import (
     AltitudeSource,
-    Coords,
     Dimensions,
     Euler,
     PixelCoords,
     Version,
+    WorldCoords,
 )
 from imgparse.util import (
     convert_to_degrees,
@@ -143,7 +143,7 @@ class MetadataParser:
                 "Couldn't parse found timestamp with given format string"
             )
 
-        lat, lon = self.location()
+        lat, lon = self.coordinates()
 
         timezone = pytz.timezone(TimezoneFinder().timezone_at(lng=lon, lat=lat))  # type: ignore
         make, _ = self.make_and_model()
@@ -269,7 +269,7 @@ class MetadataParser:
                 "Couldn't find the distortion tag. Sensor might not be supported"
             )
 
-    def location(self) -> Coords:
+    def coordinates(self) -> WorldCoords:
         """Get the latitude and longitude of the sensor when the image was taken."""
         try:
             gps_latitude = self.exif_data["GPS GPSLatitude"]
@@ -287,7 +287,7 @@ class MetadataParser:
         if gps_longitude_ref.values[0] != "E":
             lon = 0 - lon
 
-        return Coords(lat, lon)
+        return WorldCoords(lat, lon)
 
     def rotation(self, standardize: bool = True) -> Euler:
         """
@@ -394,23 +394,23 @@ class MetadataParser:
     def terrain_altitude(self, terrain_api_key: str | None = None) -> float:
         """Get terrain altitude relative to the home point."""
         home_lat, home_lon = self.home_point()
-        image_lat, image_lon = self.location()
+        image_lat, image_lon = self.coordinates()
         home_elevation = hit_terrain_api(home_lat, home_lon, terrain_api_key)
         image_elevation = hit_terrain_api(image_lat, image_lon, terrain_api_key)
         return home_elevation - image_elevation
 
-    def home_point(self) -> Coords:
+    def home_point(self) -> WorldCoords:
         """Get the flight home point. Used for `get_relative_altitude(alt_source=terrain)`."""
         try:
             make, _ = self.make_and_model()
             if make == "DJI":
                 self_data = self.xmp_data[self.xmp_tags.SELF_DATA].split("|")
                 if len(self_data) == 4:
-                    return Coords(float(self_data[0]), float(self_data[1]))
+                    return WorldCoords(float(self_data[0]), float(self_data[1]))
                 else:
                     raise KeyError()
             elif make == "Sentera":
-                return Coords(
+                return WorldCoords(
                     float(self.xmp_data[self.xmp_tags.HOMEPOINT_LAT]),
                     float(self.xmp_data[self.xmp_tags.HOMEPOINT_LON]),
                 )
