@@ -23,9 +23,6 @@ def parse_session_alt(image_path: Path | S3Path) -> float:
     Used for Sentera cameras since relative altitude isn't stored in exif or xmp tags, and instead the session ground
     altitude is written as a text file that needs to be read.  The `session.txt` must be in the same directory as the
     image in order to be read.
-
-    :param image_path: the full path to the image
-    :return: **ground_alt** - the session ground altitude, used to calculate relative altitude.
     """
     if isinstance(image_path, S3Path):
         raise ParsingError("File needs to be local to parse session.txt")

@@ -45,7 +45,7 @@ class MetadataParser:
         self.image_path = image_path
         self.s3_role = s3_role
 
-        # Lazily load exif and xmp data via properties
+        # Lazily load exif and xmp data
         self._exif_data: dict[str, Any] | None = None
         self._xmp_data: dict[str, Any] | None = None
 
@@ -119,7 +119,6 @@ class MetadataParser:
         However, other sensors may store timestamps in other formats.
 
         :param format_string: Format code, as a string, to be used to parse the image timestamp.
-        :return: **datetime_obj**: Parsed timestamp, in the format specified by the input format string.
         """
         try:
             import pytz
@@ -158,11 +157,7 @@ class MetadataParser:
         return datetime_obj
 
     def get_dimensions(self) -> Dimensions:
-        """
-        Get the height and width (in pixels) of the image.
-
-        :return: **height**, **width** - the height and width of the image
-        """
+        """Get the height and width (in pixels) of the image."""
         make, model = self.get_make_and_model()
         ext = self.image_path.suffix.lower()
 
@@ -200,8 +195,6 @@ class MetadataParser:
 
         Non-Sentera cameras don't store the pixel pitch in the exif tags, so that is found in a lookup table.  See
         `pixel_pitches.py` to check which non-Sentera sensor models are supported and to add support for new sensors.
-
-        :return: **pixel_pitch** - the pixel pitch of the camera in meters
         """
         make, model = self.get_make_and_model()
         try:
@@ -225,7 +218,6 @@ class MetadataParser:
         Get the focal length (in meters) of the sensor that took the image.
 
         :param use_calibrated: enable to use calibrated focal length if available
-        :return: **focal_length** - the focal length of the camera in meters
         """
         if use_calibrated:
             try:
@@ -251,11 +243,7 @@ class MetadataParser:
         return fl / pp
 
     def get_principal_point(self) -> PixelCoords:
-        """
-        Get the principal point (x, y) in pixels of the sensor that took the image.
-
-        :return: **principal_point** - a tuple of pixel coordinates of the principal point
-        """
+        """Get the principal point (x, y) in pixels of the sensor that took the image."""
         try:
             pt = list(
                 map(float, str(self.xmp_data[self.xmp_tags.PRINCIPAL_POINT]).split(","))
@@ -284,11 +272,7 @@ class MetadataParser:
             )
 
     def get_lat_lon(self) -> Coords:
-        """
-        Get the latitude and longitude of the sensor when the image was taken.
-
-        :return: **latitude, longitude** - the location of where the image was taken
-        """
+        """Get the latitude and longitude of the sensor when the image was taken."""
         try:
             gps_latitude = self.exif_data["GPS GPSLatitude"]
             gps_latitude_ref = self.exif_data["GPS GPSLatitudeRef"]
@@ -312,7 +296,6 @@ class MetadataParser:
         Get the orientation of the sensor (roll, pitch, yaw in degrees) when the image was taken.
 
         :param standardize: defaults to True. Standardizes roll, pitch, yaw to common reference frame (camera pointing down is pitch = 0)
-        :return: **roll, pitch, yaw** - the orientation (degrees) of the camera with respect to the NED frame
         """
         try:
             rotation = Euler(
@@ -336,11 +319,7 @@ class MetadataParser:
         return rotation
 
     def get_altitude_msl(self) -> float:
-        """
-        Get the absolute altitude (meters above msl) of the sensor when the image was taken.
-
-        :return: **altitude_msl** - the absolute altitude of the image in meters.
-        """
+        """Get the absolute altitude (meters above msl) of the sensor when the image was taken."""
         try:
             return convert_to_float(self.exif_data["GPS GPSAltitude"])
         except KeyError:
@@ -370,7 +349,6 @@ class MetadataParser:
         :param alt_source: Set to "lrf" for laser range finder. "terrain" for terrain aware altitude.
         :param terrain_api_key: Required if `alt_source` set to "terrain". API key to access google elevation api.
         :param fallback: If disabled and the specified `alt_source` fails, will throw an error instead of falling back.
-        :return: **relative_alt** - the relative altitude of the camera above the ground
         """
         terrain_alt = 0.0
 
@@ -424,11 +402,7 @@ class MetadataParser:
         return home_elevation - image_elevation
 
     def _get_home_point(self) -> tuple[float, float]:
-        """
-        Get the flight home point. Used for `get_relative_altitude(alt_source=terrain)`.
-
-        :return: **lat**, **lon** - coordinates of flight home point
-        """
+        """Get the flight home point. Used for `get_relative_altitude(alt_source=terrain)`."""
         try:
             make, _ = self.get_make_and_model()
             if make == "DJI":
@@ -462,7 +436,6 @@ class MetadataParser:
         :param alt_source: See `get_relative_altitude()`
         :param terrain_api_key: See `get_relative_altitude()`
         :param fallback: See `get_relative_altitude()`
-        :return: **gsd** - the ground sample distance of the image in meters
         """
         focal_length = self.get_focal_length_pixels(use_calibrated_focal_length)
         alt = self.get_relative_altitude(alt_source, terrain_api_key, fallback)
@@ -478,8 +451,6 @@ class MetadataParser:
 
         Autoexposure is derived from the integration time and gain of the sensor, which are stored in
         separate tags. This function retrieves those values and performs the calculation.
-
-        :return: **autoexposure** - image autoexposure value
         """
         try:
             iso = float(self.exif_data["EXIF ISOSpeedRatings"].values[0])
@@ -492,12 +463,7 @@ class MetadataParser:
         return iso * integration_time
 
     def get_ils(self) -> list[float]:
-        """
-        Get the ILS value of an image captured by a sensor with an ILS module.
-
-        :param xmp_data: used internally for memoization. Not necessary to supply.
-        :return: **ils** - ILS value of image, as a floating point number
-        """
+        """Get the ILS value of an image captured by a sensor with an ILS module."""
         try:
             make, _ = self.get_make_and_model()
             if make == "DJI":
@@ -510,12 +476,7 @@ class MetadataParser:
             )
 
     def get_wavelength_data(self) -> tuple[list[int], list[int]]:
-        """
-        Get the central and FWHM wavelength values of an image.
-
-        :return: **central_wavelength** - central wavelength of each band, as a list of ints
-        :return: **wavelength_fwhm** - wavelength fwhm of each band, as a list of ints
-        """
+        """Get the central and FWHM wavelength values of an image."""
         try:
             try:
                 central_wavelength = parse_seq(
@@ -537,11 +498,7 @@ class MetadataParser:
             )
 
     def get_bandnames(self) -> list[str]:
-        """
-        Get the name of each band of an image.
-
-        :return: **band_names** - name of each band of image, as a list of strings
-        """
+        """Get the name of each band of an image."""
         try:
             try:
                 return parse_seq(self.xmp_data[self.xmp_tags.BANDNAME])
@@ -553,11 +510,7 @@ class MetadataParser:
             )
 
     def get_lens_model(self) -> str:
-        """
-        Get the lens model of an image from a Sentera Camera.
-
-        :return: **lens_model** name of the lens model
-        """
+        """Get the lens model of an image from a Sentera Camera."""
         try:
             make, _ = self.get_make_and_model()
             if make == "Sentera":
@@ -581,8 +534,6 @@ class MetadataParser:
         Get the serial number of the sensor.
 
         Expects serial number to be parsable as an integer.
-
-        :return: **serial_no** - sensor serial version
         """
         try:
             return int(self.exif_data["Image BodySerialNumber"].values)
@@ -592,11 +543,7 @@ class MetadataParser:
             )
 
     def get_irradiance(self) -> float:
-        """
-        Get the Irradiance value of an image captured by a sensor with an DLS module.
-
-        :return: **irradiance** - Irradiance value of image, as a floating point number
-        """
+        """Get the Irradiance value of an image captured by a sensor with an DLS module."""
         try:
             return float(self.xmp_data[self.xmp_tags.IRRADIANCE])
         except KeyError:
@@ -609,8 +556,6 @@ class MetadataParser:
         Get unique id for a single capture event.
 
         This unique id is consistent across bands for multispectral cameras.
-
-        :return: **unique_id** - Unique id for the image
         """
         try:
             make, _ = self.get_make_and_model()
