@@ -608,8 +608,8 @@ def test_get_capture_id(
         sentera_parser.get_capture_id()
 
 
-@patch("imgparse.getters.s3_resource")
-@patch("imgparse.getters.exifread.process_file")
+@patch("imgparse.util.s3_resource")
+@patch("imgparse.util.exifread.process_file")
 def test_get_make_and_model_s3(
     mock_process_file: MagicMock,
     mock_s3_resource: MagicMock,
@@ -637,3 +637,43 @@ def test_get_make_and_model_s3(
     mock_process_file.assert_called_once()
 
     assert [make, model] == ["TestMake", "TestModel"]
+
+
+@patch("imgparse.util.s3_resource")  # Mock s3_resource used in get_xmp_data()
+def test_get_roll_pitch_yaw_s3(
+    mock_s3_resource: MagicMock, s3_image_parser: MetadataParser
+) -> None:
+    # Path to the local test file with XMP data
+    local_test_file = base_path / "sentera_normal.jpg"
+
+    # Mock the S3 object and its get() method to simulate chunk reading
+    mock_s3_object = MagicMock()
+    with open(local_test_file, "r", encoding="latin_1") as f:
+        file_content = f.read()
+
+    # Define the behavior for the S3 get call, return the content in chunks
+    def s3_chunk_side_effect(Range=None, **kwargs):  # type: ignore
+        if Range:
+            start_byte, end_byte = map(int, Range.replace("bytes=", "").split("-"))
+            chunk = file_content[start_byte : end_byte + 1]
+            return {"Body": MagicMock(read=lambda: chunk.encode("latin_1"))}
+        return {"Body": MagicMock(read=lambda: b"")}
+
+    # Set the mock to use the chunk reading side effect
+    mock_s3_object.get.side_effect = s3_chunk_side_effect
+    mock_s3_resource.return_value.Object.return_value = mock_s3_object
+
+    # Invoke the function that we are testing (get_roll_pitch_yaw)
+    roll, pitch, yaw = s3_image_parser.get_roll_pitch_yaw()
+
+    assert [roll, pitch, yaw] == pytest.approx(
+        [-2.445596, 1.003452, 29.639198], abs=1e-06
+    )
+
+    # Test error scenario when no XMP data is found
+    with pytest.raises(ParsingError):
+        mock_s3_object.get.side_effect = lambda *args, **kwargs: {
+            "Body": MagicMock(read=lambda: b"")
+        }
+        s3_image_parser._xmp_data = None
+        s3_image_parser.get_roll_pitch_yaw()
