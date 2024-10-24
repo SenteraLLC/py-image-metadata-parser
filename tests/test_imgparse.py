@@ -131,10 +131,10 @@ def s3_image_parser() -> MetadataParser:
 
 
 def test_get_camera_params_dji(dji_parser: MetadataParser) -> None:
-    pitch1 = dji_parser.get_pixel_pitch_meters()
-    focal1 = dji_parser.get_focal_length_meters()
-    focal2 = dji_parser.get_focal_length_meters(use_calibrated=True)
-    focal_pixels = dji_parser.get_focal_length_pixels()
+    pitch1 = dji_parser.pixel_pitch_meters()
+    focal1 = dji_parser.focal_length_meters()
+    focal2 = dji_parser.focal_length_meters(use_calibrated=True)
+    focal_pixels = dji_parser.focal_length_pixels()
 
     assert focal1 == 0.0088
     assert pitch1 == 2.41e-06
@@ -143,10 +143,10 @@ def test_get_camera_params_dji(dji_parser: MetadataParser) -> None:
 
 
 def test_get_camera_params_sentera(sentera_parser: MetadataParser) -> None:
-    focal1 = sentera_parser.get_focal_length_meters()
-    focal2 = sentera_parser.get_focal_length_meters(use_calibrated=True)
-    pitch = sentera_parser.get_pixel_pitch_meters()
-    focal_pixels = sentera_parser.get_focal_length_pixels()
+    focal1 = sentera_parser.focal_length_meters()
+    focal2 = sentera_parser.focal_length_meters(use_calibrated=True)
+    pitch = sentera_parser.pixel_pitch_meters()
+    focal_pixels = sentera_parser.focal_length_pixels()
 
     assert focal1 == 0.025
     assert focal2 == 0.025
@@ -158,31 +158,31 @@ def test_get_camera_params_bad(
     bad_sentera_parser: MetadataParser, bad_dji_parser: MetadataParser
 ) -> None:
     with pytest.raises(ParsingError):
-        bad_sentera_parser.get_pixel_pitch_meters()
+        bad_sentera_parser.pixel_pitch_meters()
 
     with pytest.raises(ParsingError):
-        bad_sentera_parser.get_focal_length_meters()
+        bad_sentera_parser.focal_length_meters()
 
     with pytest.raises(ParsingError):
-        bad_dji_parser.get_pixel_pitch_meters()
+        bad_dji_parser.pixel_pitch_meters()
 
     with pytest.raises(ParsingError):
-        bad_dji_parser.get_focal_length_meters()
+        bad_dji_parser.focal_length_meters()
 
 
 def test_get_make_and_model_dji(dji_parser: MetadataParser) -> None:
-    make, model = dji_parser.get_make_and_model()
+    make, model = dji_parser.make_and_model()
     assert [make, model] == ["DJI", "FC6310"]
 
 
 def test_get_make_and_model_sentera(sentera_parser: MetadataParser) -> None:
-    make, model = sentera_parser.get_make_and_model()
+    make, model = sentera_parser.make_and_model()
     assert [make, model] == ["Sentera", "21022-06_12MP-ERS-0001"]
 
 
 def test_get_make_and_model_bad(bad_data_parser: MetadataParser) -> None:
     with pytest.raises(ParsingError):
-        bad_data_parser.get_make_and_model()
+        bad_data_parser.make_and_model()
 
 
 def test_get_lens_model_sentera(
@@ -190,9 +190,9 @@ def test_get_lens_model_sentera(
     sentera_6x_parser: MetadataParser,
     sentera_65r_parser: MetadataParser,
 ) -> None:
-    lens_model1 = sentera_parser.get_lens_model()
-    lens_model2 = sentera_6x_parser.get_lens_model()
-    lens_model3 = sentera_65r_parser.get_lens_model()
+    lens_model1 = sentera_parser.lens_model()
+    lens_model2 = sentera_6x_parser.lens_model()
+    lens_model3 = sentera_65r_parser.lens_model()
     assert lens_model1 == "25.0mm-0001_0008"
     assert lens_model2 == "8.00mm-0005_0020"
     assert lens_model3 == "43.0mm-0001_0031"
@@ -202,10 +202,10 @@ def test_get_lens_model_bad(
     bad_sentera_parser: MetadataParser, bad_dji_parser: MetadataParser
 ) -> None:
     with pytest.raises(ParsingError):
-        bad_sentera_parser.get_lens_model()
+        bad_sentera_parser.lens_model()
 
     with pytest.raises(ParsingError):
-        bad_dji_parser.get_lens_model()
+        bad_dji_parser.lens_model()
 
 
 def test_parse_session_alt(sentera_parser: MetadataParser) -> None:
@@ -216,11 +216,11 @@ def test_parse_session_alt(sentera_parser: MetadataParser) -> None:
 def test_get_relative_altitude_sentera(
     sentera_parser: MetadataParser, sentera_quad_parser: MetadataParser
 ) -> None:
-    alt1 = sentera_parser.get_relative_altitude()
-    alt2 = sentera_parser.get_relative_altitude(alt_source=AltitudeSource.lrf)
+    alt1 = sentera_parser.relative_altitude()
+    alt2 = sentera_parser.relative_altitude(alt_source=AltitudeSource.lrf)
 
-    alt3 = sentera_quad_parser.get_relative_altitude()
-    alt4 = sentera_quad_parser.get_relative_altitude(alt_source=AltitudeSource.lrf)
+    alt3 = sentera_quad_parser.relative_altitude()
+    alt4 = sentera_quad_parser.relative_altitude(alt_source=AltitudeSource.lrf)
 
     assert alt1 == 51.042
     assert alt2 == 52.041  # AltimeterCalculatedAGL
@@ -229,8 +229,8 @@ def test_get_relative_altitude_sentera(
 
 
 def test_get_relative_altitude_dji(dji_parser: MetadataParser) -> None:
-    alt1 = dji_parser.get_relative_altitude()
-    alt2 = dji_parser.get_relative_altitude(alt_source=AltitudeSource.lrf)
+    alt1 = dji_parser.relative_altitude()
+    alt2 = dji_parser.relative_altitude(alt_source=AltitudeSource.lrf)
     assert alt1 == 15.2
     assert alt2 == 15.2
 
@@ -239,94 +239,94 @@ def test_get_relative_altitude_bad(
     bad_dji_parser: MetadataParser, fake_make_parser: MetadataParser
 ) -> None:
     with pytest.raises(ParsingError):
-        bad_dji_parser.get_relative_altitude()
+        bad_dji_parser.relative_altitude()
 
     with pytest.raises(ParsingError):
-        bad_dji_parser.get_relative_altitude(alt_source=AltitudeSource.terrain)
+        bad_dji_parser.relative_altitude(alt_source=AltitudeSource.terrain)
 
     with pytest.raises(ParsingError):
-        fake_make_parser.get_relative_altitude(alt_source=AltitudeSource.terrain)
+        fake_make_parser.relative_altitude(alt_source=AltitudeSource.terrain)
 
 
 def test_get_altitude_msl_sentera(sentera_parser: MetadataParser) -> None:
-    alt = sentera_parser.get_altitude_msl()
+    alt = sentera_parser.altitude_msl()
     assert alt == 50.592
 
 
 def test_get_altitude_msl_dji(dji_parser: MetadataParser) -> None:
-    alt = dji_parser.get_altitude_msl()
+    alt = dji_parser.altitude_msl()
     assert alt == 282.401
 
 
 def test_get_altitude_msl_bad(bad_sentera_parser: MetadataParser) -> None:
     with pytest.raises(ParsingError):
-        bad_sentera_parser.get_altitude_msl()
+        bad_sentera_parser.altitude_msl()
 
 
 def test_get_gsd_sentera(sentera_parser: MetadataParser) -> None:
-    gsd = sentera_parser.get_gsd()
+    gsd = sentera_parser.gsd()
     assert gsd == pytest.approx(0.00316, rel=0.01)
 
 
 def test_get_gsd_dji(dji_parser: MetadataParser) -> None:
-    gsd = dji_parser.get_gsd()
+    gsd = dji_parser.gsd()
     assert gsd == pytest.approx(0.00416, rel=0.01)
 
 
 def test_get_lat_lon_sentera(sentera_parser: MetadataParser) -> None:
-    lat, lon = sentera_parser.get_lat_lon()
+    lat, lon = sentera_parser.location()
     assert [lat, lon] == pytest.approx([27.564768, -97.657411], abs=1e-06)
 
 
 def test_get_lat_lon_dji(dji_parser: MetadataParser) -> None:
-    lat, lon = dji_parser.get_lat_lon()
+    lat, lon = dji_parser.location()
     assert [lat, lon] == pytest.approx([45.514942, -93.973210], abs=1e-06)
 
 
 def test_get_lat_lon_bad(bad_sentera_parser: MetadataParser) -> None:
     with pytest.raises(ParsingError):
-        bad_sentera_parser.get_lat_lon()
+        bad_sentera_parser.location()
 
 
 def test_get_roll_pitch_yaw_sentera(sentera_parser: MetadataParser) -> None:
-    roll, pitch, yaw = sentera_parser.get_roll_pitch_yaw()
+    roll, pitch, yaw = sentera_parser.rotation()
     assert [roll, pitch, yaw] == pytest.approx(
         [-2.445596, 1.003452, 29.639198], abs=1e-06
     )
 
 
 def test_get_roll_pitch_yaw_dji(dji_parser: MetadataParser) -> None:
-    roll, pitch, yaw = dji_parser.get_roll_pitch_yaw()
+    roll, pitch, yaw = dji_parser.rotation()
     assert [roll, pitch, yaw] == pytest.approx([0, 0.1, 90.2], abs=1e-06)
 
 
 def test_get_roll_pitch_yaw_bad(bad_sentera_parser: MetadataParser) -> None:
     with pytest.raises(ParsingError):
-        bad_sentera_parser.get_roll_pitch_yaw()
+        bad_sentera_parser.rotation()
 
 
 def test_get_dimensions_sentera(sentera_parser: MetadataParser) -> None:
-    height, width = sentera_parser.get_dimensions()
+    height, width = sentera_parser.dimensions()
     assert [height, width] == [3000, 4000]
 
 
 def test_get_dimensions_6x(sentera_6x_parser: MetadataParser) -> None:
-    height, width = sentera_6x_parser.get_dimensions()
+    height, width = sentera_6x_parser.dimensions()
     assert [height, width] == [1464, 1952]
 
 
 def test_get_dimensions_6x_rgb(sentera_6x_rgb_parser: MetadataParser) -> None:
-    height, width = sentera_6x_rgb_parser.get_dimensions()
+    height, width = sentera_6x_rgb_parser.dimensions()
     assert [height, width] == [3888, 5184]
 
 
 def test_get_dimensions_65r(sentera_65r_parser: MetadataParser) -> None:
-    height, width = sentera_65r_parser.get_dimensions()
+    height, width = sentera_65r_parser.dimensions()
     assert [height, width] == [7000, 9344]
 
 
 def test_get_dimensions_dji(dji_parser: MetadataParser) -> None:
-    height, width = dji_parser.get_dimensions()
+    height, width = dji_parser.dimensions()
     assert [height, width] == [3648, 4864]
 
 
@@ -334,15 +334,15 @@ def test_get_dimensions_bad(
     bad_dji_parser: MetadataParser, bad_sentera_parser: MetadataParser
 ) -> None:
     with pytest.raises(ParsingError):
-        bad_dji_parser.get_dimensions()
+        bad_dji_parser.dimensions()
 
     with pytest.raises(ParsingError):
-        bad_sentera_parser.get_dimensions()
+        bad_sentera_parser.dimensions()
 
 
 def test_get_principal_point_65r(sentera_65r_parser: MetadataParser) -> None:
-    x, y = sentera_65r_parser.get_principal_point()
-    height, width = sentera_65r_parser.get_dimensions()
+    x, y = sentera_65r_parser.principal_point()
+    height, width = sentera_65r_parser.dimensions()
 
     known_x_px_offset = -10.75  # checked with metashape camera calibration profile
     known_y_px_offset = -18.75
@@ -352,36 +352,36 @@ def test_get_principal_point_65r(sentera_65r_parser: MetadataParser) -> None:
 
 def test_get_principal_point_bad(bad_sentera_parser: MetadataParser) -> None:
     with pytest.raises(ParsingError):
-        bad_sentera_parser.get_principal_point()
+        bad_sentera_parser.principal_point()
 
 
 def test_get_distortion_params_65r(sentera_65r_parser: MetadataParser) -> None:
-    params = sentera_65r_parser.get_distortion_parameters()
+    params = sentera_65r_parser.distortion_parameters()
     assert params == [-0.127, 0.126, 0.097, 0.0, 0.0]
 
 
 def test_get_distortion_params_bad(bad_sentera_parser: MetadataParser) -> None:
     with pytest.raises(ParsingError):
-        bad_sentera_parser.get_distortion_parameters()
+        bad_sentera_parser.distortion_parameters()
 
 
 def test_get_autoexposure_sentera(sentera_parser: MetadataParser) -> None:
-    autoexposure = sentera_parser.get_autoexposure()
+    autoexposure = sentera_parser.autoexposure()
     assert autoexposure == pytest.approx(0.4105, rel=0.001)
 
 
 def test_get_autoexposure_dji(dji_parser: MetadataParser) -> None:
-    autoexposure = dji_parser.get_autoexposure()
+    autoexposure = dji_parser.autoexposure()
     assert autoexposure == pytest.approx(0.0800, rel=0.001)
 
 
 def test_get_autoexposure_bad(bad_sentera_parser: MetadataParser) -> None:
     with pytest.raises(ParsingError):
-        bad_sentera_parser.get_autoexposure()
+        bad_sentera_parser.autoexposure()
 
 
 def test_get_timestamp_sentera(sentera_parser: MetadataParser) -> None:
-    timestamp = sentera_parser.get_timestamp()
+    timestamp = sentera_parser.timestamp()
 
     correct_timestamp = datetime.strptime("2019:03:02 22:44:46", "%Y:%m:%d %H:%M:%S")
     correct_timestamp = pytz.utc.localize(correct_timestamp)
@@ -390,7 +390,7 @@ def test_get_timestamp_sentera(sentera_parser: MetadataParser) -> None:
 
 
 def test_get_timestamp_dji(dji_parser: MetadataParser) -> None:
-    timestamp = dji_parser.get_timestamp()
+    timestamp = dji_parser.timestamp()
 
     correct_timestamp = datetime.strptime("2018:05:22 17:03:27", "%Y:%m:%d %H:%M:%S")
     correct_timestamp = pytz.utc.localize(correct_timestamp)
@@ -402,33 +402,33 @@ def test_get_timestamp_bad(
     bad_sentera_parser: MetadataParser, sentera_parser: MetadataParser
 ) -> None:
     with pytest.raises(ParsingError):
-        bad_sentera_parser.get_timestamp()
+        bad_sentera_parser.timestamp()
 
     with pytest.raises(ParsingError):
-        sentera_parser.get_timestamp("BLAH")
+        sentera_parser.timestamp("BLAH")
 
 
 def test_get_ils(
     sentera_6x_parser: MetadataParser, dji_ms_parser: MetadataParser
 ) -> None:
-    ils = sentera_6x_parser.get_ils()
+    ils = sentera_6x_parser.ils()
     assert ils == [10532.165]
 
-    assert dji_ms_parser.get_ils() == [2281.689]
+    assert dji_ms_parser.ils() == [2281.689]
 
 
 def test_get_ils_bad(bad_sentera_parser: MetadataParser) -> None:
     with pytest.raises(ParsingError):
-        bad_sentera_parser.get_ils()
+        bad_sentera_parser.ils()
 
 
 def test_get_version_dji(dji_parser: MetadataParser) -> None:
-    version = dji_parser.get_firmware_version()
+    version = dji_parser.firmware_version()
     assert version == (1, 7, 1641)
 
 
 def test_get_version_sentera(sentera_parser: MetadataParser) -> None:
-    version = sentera_parser.get_firmware_version()
+    version = sentera_parser.firmware_version()
     assert version == (0, 22, 3)
 
 
@@ -436,10 +436,10 @@ def test_get_version_bad(
     bad_sentera_parser: MetadataParser, bad_dji_parser: MetadataParser
 ) -> None:
     with pytest.raises(ParsingError):
-        bad_sentera_parser.get_firmware_version()
+        bad_sentera_parser.firmware_version()
 
     with pytest.raises(ParsingError):
-        bad_dji_parser.get_firmware_version()
+        bad_dji_parser.firmware_version()
 
 
 def test_get_bandnames(
@@ -449,11 +449,11 @@ def test_get_bandnames(
     micasense_ms_parser: MetadataParser,
     parrot_ms_parser: MetadataParser,
 ) -> None:
-    bandnames1 = sentera_6x_parser.get_bandnames()
-    bandnames2 = sentera_quad_parser.get_bandnames()
-    bandnames3 = dji_ms_parser.get_bandnames()
-    bandnames4 = micasense_ms_parser.get_bandnames()
-    bandnames5 = parrot_ms_parser.get_bandnames()
+    bandnames1 = sentera_6x_parser.bandnames()
+    bandnames2 = sentera_quad_parser.bandnames()
+    bandnames3 = dji_ms_parser.bandnames()
+    bandnames4 = micasense_ms_parser.bandnames()
+    bandnames5 = parrot_ms_parser.bandnames()
 
     assert bandnames1 == ["Blue"]
     assert bandnames2 == ["Red", "Green", "Blue"]
@@ -464,7 +464,7 @@ def test_get_bandnames(
 
 def test_get_bandnames_bad(bad_sentera_parser: MetadataParser) -> None:
     with pytest.raises(ParsingError):
-        bad_sentera_parser.get_bandnames()
+        bad_sentera_parser.bandnames()
 
 
 def test_get_wavelength_data(
@@ -474,11 +474,11 @@ def test_get_wavelength_data(
     micasense_ms_parser: MetadataParser,
     parrot_ms_parser: MetadataParser,
 ) -> None:
-    central1, fwhm1 = sentera_6x_parser.get_wavelength_data()
-    central2, fwhm2 = sentera_quad_parser.get_wavelength_data()
-    central3, fwhm3 = dji_ms_parser.get_wavelength_data()
-    central4, fwhm4 = micasense_ms_parser.get_wavelength_data()
-    central5, fwhm5 = parrot_ms_parser.get_wavelength_data()
+    central1, fwhm1 = sentera_6x_parser.wavelength_data()
+    central2, fwhm2 = sentera_quad_parser.wavelength_data()
+    central3, fwhm3 = dji_ms_parser.wavelength_data()
+    central4, fwhm4 = micasense_ms_parser.wavelength_data()
+    central5, fwhm5 = parrot_ms_parser.wavelength_data()
 
     assert central1 == [475]
     assert fwhm1 == [30]
@@ -494,7 +494,7 @@ def test_get_wavelength_data(
 
 def test_get_wavelength_data_bad(bad_sentera_parser: MetadataParser) -> None:
     with pytest.raises(ParsingError):
-        bad_sentera_parser.get_wavelength_data()
+        bad_sentera_parser.wavelength_data()
 
 
 def test_dji_terrain_elevation(
@@ -507,10 +507,10 @@ def test_dji_terrain_elevation(
             {"json": {"status": "OK", "results": [{"elevation": 0}]}},
         ],
     )
-    alt = dji_homepoint_parser.get_relative_altitude(alt_source=AltitudeSource.terrain)
+    alt = dji_homepoint_parser.relative_altitude(alt_source=AltitudeSource.terrain)
     assert alt == 171.4
 
-    alt = dji_homepoint_parser.get_relative_altitude(alt_source=AltitudeSource.terrain)
+    alt = dji_homepoint_parser.relative_altitude(alt_source=AltitudeSource.terrain)
     assert alt == 171.4
     # Make sure api calls only requested once
     assert len(mock.request_history) == 2
@@ -519,11 +519,11 @@ def test_dji_terrain_elevation(
     hit_terrain_api.cache_clear()
 
     requests_mock.get(TERRAIN_URL, json={"status": "ERROR"})
-    alt2 = dji_homepoint_parser.get_relative_altitude(alt_source=AltitudeSource.terrain)
+    alt2 = dji_homepoint_parser.relative_altitude(alt_source=AltitudeSource.terrain)
     assert alt2 == 121.4
 
     with pytest.raises(TerrainAPIError):
-        dji_homepoint_parser.get_relative_altitude(
+        dji_homepoint_parser.relative_altitude(
             alt_source=AltitudeSource.terrain, fallback=False
         )
 
@@ -538,14 +538,10 @@ def test_sentera_terrain_elevation(
             {"json": {"status": "OK", "results": [{"elevation": 0}]}},
         ],
     )
-    alt = sentera_homepoint_parser.get_relative_altitude(
-        alt_source=AltitudeSource.terrain
-    )
+    alt = sentera_homepoint_parser.relative_altitude(alt_source=AltitudeSource.terrain)
     assert alt == pytest.approx(114.45, 0.01)
 
-    alt = sentera_homepoint_parser.get_relative_altitude(
-        alt_source=AltitudeSource.terrain
-    )
+    alt = sentera_homepoint_parser.relative_altitude(alt_source=AltitudeSource.terrain)
     assert alt == pytest.approx(114.45, 0.01)
 
     # Make sure api calls only requested once
@@ -555,19 +551,17 @@ def test_sentera_terrain_elevation(
     hit_terrain_api.cache_clear()
 
     requests_mock.get(TERRAIN_URL, json={"status": "ERROR"})
-    alt2 = sentera_homepoint_parser.get_relative_altitude(
-        alt_source=AltitudeSource.terrain
-    )
+    alt2 = sentera_homepoint_parser.relative_altitude(alt_source=AltitudeSource.terrain)
     assert alt2 == pytest.approx(64.45, 0.01)
 
     with pytest.raises(TerrainAPIError):
-        sentera_homepoint_parser.get_relative_altitude(
+        sentera_homepoint_parser.relative_altitude(
             alt_source=AltitudeSource.terrain, fallback=False
         )
 
 
 def test_get_serial_num_sentera(sentera_6x_parser: MetadataParser) -> None:
-    serial_no = sentera_6x_parser.get_serial_number()
+    serial_no = sentera_6x_parser.serial_number()
     assert serial_no == 1
 
 
@@ -576,20 +570,20 @@ def test_get_serial_bad(
 ) -> None:
     # Non-numeric
     with pytest.raises(ParsingError):
-        sentera_65r_parser.get_serial_number()
+        sentera_65r_parser.serial_number()
 
     # Doesn't exist
     with pytest.raises(ParsingError):
-        sentera_quad_parser.get_serial_number()
+        sentera_quad_parser.serial_number()
 
 
 def test_get_irradiance(
     dji_ms_parser: MetadataParser, sentera_parser: MetadataParser
 ) -> None:
-    assert dji_ms_parser.get_irradiance() == 2281.688965
+    assert dji_ms_parser.irradiance() == 2281.688965
 
     with pytest.raises(ParsingError):
-        sentera_parser.get_irradiance()
+        sentera_parser.irradiance()
 
 
 def test_get_capture_id(
@@ -599,13 +593,13 @@ def test_get_capture_id(
     parrot_ms_parser: MetadataParser,
     sentera_parser: MetadataParser,
 ) -> None:
-    assert micasense_ms_parser.get_capture_id() == "rbSiEyRnG1UCUY5EM20i"
-    assert dji_ms_parser.get_capture_id() == "576047cc8d7411ec87fda099c9f7f1f5"
-    assert sentera_6x_rgb_parser.get_capture_id() == "2022-11-10_22-03-47_8"
-    assert parrot_ms_parser.get_capture_id() == "15B9793D3A9597E2E348B932826B427B"
+    assert micasense_ms_parser.capture_id() == "rbSiEyRnG1UCUY5EM20i"
+    assert dji_ms_parser.capture_id() == "576047cc8d7411ec87fda099c9f7f1f5"
+    assert sentera_6x_rgb_parser.capture_id() == "2022-11-10_22-03-47_8"
+    assert parrot_ms_parser.capture_id() == "15B9793D3A9597E2E348B932826B427B"
 
     with pytest.raises(ParsingError):
-        sentera_parser.get_capture_id()
+        sentera_parser.capture_id()
 
 
 @patch("imgparse.util.s3_resource")
@@ -628,7 +622,7 @@ def test_get_make_and_model_s3(
         "Image Model": Tag("TestModel"),
     }
 
-    make, model = s3_image_parser.get_make_and_model()
+    make, model = s3_image_parser.make_and_model()
 
     mock_s3_client.Object.assert_called_with(
         s3_image_parser.image_path.bucket, s3_image_parser.image_path.key
@@ -664,7 +658,7 @@ def test_get_roll_pitch_yaw_s3(
     mock_s3_resource.return_value.Object.return_value = mock_s3_object
 
     # Invoke the function that we are testing (get_roll_pitch_yaw)
-    roll, pitch, yaw = s3_image_parser.get_roll_pitch_yaw()
+    roll, pitch, yaw = s3_image_parser.rotation()
 
     assert [roll, pitch, yaw] == pytest.approx(
         [-2.445596, 1.003452, 29.639198], abs=1e-06
@@ -676,4 +670,4 @@ def test_get_roll_pitch_yaw_s3(
             "Body": MagicMock(read=lambda: b"")
         }
         s3_image_parser._xmp_data = None
-        s3_image_parser.get_roll_pitch_yaw()
+        s3_image_parser.rotation()

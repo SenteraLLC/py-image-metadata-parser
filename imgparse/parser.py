@@ -66,7 +66,7 @@ class MetadataParser:
     @property
     def xmp_tags(self) -> xmp_tags.XMPTags:
         """Get the xmp tag names associated with the image's sensor."""
-        make, _ = self.get_make_and_model()
+        make, _ = self.make_and_model()
         if make == "Sentera":
             return xmp_tags.SenteraTags()
         elif make == "DJI" or make == "Hasselblad":
@@ -78,7 +78,7 @@ class MetadataParser:
         else:
             return xmp_tags.XMPTags()
 
-    def get_make_and_model(self) -> tuple[str, str]:
+    def make_and_model(self) -> tuple[str, str]:
         """Get the make and model of the sensor that took the image."""
         try:
             return (
@@ -90,7 +90,7 @@ class MetadataParser:
                 "Couldn't parse the make and model. Sensor might not be supported"
             )
 
-    def get_firmware_version(self) -> Version:
+    def firmware_version(self) -> Version:
         """
         Get the firmware version of the sensor.
 
@@ -111,7 +111,7 @@ class MetadataParser:
 
         return Version(int(major), int(minor), int(patch))
 
-    def get_timestamp(self, format_string: str = "%Y:%m:%d %H:%M:%S") -> datetime:
+    def timestamp(self, format_string: str = "%Y:%m:%d %H:%M:%S") -> datetime:
         """
         Get the time stamp of an image and parse it into a `datetime` object with the given format string.
 
@@ -143,10 +143,10 @@ class MetadataParser:
                 "Couldn't parse found timestamp with given format string"
             )
 
-        lat, lon = self.get_lat_lon()
+        lat, lon = self.location()
 
         timezone = pytz.timezone(TimezoneFinder().timezone_at(lng=lon, lat=lat))  # type: ignore
-        make, _ = self.get_make_and_model()
+        make, _ = self.make_and_model()
         if make in ["Sentera", "MicaSense"]:
             datetime_obj = pytz.utc.localize(datetime_obj)
             # convert time to local timezone
@@ -156,9 +156,9 @@ class MetadataParser:
 
         return datetime_obj
 
-    def get_dimensions(self) -> Dimensions:
+    def dimensions(self) -> Dimensions:
         """Get the height and width (in pixels) of the image."""
-        make, model = self.get_make_and_model()
+        make, model = self.make_and_model()
         ext = self.image_path.suffix.lower()
 
         try:
@@ -189,14 +189,14 @@ class MetadataParser:
                 "Couldn't parse the height and width of the image. Sensor might not be supported"
             )
 
-    def get_pixel_pitch_meters(self) -> float:
+    def pixel_pitch_meters(self) -> float:
         """
         Get pixel pitch (in meters) of the sensor that took the image.
 
         Non-Sentera cameras don't store the pixel pitch in the exif tags, so that is found in a lookup table.  See
         `pixel_pitches.py` to check which non-Sentera sensor models are supported and to add support for new sensors.
         """
-        make, model = self.get_make_and_model()
+        make, model = self.make_and_model()
         try:
             if make == "Sentera":
                 return (
@@ -213,7 +213,7 @@ class MetadataParser:
 
         return pixel_pitch
 
-    def get_focal_length_meters(self, use_calibrated: bool = False) -> float:
+    def focal_length_meters(self, use_calibrated: bool = False) -> float:
         """
         Get the focal length (in meters) of the sensor that took the image.
 
@@ -234,21 +234,19 @@ class MetadataParser:
                 "Couldn't parse the focal length. Sensor might not be supported"
             )
 
-    def get_focal_length_pixels(
-        self, use_calibrated_focal_length: bool = False
-    ) -> float:
+    def focal_length_pixels(self, use_calibrated_focal_length: bool = False) -> float:
         """Get the focal length (in pixels) of the sensor that took the image."""
-        fl = self.get_focal_length_meters(use_calibrated_focal_length)
-        pp = self.get_pixel_pitch_meters()
+        fl = self.focal_length_meters(use_calibrated_focal_length)
+        pp = self.pixel_pitch_meters()
         return fl / pp
 
-    def get_principal_point(self) -> PixelCoords:
+    def principal_point(self) -> PixelCoords:
         """Get the principal point (x, y) in pixels of the sensor that took the image."""
         try:
             pt = list(
                 map(float, str(self.xmp_data[self.xmp_tags.PRINCIPAL_POINT]).split(","))
             )
-            pp = self.get_pixel_pitch_meters()
+            pp = self.pixel_pitch_meters()
 
             # convert point from mm from origin to px from origin
             ptx = pt[0] * 0.001 / pp
@@ -260,7 +258,7 @@ class MetadataParser:
                 "Couldn't find the principal point tag. Sensor might not be supported"
             )
 
-    def get_distortion_parameters(self) -> list[float]:
+    def distortion_parameters(self) -> list[float]:
         """Get the radial distortion parameters of the sensor that took the image."""
         try:
             return list(
@@ -271,7 +269,7 @@ class MetadataParser:
                 "Couldn't find the distortion tag. Sensor might not be supported"
             )
 
-    def get_lat_lon(self) -> Coords:
+    def location(self) -> Coords:
         """Get the latitude and longitude of the sensor when the image was taken."""
         try:
             gps_latitude = self.exif_data["GPS GPSLatitude"]
@@ -291,7 +289,7 @@ class MetadataParser:
 
         return Coords(lat, lon)
 
-    def get_roll_pitch_yaw(self, standardize: bool = True) -> Euler:
+    def rotation(self, standardize: bool = True) -> Euler:
         """
         Get the orientation of the sensor (roll, pitch, yaw in degrees) when the image was taken.
 
@@ -305,7 +303,7 @@ class MetadataParser:
             )
 
             if standardize:
-                make, _ = self.get_make_and_model()
+                make, _ = self.make_and_model()
                 if make == "DJI" or make == "Hasselblad":
                     # DJI describes orientation in terms of the gimbal reference frame
                     # Thus camera pointing down is pitch = -90
@@ -318,7 +316,7 @@ class MetadataParser:
 
         return rotation
 
-    def get_altitude_msl(self) -> float:
+    def altitude_msl(self) -> float:
         """Get the absolute altitude (meters above msl) of the sensor when the image was taken."""
         try:
             return convert_to_float(self.exif_data["GPS GPSAltitude"])
@@ -327,7 +325,7 @@ class MetadataParser:
                 "Couldn't parse altitude msl. Sensor might not be supported"
             )
 
-    def get_relative_altitude(
+    def relative_altitude(
         self,
         alt_source: AltitudeSource = AltitudeSource.default,
         terrain_api_key: str | None = None,
@@ -354,19 +352,19 @@ class MetadataParser:
 
         try:
             if alt_source == AltitudeSource.lrf:
-                return self._get_lrf_altitude()
+                return self.lrf_altitude()
             elif alt_source == AltitudeSource.terrain:
-                terrain_alt = self._get_terrain_altitude(terrain_api_key)
+                terrain_alt = self.terrain_altitude(terrain_api_key)
         except (ParsingError, TerrainAPIError) as e:
             if not fallback:
                 raise e
             logger.warning(f"{e}. Falling back to default relative altitude.")
 
-        return self._get_relative_altitude_default() + terrain_alt
+        return self.relative_altitude_default() + terrain_alt
 
-    def _get_relative_altitude_default(self) -> float:
+    def relative_altitude_default(self) -> float:
         """Get default relative altitude."""
-        make, _ = self.get_make_and_model()
+        make, _ = self.make_and_model()
         try:
             return float(self.xmp_data[self.xmp_tags.RELATIVE_ALT])
         except KeyError:
@@ -374,7 +372,7 @@ class MetadataParser:
                 logger.warning(
                     "Relative altitude not found in XMP. Attempting to parse from session.txt file"
                 )
-                abs_alt = self.get_altitude_msl()
+                abs_alt = self.altitude_msl()
                 session_alt = parse_session_alt(self.image_path)
                 return abs_alt - session_alt
             else:
@@ -382,7 +380,7 @@ class MetadataParser:
                     "Couldn't parse relative altitude from xmp data. Sensor may not be supported"
                 )
 
-    def _get_lrf_altitude(self) -> float:
+    def lrf_altitude(self) -> float:
         """Get altitude from laser range finder data stored in XMP."""
         try:
             try:
@@ -393,27 +391,28 @@ class MetadataParser:
         except KeyError:
             raise ParsingError("Altimeter LRF altitude not found in XMP data.")
 
-    def _get_terrain_altitude(self, terrain_api_key: str | None = None) -> float:
+    def terrain_altitude(self, terrain_api_key: str | None = None) -> float:
         """Get terrain altitude relative to the home point."""
-        home_lat, home_lon = self._get_home_point()
-        image_lat, image_lon = self.get_lat_lon()
+        home_lat, home_lon = self.home_point()
+        image_lat, image_lon = self.location()
         home_elevation = hit_terrain_api(home_lat, home_lon, terrain_api_key)
         image_elevation = hit_terrain_api(image_lat, image_lon, terrain_api_key)
         return home_elevation - image_elevation
 
-    def _get_home_point(self) -> tuple[float, float]:
+    def home_point(self) -> Coords:
         """Get the flight home point. Used for `get_relative_altitude(alt_source=terrain)`."""
         try:
-            make, _ = self.get_make_and_model()
+            make, _ = self.make_and_model()
             if make == "DJI":
                 self_data = self.xmp_data[self.xmp_tags.SELF_DATA].split("|")
                 if len(self_data) == 4:
-                    return float(self_data[0]), float(self_data[1])
+                    return Coords(float(self_data[0]), float(self_data[1]))
                 else:
                     raise KeyError()
             elif make == "Sentera":
-                return float(self.xmp_data[self.xmp_tags.HOMEPOINT_LAT]), float(
-                    self.xmp_data[self.xmp_tags.HOMEPOINT_LON]
+                return Coords(
+                    float(self.xmp_data[self.xmp_tags.HOMEPOINT_LAT]),
+                    float(self.xmp_data[self.xmp_tags.HOMEPOINT_LON]),
                 )
             else:
                 raise KeyError()
@@ -422,7 +421,7 @@ class MetadataParser:
                 "Couldn't parse home point. Sensor might not be supported for terrain elevation parsing"
             )
 
-    def get_gsd(
+    def gsd(
         self,
         use_calibrated_focal_length: bool = False,
         alt_source: AltitudeSource = AltitudeSource.default,
@@ -437,15 +436,15 @@ class MetadataParser:
         :param terrain_api_key: See `get_relative_altitude()`
         :param fallback: See `get_relative_altitude()`
         """
-        focal_length = self.get_focal_length_pixels(use_calibrated_focal_length)
-        alt = self.get_relative_altitude(alt_source, terrain_api_key, fallback)
+        focal_length = self.focal_length_pixels(use_calibrated_focal_length)
+        alt = self.relative_altitude(alt_source, terrain_api_key, fallback)
 
         if alt <= 0:
             raise ValueError("Parsed gsd is less than or equal to 0")
 
         return alt / focal_length
 
-    def get_autoexposure(self) -> float:
+    def autoexposure(self) -> float:
         """
         Get the autoexposure value of the sensor when the image was taken.
 
@@ -462,10 +461,10 @@ class MetadataParser:
 
         return iso * integration_time
 
-    def get_ils(self) -> list[float]:
+    def ils(self) -> list[float]:
         """Get the ILS value of an image captured by a sensor with an ILS module."""
         try:
-            make, _ = self.get_make_and_model()
+            make, _ = self.make_and_model()
             if make == "DJI":
                 return [float(self.xmp_data[self.xmp_tags.ILS])]
             else:
@@ -475,7 +474,7 @@ class MetadataParser:
                 "Couldn't parse ILS value. Sensor might not be supported"
             )
 
-    def get_wavelength_data(self) -> tuple[list[int], list[int]]:
+    def wavelength_data(self) -> tuple[list[int], list[int]]:
         """Get the central and FWHM wavelength values of an image."""
         try:
             try:
@@ -497,7 +496,7 @@ class MetadataParser:
                 "Couldn't parse wavelength data. Sensor might not be supported"
             )
 
-    def get_bandnames(self) -> list[str]:
+    def bandnames(self) -> list[str]:
         """Get the name of each band of an image."""
         try:
             try:
@@ -509,10 +508,10 @@ class MetadataParser:
                 "Couldn't parse bandnames. Sensor might not be supported"
             )
 
-    def get_lens_model(self) -> str:
+    def lens_model(self) -> str:
         """Get the lens model of an image from a Sentera Camera."""
         try:
-            make, _ = self.get_make_and_model()
+            make, _ = self.make_and_model()
             if make == "Sentera":
                 # Exif LensModel is Single and D4K. Images LensModel is 6x
                 return (
@@ -529,7 +528,7 @@ class MetadataParser:
                 "Couldn't parse lens model. Sensor might not be supported"
             )
 
-    def get_serial_number(self) -> int:
+    def serial_number(self) -> int:
         """
         Get the serial number of the sensor.
 
@@ -542,7 +541,7 @@ class MetadataParser:
                 "Couldn't parse sensor version. Sensor might not be supported"
             )
 
-    def get_irradiance(self) -> float:
+    def irradiance(self) -> float:
         """Get the Irradiance value of an image captured by a sensor with an DLS module."""
         try:
             return float(self.xmp_data[self.xmp_tags.IRRADIANCE])
@@ -551,14 +550,14 @@ class MetadataParser:
                 "Couldn't parse irradiance value. Sensor might not be supported"
             )
 
-    def get_capture_id(self) -> str:
+    def capture_id(self) -> str:
         """
         Get unique id for a single capture event.
 
         This unique id is consistent across bands for multispectral cameras.
         """
         try:
-            make, _ = self.get_make_and_model()
+            make, _ = self.make_and_model()
             if make == "Sentera":
                 try:
                     # Firmware version >=2.1.0

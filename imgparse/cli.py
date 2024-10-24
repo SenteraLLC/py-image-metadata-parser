@@ -31,44 +31,42 @@ def cli(log_level: str) -> None:
 @click.argument("image_path", required=True)
 def get_ils(image_path: str) -> None:
     """Parse ILS from metadata."""
-    print("ILS:", MetadataParser(image_path).get_ils())
+    print("ILS:", MetadataParser(image_path).ils())
 
 
 @cli.command()
 @click.argument("image_path", required=True)
 def get_autoexposure(image_path: str) -> None:
     """Parse autoexposure from metadata."""
-    print("Autoexposure:", MetadataParser(image_path).get_autoexposure())
+    print("Autoexposure:", MetadataParser(image_path).autoexposure())
 
 
 @cli.command()
 @click.argument("image_path", required=True)
 def get_timestamp(image_path: str) -> None:
     """Parse timestamp from metadata."""
-    print("Timestamp:", MetadataParser(image_path).get_timestamp())
+    print("Timestamp:", MetadataParser(image_path).timestamp())
 
 
 @cli.command()
 @click.argument("image_path", required=True)
 def get_focal_length(image_path: str) -> None:
     """Parse focal length from metadata."""
-    print(
-        "Focal length (pixels):", MetadataParser(image_path).get_focal_length_pixels()
-    )
+    print("Focal length (pixels):", MetadataParser(image_path).focal_length_pixels())
 
 
 @cli.command()
 @click.argument("image_path", required=True)
 def get_principal_point(image_path: str) -> None:
     """Parse principal point from metadata."""
-    print("Principal Point (x,y): ", MetadataParser(image_path).get_principal_point())
+    print("Principal Point (x,y): ", MetadataParser(image_path).principal_point())
 
 
 @cli.command()
 @click.argument("image_path", required=True)
 def get_distortion_parameters(image_path: str) -> None:
     """Parse radial distortion parameters from metadata."""
-    print("Distortions: ", MetadataParser(image_path).get_distortion_parameters())
+    print("Distortions: ", MetadataParser(image_path).distortion_parameters())
 
 
 @cli.command()
@@ -81,7 +79,7 @@ def get_relative_altitude(image_path: str, source: str, api_key: str) -> None:
     """Parse relative altitude from metadata."""
     print(
         "Altitude (m):",
-        MetadataParser(image_path).get_relative_altitude(
+        MetadataParser(image_path).relative_altitude(
             alt_source=AltitudeSource[source], terrain_api_key=api_key
         ),
     )
@@ -91,7 +89,7 @@ def get_relative_altitude(image_path: str, source: str, api_key: str) -> None:
 @click.argument("image_path", required=True)
 def get_lat_lon(image_path: str) -> None:
     """Parse latitude and longitude from metadata."""
-    lat, lon = MetadataParser(image_path).get_lat_lon()
+    lat, lon = MetadataParser(image_path).location()
     print("Lat:", lat)
     print("Lon:", lon)
 
@@ -100,7 +98,7 @@ def get_lat_lon(image_path: str) -> None:
 @click.argument("image_path", required=True)
 def get_altitude_msl(image_path: str) -> None:
     """Parse altitude msl from metadata."""
-    print("Altitude MSL (m):", MetadataParser(image_path).get_altitude_msl())
+    print("Altitude MSL (m):", MetadataParser(image_path).altitude_msl())
 
 
 @cli.command()
@@ -108,7 +106,7 @@ def get_altitude_msl(image_path: str) -> None:
 @click.option("--no_standardize", is_flag=True, default=False)
 def get_roll_pitch_yaw(image_path: str, no_standardize: bool) -> None:
     """Parse the roll, pitch, yaw from metadata."""
-    roll, pitch, yaw = MetadataParser(image_path).get_roll_pitch_yaw(
+    roll, pitch, yaw = MetadataParser(image_path).rotation(
         standardize=not no_standardize
     )
     print("Roll (degrees):", roll)
@@ -120,7 +118,7 @@ def get_roll_pitch_yaw(image_path: str, no_standardize: bool) -> None:
 @click.argument("image_path", required=True)
 def get_make_and_model(image_path: str) -> None:
     """Parse camera make and model from metadata."""
-    make, model = MetadataParser(image_path).get_make_and_model()
+    make, model = MetadataParser(image_path).make_and_model()
     print("Make:", make)
     print("Model:", model)
 
@@ -129,14 +127,14 @@ def get_make_and_model(image_path: str) -> None:
 @click.argument("image_path", required=True)
 def get_dimensions(image_path: str) -> None:
     """Parse image dimensions from metadata."""
-    print("Dimensions:", MetadataParser(image_path).get_dimensions())
+    print("Dimensions:", MetadataParser(image_path).dimensions())
 
 
 @cli.command()
 @click.argument("image_path", required=True)
 def get_gsd(image_path: str) -> None:
     """Parse gsd from metadata."""
-    print("Gsd (m):", MetadataParser(image_path).get_gsd())
+    print("Gsd (m):", MetadataParser(image_path).gsd())
 
 
 @cli.command()
@@ -145,7 +143,7 @@ def get_firmware_version(image_path: str) -> None:
     """Parse firmware from metadata."""
     print(
         "Firmware version:",
-        ".".join(map(str, MetadataParser(image_path).get_firmware_version())),
+        ".".join(map(str, MetadataParser(image_path).firmware_version())),
     )
 
 
@@ -153,7 +151,7 @@ def get_firmware_version(image_path: str) -> None:
 @click.argument("image_path", required=True)
 def get_wavelength_data(image_path: str) -> None:
     """Parse wavelength data from metadata."""
-    data = MetadataParser(image_path).get_wavelength_data()
+    data = MetadataParser(image_path).wavelength_data()
     print("Central Wavelength:")
     for w in data[0]:
         print(f"  {w}")
@@ -166,7 +164,7 @@ def get_wavelength_data(image_path: str) -> None:
 @click.argument("image_path", required=True)
 def get_bandnames(image_path: str) -> None:
     """Parse bandnames from metadata."""
-    names = MetadataParser(image_path).get_bandnames()
+    names = MetadataParser(image_path).bandnames()
     print("Bandnames:")
     for name in names:
         print(f"  {name}")
@@ -176,14 +174,14 @@ def get_bandnames(image_path: str) -> None:
 @click.argument("image_path")
 def get_irradiance(image_path: str) -> None:
     """Parse irradiance from metadata."""
-    print("Irradiance:", MetadataParser(image_path).get_irradiance())
+    print("Irradiance:", MetadataParser(image_path).irradiance())
 
 
 @cli.command()
 @click.argument("image_path")
 def get_capture_id(image_path: str) -> None:
     """Parse capture id from metadata."""
-    print("Capture ID:", MetadataParser(image_path).get_capture_id())
+    print("Capture ID:", MetadataParser(image_path).capture_id())
 
 
 @cli.command()
@@ -243,11 +241,11 @@ def create_metadata_csv(imagery_path: str) -> None:  # noqa: D301
             writer.writerow(
                 [
                     image_path.name,
-                    *parser.get_lat_lon(),
-                    parser.get_altitude_msl(),
-                    *parser.get_roll_pitch_yaw(),
-                    parser.get_relative_altitude(),
-                    parser.get_focal_length_pixels(),
+                    *parser.location(),
+                    parser.altitude_msl(),
+                    *parser.rotation(),
+                    parser.relative_altitude(),
+                    parser.focal_length_pixels(),
                 ]
             )
 
