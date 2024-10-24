@@ -118,9 +118,9 @@ def get_roll_pitch_yaw(image_path: str, no_standardize: bool) -> None:
 @click.argument("image_path", required=True)
 def get_make_and_model(image_path: str) -> None:
     """Parse camera make and model from metadata."""
-    make, model = MetadataParser(image_path).make_and_model()
-    print("Make:", make)
-    print("Model:", model)
+    parser = MetadataParser(image_path)
+    print("Make:", parser.make())
+    print("Model:", parser.model())
 
 
 @cli.command()

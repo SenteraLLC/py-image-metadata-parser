@@ -171,18 +171,22 @@ def test_get_camera_params_bad(
 
 
 def test_get_make_and_model_dji(dji_parser: MetadataParser) -> None:
-    make, model = dji_parser.make_and_model()
-    assert [make, model] == ["DJI", "FC6310"]
+    assert [dji_parser.make(), dji_parser.model()] == ["DJI", "FC6310"]
 
 
 def test_get_make_and_model_sentera(sentera_parser: MetadataParser) -> None:
-    make, model = sentera_parser.make_and_model()
-    assert [make, model] == ["Sentera", "21022-06_12MP-ERS-0001"]
+    assert [sentera_parser.make(), sentera_parser.model()] == [
+        "Sentera",
+        "21022-06_12MP-ERS-0001",
+    ]
 
 
 def test_get_make_and_model_bad(bad_data_parser: MetadataParser) -> None:
     with pytest.raises(ParsingError):
-        bad_data_parser.make_and_model()
+        bad_data_parser.make()
+
+    with pytest.raises(ParsingError):
+        bad_data_parser.model()
 
 
 def test_get_lens_model_sentera(
@@ -622,7 +626,7 @@ def test_get_make_and_model_s3(
         "Image Model": Tag("TestModel"),
     }
 
-    make, model = s3_image_parser.make_and_model()
+    make, model = s3_image_parser.make(), s3_image_parser.model()
 
     mock_s3_client.Object.assert_called_with(
         s3_image_parser.image_path.bucket, s3_image_parser.image_path.key

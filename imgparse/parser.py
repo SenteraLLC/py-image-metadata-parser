@@ -66,25 +66,30 @@ class MetadataParser:
     @property
     def xmp_tags(self) -> xmp_tags.XMPTags:
         """Get the xmp tag names associated with the image's sensor."""
-        make, _ = self.make_and_model()
-        if make == "Sentera":
+        if self.make() == "Sentera":
             return xmp_tags.SenteraTags()
-        elif make == "DJI" or make == "Hasselblad":
+        elif self.make() == "DJI" or self.make() == "Hasselblad":
             return xmp_tags.DJITags()
-        elif make == "MicaSense":
+        elif self.make() == "MicaSense":
             return xmp_tags.MicaSenseTags()
-        elif make == "Parrot":
+        elif self.make() == "Parrot":
             return xmp_tags.ParrotTags()
         else:
             return xmp_tags.XMPTags()
 
-    def make_and_model(self) -> tuple[str, str]:
+    def make(self) -> str:
         """Get the make and model of the sensor that took the image."""
         try:
-            return (
-                self.exif_data["Image Make"].values,
-                self.exif_data["Image Model"].values,
+            return str(self.exif_data["Image Make"].values)
+        except KeyError:
+            raise ParsingError(
+                "Couldn't parse the make and model. Sensor might not be supported"
             )
+
+    def model(self) -> str:
+        """Get the make and model of the sensor that took the image."""
+        try:
+            return str(self.exif_data["Image Model"].values)
         except KeyError:
             raise ParsingError(
                 "Couldn't parse the make and model. Sensor might not be supported"
@@ -146,8 +151,7 @@ class MetadataParser:
         lat, lon = self.coordinates()
 
         timezone = pytz.timezone(TimezoneFinder().timezone_at(lng=lon, lat=lat))  # type: ignore
-        make, _ = self.make_and_model()
-        if make in ["Sentera", "MicaSense"]:
+        if self.make() in ["Sentera", "MicaSense"]:
             datetime_obj = pytz.utc.localize(datetime_obj)
             # convert time to local timezone
             datetime_obj = datetime_obj.astimezone(timezone)
@@ -158,7 +162,6 @@ class MetadataParser:
 
     def dimensions(self) -> Dimensions:
         """Get the height and width (in pixels) of the image."""
-        make, model = self.make_and_model()
         ext = self.image_path.suffix.lower()
 
         try:
@@ -178,11 +181,11 @@ class MetadataParser:
                 )
         except KeyError:
             # Workaround for Sentera sensors missing the tags
-            if make == "Sentera":
-                if model.startswith("21030-"):
+            if self.make() == "Sentera":
+                if self.model().startswith("21030-"):
                     # 65R
                     return Dimensions(7000, 9344)
-                elif model.startswith("21214-"):
+                elif self.model().startswith("21214-"):
                     # 6X RGB
                     return Dimensions(3888, 5184)
             raise ParsingError(
@@ -196,16 +199,15 @@ class MetadataParser:
         Non-Sentera cameras don't store the pixel pitch in the exif tags, so that is found in a lookup table.  See
         `pixel_pitches.py` to check which non-Sentera sensor models are supported and to add support for new sensors.
         """
-        make, model = self.make_and_model()
         try:
-            if make == "Sentera":
+            if self.make() == "Sentera":
                 return (
                     1
                     / convert_to_float(self.exif_data["EXIF FocalPlaneXResolution"])
                     / 100
                 )
             else:
-                pixel_pitch = PIXEL_PITCHES[make][model]
+                pixel_pitch = PIXEL_PITCHES[self.make()][self.model()]
         except KeyError:
             raise ParsingError(
                 "Couldn't parse pixel pitch. Sensor might not be supported"
@@ -303,8 +305,7 @@ class MetadataParser:
             )
 
             if standardize:
-                make, _ = self.make_and_model()
-                if make == "DJI" or make == "Hasselblad":
+                if self.make() == "DJI" or self.make() == "Hasselblad":
                     # DJI describes orientation in terms of the gimbal reference frame
                     # Thus camera pointing down is pitch = -90
                     # Apply pitch rotation of +90 to convert to standard reference frame
@@ -364,11 +365,10 @@ class MetadataParser:
 
     def relative_altitude_default(self) -> float:
         """Get default relative altitude."""
-        make, _ = self.make_and_model()
         try:
             return float(self.xmp_data[self.xmp_tags.RELATIVE_ALT])
         except KeyError:
-            if make == "Sentera":
+            if self.make() == "Sentera":
                 logger.warning(
                     "Relative altitude not found in XMP. Attempting to parse from session.txt file"
                 )
@@ -402,14 +402,13 @@ class MetadataParser:
     def home_point(self) -> WorldCoords:
         """Get the flight home point. Used for `get_relative_altitude(alt_source=terrain)`."""
         try:
-            make, _ = self.make_and_model()
-            if make == "DJI":
+            if self.make() == "DJI":
                 self_data = self.xmp_data[self.xmp_tags.SELF_DATA].split("|")
                 if len(self_data) == 4:
                     return WorldCoords(float(self_data[0]), float(self_data[1]))
                 else:
                     raise KeyError()
-            elif make == "Sentera":
+            elif self.make() == "Sentera":
                 return WorldCoords(
                     float(self.xmp_data[self.xmp_tags.HOMEPOINT_LAT]),
                     float(self.xmp_data[self.xmp_tags.HOMEPOINT_LON]),
@@ -464,8 +463,7 @@ class MetadataParser:
     def ils(self) -> list[float]:
         """Get the ILS value of an image captured by a sensor with an ILS module."""
         try:
-            make, _ = self.make_and_model()
-            if make == "DJI":
+            if self.make() == "DJI":
                 return [float(self.xmp_data[self.xmp_tags.ILS])]
             else:
                 return parse_seq(self.xmp_data[self.xmp_tags.ILS], float)
@@ -511,17 +509,12 @@ class MetadataParser:
     def lens_model(self) -> str:
         """Get the lens model of an image from a Sentera Camera."""
         try:
-            make, _ = self.make_and_model()
-            if make == "Sentera":
-                # Exif LensModel is Single and D4K. Images LensModel is 6x
-                return (
-                    str(self.exif_data["Image LensModel"].values)
-                    if self.exif_data.get("Image LensModel")
-                    # will return KeyError if both are not found
-                    else str(self.exif_data["EXIF LensModel"].values)
-                )
-            else:
-                raise KeyError()
+            return (
+                str(self.exif_data["Image LensModel"].values)
+                if self.exif_data.get("Image LensModel")
+                # will return KeyError if both are not found
+                else str(self.exif_data["EXIF LensModel"].values)
+            )
 
         except KeyError:
             raise ParsingError(
@@ -557,8 +550,7 @@ class MetadataParser:
         This unique id is consistent across bands for multispectral cameras.
         """
         try:
-            make, _ = self.make_and_model()
-            if make == "Sentera":
+            if self.make() == "Sentera":
                 try:
                     # Firmware version >=2.1.0
                     return f"{self.xmp_data['Camera:FlightUUID']}_{self.xmp_data['Camera:CaptureUUID']}"
