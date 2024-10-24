@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta
+from io import BytesIO
 from pathlib import Path
 from typing import Any
+from unittest.mock import MagicMock, patch
 
 import pytest
 import pytz
@@ -32,7 +34,7 @@ def bad_data_parser() -> MetadataParser:
 
 @pytest.fixture
 def bad_sentera_parser() -> MetadataParser:
-    parser = MetadataParser(base_path / "BAD_IMG.jpg")
+    parser = MetadataParser(str(base_path / "BAD_IMG.jpg"))
     parser._exif_data = {
         "BadKey1": "BadValue1",
         "BadKey2": 0,
@@ -123,6 +125,13 @@ def sentera_quad_parser() -> MetadataParser:
 @pytest.fixture
 def sentera_65r_parser() -> MetadataParser:
     return MetadataParser(base_path / "sentera_65r.jpg")
+
+
+@pytest.fixture
+def s3_image_parser() -> MetadataParser:
+    return MetadataParser(
+        "s3://bucket_name/image.jpg", "arn:aws:iam::123456789012:role/example-role"
+    )
 
 
 def test_get_camera_params_dji(dji_parser: MetadataParser) -> None:
@@ -601,3 +610,34 @@ def test_get_capture_id(
 
     with pytest.raises(ParsingError):
         sentera_parser.get_capture_id()
+
+
+@patch("imgparse.getters.s3_resource")
+@patch("imgparse.getters.exifread.process_file")
+def test_get_make_and_model_s3(
+    mock_process_file: MagicMock,
+    mock_s3_resource: MagicMock,
+    s3_image_parser: MetadataParser,
+) -> None:
+    mock_s3_client = MagicMock()
+    mock_s3_object = MagicMock()
+
+    mock_s3_client.Object.return_value = mock_s3_object
+    mock_s3_object.get.return_value = {"Body": BytesIO(b"fake_exif_header_bytes")}
+
+    mock_s3_resource.return_value = mock_s3_client
+
+    mock_process_file.return_value = {
+        "Image Make": Tag("TestMake"),
+        "Image Model": Tag("TestModel"),
+    }
+
+    make, model = s3_image_parser.get_make_and_model()
+
+    mock_s3_client.Object.assert_called_with(
+        s3_image_parser.image_path.bucket, s3_image_parser.image_path.key
+    )
+    mock_s3_object.get.assert_called_once_with(Range="bytes=0-65536")
+    mock_process_file.assert_called_once()
+
+    assert [make, model] == ["TestMake", "TestModel"]

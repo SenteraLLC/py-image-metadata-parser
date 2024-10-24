@@ -23,15 +23,17 @@ logger = logging.getLogger(__name__)
 class MetadataParser:
     """Metadata parsing class."""
 
-    def __init__(self, image_path: Path | str | S3Path):
+    def __init__(self, image_path: Path | str | S3Path, s3_role: str | None = None):
         """Initialize metadata parser."""
+        print(image_path)
         if isinstance(image_path, str):
-            if image_path[:4] == "s3://":
+            if image_path[:5] == "s3://":
                 image_path = S3Path.from_uri(image_path)
             else:
                 image_path = Path(image_path)
 
         self.image_path = image_path
+        self.s3_role = s3_role
 
         # Lazily load exif and xmp data via properties
         self._exif_data: dict[str, Any] | None = None
@@ -41,7 +43,7 @@ class MetadataParser:
     def exif_data(self) -> dict[str, Any]:
         """Get the exif data for the image."""
         if self._exif_data is None:
-            self._exif_data = get_exif_data(self.image_path)
+            self._exif_data = get_exif_data(self.image_path, self.s3_role)
         return self._exif_data
 
     @property
