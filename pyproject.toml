@@ -10,10 +10,10 @@ exifread = "*"
 click = "*"
 xmltodict = "*"
 requests = "*"
-s3path = "*"
 pytz = {version = "*", optional = true}
-timezonefinder = {version = "^5.2.0", optional = true}
+timezonefinder = {version = "*", optional = true}
 boto3 = {version = "*", optional = true}
+s3path = {version = "*", optional = true}
 
 [tool.poetry.dev-dependencies]
 pytest = "*"
@@ -30,7 +30,7 @@ imgparse = "imgparse.cli:cli"
 
 [tool.poetry.extras]
 timestamps = ["timezonefinder", "pytz"]
-s3 = ["boto3"]
+s3 = ["boto3", "s3path"]
 
 [build-system]
 requires = ["poetry-core"]

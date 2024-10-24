@@ -2,27 +2,18 @@
 
 import logging
 import os
-from enum import Enum
 from functools import lru_cache
 from pathlib import Path
 
 import requests
-from s3path import S3Path
 
 from imgparse.exceptions import ParsingError, TerrainAPIError
+from imgparse.s3 import S3Path
 
 logger = logging.getLogger(__name__)
 
 TERRAIN_URL = "https://maps.googleapis.com/maps/api/elevation/json"
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-
-
-class AltitudeSource(Enum):
-    """Altitude source enum."""
-
-    default = "default"
-    terrain = "terrain"
-    lrf = "lrf"
 
 
 def parse_session_alt(image_path: Path | S3Path) -> float:
@@ -54,7 +45,7 @@ def parse_session_alt(image_path: Path | S3Path) -> float:
 
 @lru_cache(maxsize=None)
 def hit_terrain_api(lat: float, lon: float, api_key: str | None = None) -> float:
-    """Call out to the google elevation api to get the terrain elevation at a given lat/lon."""
+    """Hit the google elevation api to get the terrain elevation at a given lat/lon."""
     if api_key is None:
         api_key = GOOGLE_API_KEY
 

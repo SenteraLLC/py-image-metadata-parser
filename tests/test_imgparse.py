@@ -9,12 +9,8 @@ import pytz
 from requests_mock import Mocker
 
 from imgparse import MetadataParser, ParsingError, TerrainAPIError
-from imgparse.altitude import (
-    TERRAIN_URL,
-    AltitudeSource,
-    hit_terrain_api,
-    parse_session_alt,
-)
+from imgparse.altitude import TERRAIN_URL, hit_terrain_api, parse_session_alt
+from imgparse.types import AltitudeSource
 
 base_path = Path(__file__).parent / "data"
 

@@ -6,7 +6,8 @@ from pathlib import Path
 
 import click
 
-from imgparse import AltitudeSource, MetadataParser, __version__
+from imgparse import MetadataParser, __version__
+from imgparse.types import AltitudeSource
 
 logger = logging.getLogger(__name__)
 

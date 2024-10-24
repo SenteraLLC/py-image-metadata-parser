@@ -7,7 +7,6 @@ Run ``imgparse --help`` on the command line to see all available CLI commands th
 """
 
 from imgparse._version import __version__
-from imgparse.altitude import AltitudeSource
 from imgparse.exceptions import ParsingError, TerrainAPIError
 from imgparse.parser import MetadataParser
 
@@ -16,5 +15,4 @@ __all__ = [
     "ParsingError",
     "TerrainAPIError",
     "MetadataParser",
-    "AltitudeSource",
 ]

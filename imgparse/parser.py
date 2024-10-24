@@ -6,16 +6,27 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from s3path import S3Path
-
 from imgparse import xmp_tags
-from imgparse.altitude import AltitudeSource, hit_terrain_api, parse_session_alt
+from imgparse.altitude import hit_terrain_api, parse_session_alt
 from imgparse.exceptions import ParsingError, TerrainAPIError
-from imgparse.getters import get_exif_data, get_xmp_data
 from imgparse.pixel_pitches import PIXEL_PITCHES
 from imgparse.rotations import apply_rotational_offset
-from imgparse.types import Coords, Dimensions, Euler, PixelCoords, Version
-from imgparse.util import convert_to_degrees, convert_to_float, parse_seq
+from imgparse.s3 import S3Path
+from imgparse.types import (
+    AltitudeSource,
+    Coords,
+    Dimensions,
+    Euler,
+    PixelCoords,
+    Version,
+)
+from imgparse.util import (
+    convert_to_degrees,
+    convert_to_float,
+    get_exif_data,
+    get_xmp_data,
+    parse_seq,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +61,7 @@ class MetadataParser:
     def xmp_data(self) -> dict[str, Any]:
         """Get the xmp data for the image."""
         if self._xmp_data is None:
-            self._xmp_data = get_xmp_data(self.image_path)
+            self._xmp_data = get_xmp_data(self.image_path, self.s3_role)
         return self._xmp_data
 
     @property
@@ -136,7 +147,7 @@ class MetadataParser:
 
         lat, lon = self.get_lat_lon()
 
-        timezone = pytz.timezone(TimezoneFinder().timezone_at(lng=lon, lat=lat))
+        timezone = pytz.timezone(TimezoneFinder().timezone_at(lng=lon, lat=lat))  # type: ignore
         make, _ = self.get_make_and_model()
         if make in ["Sentera", "MicaSense"]:
             datetime_obj = pytz.utc.localize(datetime_obj)
