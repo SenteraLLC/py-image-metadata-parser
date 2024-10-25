@@ -278,18 +278,18 @@ def test_get_gsd_dji(dji_parser: MetadataParser) -> None:
 
 
 def test_get_lat_lon_sentera(sentera_parser: MetadataParser) -> None:
-    lat, lon = sentera_parser.coordinates()
+    lat, lon = sentera_parser.location()
     assert [lat, lon] == pytest.approx([27.564768, -97.657411], abs=1e-06)
 
 
 def test_get_lat_lon_dji(dji_parser: MetadataParser) -> None:
-    lat, lon = dji_parser.coordinates()
+    lat, lon = dji_parser.location()
     assert [lat, lon] == pytest.approx([45.514942, -93.973210], abs=1e-06)
 
 
 def test_get_lat_lon_bad(bad_sentera_parser: MetadataParser) -> None:
     with pytest.raises(ParsingError):
-        bad_sentera_parser.coordinates()
+        bad_sentera_parser.location()
 
 
 def test_get_roll_pitch_yaw_sentera(sentera_parser: MetadataParser) -> None:

@@ -148,7 +148,7 @@ class MetadataParser:
                 "Couldn't parse found timestamp with given format string"
             )
 
-        lat, lon = self.coordinates()
+        lat, lon = self.location()
 
         timezone = pytz.timezone(TimezoneFinder().timezone_at(lng=lon, lat=lat))  # type: ignore
         if self.make() in ["Sentera", "MicaSense"]:
@@ -271,7 +271,7 @@ class MetadataParser:
                 "Couldn't find the distortion tag. Sensor might not be supported"
             )
 
-    def coordinates(self) -> WorldCoords:
+    def location(self) -> WorldCoords:
         """Get the latitude and longitude of the sensor when the image was taken."""
         try:
             gps_latitude = self.exif_data["GPS GPSLatitude"]
@@ -394,7 +394,7 @@ class MetadataParser:
     def terrain_altitude(self, terrain_api_key: str | None = None) -> float:
         """Get terrain altitude relative to the home point."""
         home_lat, home_lon = self.home_point()
-        image_lat, image_lon = self.coordinates()
+        image_lat, image_lon = self.location()
         home_elevation = hit_terrain_api(home_lat, home_lon, terrain_api_key)
         image_elevation = hit_terrain_api(image_lat, image_lon, terrain_api_key)
         return home_elevation - image_elevation

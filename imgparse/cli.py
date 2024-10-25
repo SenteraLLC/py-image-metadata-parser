@@ -89,7 +89,7 @@ def get_relative_altitude(image_path: str, source: str, api_key: str) -> None:
 @click.argument("image_path", required=True)
 def get_lat_lon(image_path: str) -> None:
     """Parse latitude and longitude from metadata."""
-    lat, lon = MetadataParser(image_path).coordinates()
+    lat, lon = MetadataParser(image_path).location()
     print("Lat:", lat)
     print("Lon:", lon)
 
@@ -241,7 +241,7 @@ def create_metadata_csv(imagery_path: str) -> None:  # noqa: D301
             writer.writerow(
                 [
                     image_path.name,
-                    *parser.coordinates(),
+                    *parser.location(),
                     parser.global_altitude(),
                     *parser.rotation(),
                     parser.relative_altitude(),
