@@ -38,7 +38,7 @@ def s3_resource(role_arn: str | None = None) -> S3ServiceResource:
     if role_arn is not None:
         sts_client = boto3.client("sts")
         assumed_role = sts_client.assume_role(
-            RoleArn=role_arn, RoleSessionName=role_arn
+            RoleArn=role_arn, RoleSessionName="AssumeRoleSession"
         )
         credentials = assumed_role["Credentials"]
         return boto3.resource(
