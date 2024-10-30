@@ -48,19 +48,24 @@ class MetadataParser:
         # Lazily load exif and xmp data
         self._exif_data: dict[str, Any] | None = None
         self._xmp_data: dict[str, Any] | None = None
+        self._raw_data: bytes = b""
 
     @property
     def exif_data(self) -> dict[str, Any]:
         """Get the exif data for the image."""
         if self._exif_data is None:
-            self._exif_data = get_exif_data(self.image_path, self.s3_role)
+            self._exif_data, self._raw_data = get_exif_data(
+                self.image_path, self.s3_role, self._raw_data
+            )
         return self._exif_data
 
     @property
     def xmp_data(self) -> dict[str, Any]:
         """Get the xmp data for the image."""
         if self._xmp_data is None:
-            self._xmp_data = get_xmp_data(self.image_path, self.s3_role)
+            self._xmp_data, self._raw_data = get_xmp_data(
+                self.image_path, self.s3_role, self._raw_data
+            )
         return self._xmp_data
 
     @property

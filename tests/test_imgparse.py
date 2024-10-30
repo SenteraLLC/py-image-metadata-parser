@@ -674,4 +674,5 @@ def test_get_roll_pitch_yaw_s3(
             "Body": MagicMock(read=lambda: b"")
         }
         s3_image_parser._xmp_data = None
+        s3_image_parser._raw_data = b""
         s3_image_parser.rotation()
