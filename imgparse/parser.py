@@ -2,7 +2,7 @@
 
 import logging
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -121,17 +121,25 @@ class MetadataParser:
 
         return Version(int(major), int(minor), int(patch))
 
-    def timestamp(self) -> datetime:
+    def timestamp(self, solar_time: bool = False) -> datetime:
         """
         Get the time stamp of an image and parse it into a `datetime` object.
 
         For Sentera sensors, the parsed datetime will be in utc. For DJI sensors, it will
-        be the local time on the sensor.
+        be the local time on the sensor. Set `solar_time=True` to convert Sentera timestamps
+        to the approximate solar time based on the sensor's longitude.
         """
         try:
-            return datetime.strptime(
+            timestamp = datetime.strptime(
                 self.exif_data["EXIF DateTimeOriginal"].values, "%Y:%m:%d %H:%M:%S"
             )
+
+            if solar_time and self.make() == "Sentera":
+                _, lon = self.location()
+                # longitude / 15 gives solar time offset
+                timestamp += timedelta(hours=lon / 15.0)
+
+            return timestamp
         except KeyError:
             raise ParsingError(
                 "Couldn't parse image timestamp. Sensor might not be supported"
