@@ -10,8 +10,6 @@ exifread = "*"
 click = "*"
 xmltodict = "*"
 requests = "*"
-pytz = {version = "*", optional = true}
-timezonefinder = {version = "*", optional = true}
 boto3 = {version = "*", optional = true}
 s3path = {version = "*", optional = true}
 
@@ -22,14 +20,12 @@ pre_commit = "*"
 requests-mock = "*"
 mypy = "*"
 types-requests = "*"
-types-pytz = "*"
 boto3-stubs = {version = "*", extras=["s3"]}
 
 [tool.poetry.scripts]
 imgparse = "imgparse.cli:cli"
 
 [tool.poetry.extras]
-timestamps = ["timezonefinder", "pytz"]
 s3 = ["boto3", "s3path"]
 
 [build-system]

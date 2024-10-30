@@ -121,28 +121,16 @@ class MetadataParser:
 
         return Version(int(major), int(minor), int(patch))
 
-    def timestamp(self, format_string: str = "%Y:%m:%d %H:%M:%S") -> datetime:
+    def timestamp(self) -> datetime:
         """
-        Get the time stamp of an image and parse it into a `datetime` object with the given format string.
+        Get the time stamp of an image and parse it into a `datetime` object.
 
-        If originating from a Sentera or DJI sensor, the format of the tag will likely be that of the default input.
-        However, other sensors may store timestamps in other formats.
-
-        :param format_string: Format code, as a string, to be used to parse the image timestamp.
+        For Sentera sensors, the parsed datetime will be in utc. For DJI sensors, it will
+        be the local time on the sensor.
         """
         try:
-            import pytz
-            from timezonefinder import TimezoneFinder
-        except ImportError:
-            logger.warning(
-                "Module timezonefinder is required for retrieving timestamps."
-                "Please execute `poetry install -E timestamps` to install this module."
-            )
-            raise
-
-        try:
-            datetime_obj = datetime.strptime(
-                self.exif_data["EXIF DateTimeOriginal"].values, format_string
+            return datetime.strptime(
+                self.exif_data["EXIF DateTimeOriginal"].values, "%Y:%m:%d %H:%M:%S"
             )
         except KeyError:
             raise ParsingError(
@@ -152,18 +140,6 @@ class MetadataParser:
             raise ParsingError(
                 "Couldn't parse found timestamp with given format string"
             )
-
-        lat, lon = self.location()
-
-        timezone = pytz.timezone(TimezoneFinder().timezone_at(lng=lon, lat=lat))  # type: ignore
-        if self.make() in ["Sentera", "MicaSense"]:
-            datetime_obj = pytz.utc.localize(datetime_obj)
-            # convert time to local timezone
-            datetime_obj = datetime_obj.astimezone(timezone)
-        else:
-            datetime_obj = timezone.localize(datetime_obj)
-
-        return datetime_obj
 
     def dimensions(self) -> Dimensions:
         """Get the height and width (in pixels) of the image."""

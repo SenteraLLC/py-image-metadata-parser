@@ -5,7 +5,6 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
-import pytz
 from requests_mock import Mocker
 
 from imgparse import MetadataParser, ParsingError, TerrainAPIError
@@ -388,7 +387,6 @@ def test_get_timestamp_sentera(sentera_parser: MetadataParser) -> None:
     timestamp = sentera_parser.timestamp()
 
     correct_timestamp = datetime.strptime("2019:03:02 22:44:46", "%Y:%m:%d %H:%M:%S")
-    correct_timestamp = pytz.utc.localize(correct_timestamp)
 
     assert abs(timestamp - correct_timestamp) < timedelta(seconds=1)
 
@@ -396,8 +394,7 @@ def test_get_timestamp_sentera(sentera_parser: MetadataParser) -> None:
 def test_get_timestamp_dji(dji_parser: MetadataParser) -> None:
     timestamp = dji_parser.timestamp()
 
-    correct_timestamp = datetime.strptime("2018:05:22 17:03:27", "%Y:%m:%d %H:%M:%S")
-    correct_timestamp = pytz.utc.localize(correct_timestamp)
+    correct_timestamp = datetime.strptime("2018:05:22 12:03:27", "%Y:%m:%d %H:%M:%S")
 
     assert abs(timestamp - correct_timestamp) < timedelta(seconds=1)
 
@@ -407,9 +404,6 @@ def test_get_timestamp_bad(
 ) -> None:
     with pytest.raises(ParsingError):
         bad_sentera_parser.timestamp()
-
-    with pytest.raises(ParsingError):
-        sentera_parser.timestamp("BLAH")
 
 
 def test_get_ils(
