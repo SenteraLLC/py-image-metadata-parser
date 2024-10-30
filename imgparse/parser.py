@@ -137,7 +137,8 @@ class MetadataParser:
             if solar_time and self.make() == "Sentera":
                 _, lon = self.location()
                 # longitude / 15 gives solar time offset
-                timestamp += timedelta(hours=lon / 15.0)
+                offset_seconds = int((lon / 15.0) * 3600)
+                timestamp += timedelta(seconds=offset_seconds)
 
             return timestamp
         except KeyError:
