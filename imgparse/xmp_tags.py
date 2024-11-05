@@ -76,7 +76,7 @@ class MicaSenseTags(XMPTags):
     WAVELENGTH_FWHM = "Camera:WavelengthFWHM"
     BANDNAME = "Camera:BandName"
     CAPTURE_UUID = "MicaSense:CaptureId"
-
+IRRADIANCE = "Camera:Irradiance"
 
 class ParrotTags(XMPTags):
     """Parrot XMP Tags."""
