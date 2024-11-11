@@ -1,10 +1,58 @@
 """Return types that include multiple values."""
 
-from collections import namedtuple
+from enum import Enum
+from typing import NamedTuple
 
-Quaternion = namedtuple("Quaternion", "q0 q1 q2 q3")
-Euler = namedtuple("Euler", "roll pitch yaw")
-Coords = namedtuple("Coords", "lat lon")
-PixelCoords = namedtuple("PixelCoords", "x y")
-Dimensions = namedtuple("Dimensions", "height width")
-Version = namedtuple("Version", "major minor patch")
+
+class Quaternion(NamedTuple):
+    """Quaternion rotation."""
+
+    q0: float
+    q1: float
+    q2: float
+    q3: float
+
+
+class Euler(NamedTuple):
+    """Euler rotation."""
+
+    roll: float
+    pitch: float
+    yaw: float
+
+
+class WorldCoords(NamedTuple):
+    """World coordinates."""
+
+    lat: float
+    lon: float
+
+
+class PixelCoords(NamedTuple):
+    """Pixel coordinates."""
+
+    x: float
+    y: float
+
+
+class Dimensions(NamedTuple):
+    """Image dimensions."""
+
+    height: int
+    width: int
+
+
+class Version(NamedTuple):
+    """Firmware version."""
+
+    major: int
+    minor: int
+    patch: int
+
+
+class AltitudeSource(Enum):
+    """Altitude source enum."""
+
+    default = "default"
+    terrain = "terrain"
+    lrf = "lrf"

@@ -9,3 +9,5 @@ class ParsingError(Exception):
 
 class TerrainAPIError(Exception):
     """Custom exception for when the call to the google terrain api fails."""
+
+    pass

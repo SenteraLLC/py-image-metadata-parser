@@ -2,34 +2,14 @@
 
 import csv
 import logging
-import os
+from pathlib import Path
 
 import click
 
-from imgparse import metadata
-
-from . import imgparse
+from imgparse import MetadataParser, __version__
+from imgparse.types import AltitudeSource
 
 logger = logging.getLogger(__name__)
-
-
-class ClickMetadata(click.ParamType):
-    """Click type that converts a passed metadata type to a Metadata instance."""
-
-    metadata_items = {
-        k: v for k, v in vars(metadata).items() if isinstance(v, metadata.Metadata)
-    }
-
-    def convert(self, value, param, ctx):
-        """Attempt to parse the passed metadata string to a Metadata instance, and fail if unable."""
-        try:
-            return ClickMetadata.metadata_items[value.upper()]
-        except KeyError:
-            self.fail(
-                f"Invalid metadata type '{value}'. Supported types are [{'|'.join((item for item in ClickMetadata.metadata_items))}]",
-                param,
-                ctx,
-            )
 
 
 @click.group()
@@ -39,7 +19,8 @@ class ClickMetadata(click.ParamType):
     default="INFO",
     help="Set logging level for both console and file",
 )
-def cli(log_level):
+@click.version_option(__version__)
+def cli(log_level: str) -> None:
     """CLI wrappers for metadata parsing functions."""
     logging.basicConfig(
         level=log_level, format="%(name)s - %(levelname)s - %(message)s"
@@ -48,60 +29,44 @@ def cli(log_level):
 
 @cli.command()
 @click.argument("image_path", required=True)
-def get_ils(image_path):
+def get_ils(image_path: str) -> None:
     """Parse ILS from metadata."""
-    print("ILS:", imgparse.get_ils(image_path))
+    print("ILS:", MetadataParser(image_path).ils())
 
 
 @cli.command()
 @click.argument("image_path", required=True)
-def get_autoexposure(image_path):
+def get_autoexposure(image_path: str) -> None:
     """Parse autoexposure from metadata."""
-    print("Autoexposure:", imgparse.get_autoexposure(image_path))
+    print("Autoexposure:", MetadataParser(image_path).autoexposure())
 
 
 @cli.command()
 @click.argument("image_path", required=True)
-def get_timestamp(image_path):
+def get_timestamp(image_path: str) -> None:
     """Parse timestamp from metadata."""
-    print("Timestamp:", imgparse.get_timestamp(image_path))
+    print("Timestamp:", MetadataParser(image_path).timestamp())
 
 
 @cli.command()
 @click.argument("image_path", required=True)
-def get_pixel_pitch(image_path):
-    """Parse pixel pitch from metadata."""
-    print("Pixel pitch (m):", imgparse.get_pixel_pitch(image_path))
-
-
-@cli.command()
-@click.argument("image_path", required=True)
-def get_focal_length(image_path):
+def get_focal_length(image_path: str) -> None:
     """Parse focal length from metadata."""
-    print("Focal length (m):", imgparse.get_focal_length(image_path))
+    print("Focal length (pixels):", MetadataParser(image_path).focal_length_pixels())
 
 
 @cli.command()
 @click.argument("image_path", required=True)
-def get_principal_point(image_path):
+def get_principal_point(image_path: str) -> None:
     """Parse principal point from metadata."""
-    print("Principal Point (x,y): ", imgparse.get_principal_point(image_path))
+    print("Principal Point (x,y): ", MetadataParser(image_path).principal_point())
 
 
 @cli.command()
 @click.argument("image_path", required=True)
-def get_distortion_parameters(image_path):
+def get_distortion_parameters(image_path: str) -> None:
     """Parse radial distortion parameters from metadata."""
-    print("Distortions: ", imgparse.get_distortion_parameters(image_path))
-
-
-@cli.command()
-@click.argument("image_path", required=True)
-def get_camera_params(image_path):
-    """Parse pixel pitch and focal length from metadata."""
-    fl, pp = imgparse.get_camera_params(image_path)
-    print("Focal length (m):", fl)
-    print("Pixel pitch (m):", pp)
+    print("Distortions: ", MetadataParser(image_path).distortion_parameters())
 
 
 @cli.command()
@@ -110,39 +75,39 @@ def get_camera_params(image_path):
     "--source", default="default", type=click.Choice(["default", "lrf", "terrain"])
 )
 @click.option("--api_key")
-def get_relative_altitude(image_path, source, api_key):
+def get_relative_altitude(image_path: str, source: str, api_key: str) -> None:
     """Parse relative altitude from metadata."""
     print(
         "Altitude (m):",
-        imgparse.get_relative_altitude(
-            image_path, alt_source=source, terrain_api_key=api_key
+        MetadataParser(image_path).relative_altitude(
+            alt_source=AltitudeSource[source], terrain_api_key=api_key
         ),
     )
 
 
 @cli.command()
 @click.argument("image_path", required=True)
-def get_lat_lon(image_path):
+def get_lat_lon(image_path: str) -> None:
     """Parse latitude and longitude from metadata."""
-    lat, lon = imgparse.get_lat_lon(image_path)
+    lat, lon = MetadataParser(image_path).location()
     print("Lat:", lat)
     print("Lon:", lon)
 
 
 @cli.command()
 @click.argument("image_path", required=True)
-def get_altitude_msl(image_path):
+def get_altitude_msl(image_path: str) -> None:
     """Parse altitude msl from metadata."""
-    print("Altitude MSL (m):", imgparse.get_altitude_msl(image_path))
+    print("Altitude MSL (m):", MetadataParser(image_path).global_altitude())
 
 
 @cli.command()
 @click.argument("image_path", required=True)
 @click.option("--no_standardize", is_flag=True, default=False)
-def get_roll_pitch_yaw(image_path, no_standardize):
+def get_roll_pitch_yaw(image_path: str, no_standardize: bool) -> None:
     """Parse the roll, pitch, yaw from metadata."""
-    roll, pitch, yaw = imgparse.get_roll_pitch_yaw(
-        image_path, standardize=not no_standardize
+    roll, pitch, yaw = MetadataParser(image_path).rotation(
+        standardize=not no_standardize
     )
     print("Roll (degrees):", roll)
     print("Pitch (degrees):", pitch)
@@ -151,42 +116,42 @@ def get_roll_pitch_yaw(image_path, no_standardize):
 
 @cli.command()
 @click.argument("image_path", required=True)
-def get_make_and_model(image_path):
+def get_make_and_model(image_path: str) -> None:
     """Parse camera make and model from metadata."""
-    make, model = imgparse.get_make_and_model(image_path)
-    print("Make:", make)
-    print("Model:", model)
+    parser = MetadataParser(image_path)
+    print("Make:", parser.make())
+    print("Model:", parser.model())
 
 
 @cli.command()
 @click.argument("image_path", required=True)
-def get_dimensions(image_path):
+def get_dimensions(image_path: str) -> None:
     """Parse image dimensions from metadata."""
-    print("Dimensions:", imgparse.get_dimensions(image_path))
+    print("Dimensions:", MetadataParser(image_path).dimensions())
 
 
 @cli.command()
 @click.argument("image_path", required=True)
-def get_gsd(image_path):
+def get_gsd(image_path: str) -> None:
     """Parse gsd from metadata."""
-    print("Gsd (m):", imgparse.get_gsd(image_path))
+    print("Gsd (m):", MetadataParser(image_path).gsd())
 
 
 @cli.command()
 @click.argument("image_path", required=True)
-def get_firmware_version(image_path):
+def get_firmware_version(image_path: str) -> None:
     """Parse firmware from metadata."""
     print(
         "Firmware version:",
-        ".".join(map(str, imgparse.get_firmware_version(image_path))),
+        ".".join(map(str, MetadataParser(image_path).firmware_version())),
     )
 
 
 @cli.command()
 @click.argument("image_path", required=True)
-def get_wavelength_data(image_path):
+def get_wavelength_data(image_path: str) -> None:
     """Parse wavelength data from metadata."""
-    data = imgparse.get_wavelength_data(image_path)
+    data = MetadataParser(image_path).wavelength_data()
     print("Central Wavelength:")
     for w in data[0]:
         print(f"  {w}")
@@ -197,35 +162,31 @@ def get_wavelength_data(image_path):
 
 @cli.command()
 @click.argument("image_path", required=True)
-def get_bandnames(image_path):
+def get_bandnames(image_path: str) -> None:
     """Parse bandnames from metadata."""
-    names = imgparse.get_bandnames(image_path)
+    names = MetadataParser(image_path).bandnames()
     print("Bandnames:")
     for name in names:
         print(f"  {name}")
 
 
 @cli.command()
-@click.argument("image_path", required=True)
-def get_home_point(image_path):
-    """Parse flight home point from metadata."""
-    lat, lon = imgparse.get_home_point(image_path)
-    print("Lat:", lat)
-    print("Lon:", lon)
+@click.argument("image_path")
+def get_irradiance(image_path: str) -> None:
+    """Parse irradiance from metadata."""
+    print("Irradiance:", MetadataParser(image_path).irradiance())
 
 
 @cli.command()
-@click.argument("image_path", required=True)
-@click.argument("metadata", required=True, nargs=-1, type=ClickMetadata())
-def get_metadata(image_path, metadata):
-    """Get a variable number of supported metadata."""
-    for metadata_type in metadata:
-        print(f"{metadata_type.name}:", metadata_type.method(image_path))
+@click.argument("image_path")
+def get_capture_id(image_path: str) -> None:
+    """Parse capture id from metadata."""
+    print("Capture ID:", MetadataParser(image_path).capture_id())
 
 
 @cli.command()
-@click.argument("imagery_dir", required=True)
-def create_metadata_csv(imagery_dir):  # noqa: D301
+@click.argument("imagery_path", required=True)
+def create_metadata_csv(imagery_path: str) -> None:  # noqa: D301
     r"""
     Construct a metadata csv file within the provided imagery directory.
 
@@ -239,21 +200,23 @@ def create_metadata_csv(imagery_dir):  # noqa: D301
     """
     logger.info("Creating metadata csv")
 
-    if not os.path.isdir(imagery_dir):
-        logger.error("Imagery directory doesn't exist: %s", imagery_dir)
+    image_dir = Path(imagery_path)
+
+    if not image_dir.is_dir():
+        logger.error("Imagery directory doesn't exist: %s", image_dir)
         raise ValueError("Imagery directory doesn't exist")
 
     images = [
-        os.path.join(imagery_dir, image)
-        for image in os.listdir(imagery_dir)
-        if os.path.splitext(image)[1].lower() in [".jpg", ".tiff", ".tif"]
+        file
+        for file in image_dir.glob("*")
+        if file.suffix.lower() in [".jpg", ".jpeg", ".tif"]
     ]
 
     if not images:
         logger.error("No images found in imagery dir.")
         raise ValueError("No images found in imagery dir")
 
-    metadata_csv = os.path.join(imagery_dir, "analytics-metadata.csv")
+    metadata_csv = image_dir / "analytics-metadata.csv"
     with open(metadata_csv, "w") as f:
         writer = csv.writer(f)
         # Write header
@@ -273,18 +236,16 @@ def create_metadata_csv(imagery_dir):  # noqa: D301
 
         for image_path in images:
             logger.info("Parsing image: %s", image_path)
-            exif_data = imgparse.get_exif_data(image_path)
-            xmp_data = imgparse.get_xmp_data(image_path)
-            fl, pp = imgparse.get_camera_params(image_path)
+            parser = MetadataParser(image_path)
 
             writer.writerow(
                 [
-                    os.path.split(image_path)[1],
-                    *imgparse.get_lat_lon(image_path, exif_data),
-                    imgparse.get_altitude_msl(image_path, exif_data),
-                    *imgparse.get_roll_pitch_yaw(image_path, exif_data, xmp_data),
-                    imgparse.get_relative_altitude(image_path, exif_data, xmp_data),
-                    fl / pp,
+                    image_path.name,
+                    *parser.location(),
+                    parser.global_altitude(),
+                    *parser.rotation(),
+                    parser.relative_altitude(),
+                    parser.focal_length_pixels(),
                 ]
             )
 
