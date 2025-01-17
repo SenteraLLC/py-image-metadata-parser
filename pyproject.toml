@@ -1,8 +1,11 @@
 [tool.poetry]
 name = "imgparse"
-version = "2.0.0"
+version = "2.0.1"
 description = "Python image-metadata-parser utilities"
 authors = []
+include = [
+    "imgparse/py.typed"
+]
 
 [tool.poetry.dependencies]
 python = "^3.9"
