@@ -28,6 +28,7 @@ class XMPTags:
     IRRADIANCE: str = ""
     CAPTURE_UUID: str = ""
     FLIGHT_UUID: str = ""
+    DEWARP_FLAG: str = ""
 
 
 class SenteraTags(XMPTags):
