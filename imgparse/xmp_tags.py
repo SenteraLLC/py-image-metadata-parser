@@ -28,6 +28,7 @@ class XMPTags:
     IRRADIANCE: str = ""
     CAPTURE_UUID: str = ""
     FLIGHT_UUID: str = ""
+    DEWARP_FLAG: str = ""
 
 
 class SenteraTags(XMPTags):
@@ -67,6 +68,7 @@ class DJITags(XMPTags):
     ILS = "Camera:SunSensor"
     IRRADIANCE = "Camera:Irradiance"
     CAPTURE_UUID = "drone-dji:CaptureUUID"
+    DEWARP_FLAG = "drone-dji:DewarpFlag"
 
 
 class MicaSenseTags(XMPTags):
