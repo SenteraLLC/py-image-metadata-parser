@@ -555,7 +555,7 @@ class MetadataParser:
     def dewarp_flag(self) -> bool:
         """Get the dewarp flag of the image."""
         try:
-            return bool(self.xmp_data[self.xmp_tags.DEWARP_FLAG])
+            return bool(int(self.xmp_data[self.xmp_tags.DEWARP_FLAG]))
         except KeyError:
             raise ParsingError(
                 "Couldn't parse dewarp flag. Sensor might not be supported"
