@@ -38,11 +38,12 @@ class MetadataParser:
         """Initialize metadata parser."""
         if isinstance(image_path, str):
             if image_path[:5] == "s3://":
-                image_path = S3Path.from_uri(image_path)
+                self.image_path = S3Path.from_uri(image_path)
             else:
-                image_path = Path(image_path)
+                self.image_path = Path(image_path)
+        else:
+            self.image_path = image_path
 
-        self.image_path = image_path
         self.s3_role = s3_role
 
         # Lazily load exif and xmp data
