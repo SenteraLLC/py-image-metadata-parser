@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "imgparse"
-version = "2.0.3"
+version = "2.0.4"
 description = "Python image-metadata-parser utilities"
 authors = []
 include = [
@@ -9,7 +9,7 @@ include = [
 
 [tool.poetry.dependencies]
 python = "^3.10"
-exifread = "*"
+exifread = "3.1.0"
 click = "*"
 xmltodict = "*"
 requests = "*"
