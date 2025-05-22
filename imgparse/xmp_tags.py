@@ -69,6 +69,7 @@ class DJITags(XMPTags):
     IRRADIANCE = "Camera:Irradiance"
     CAPTURE_UUID = "drone-dji:CaptureUUID"
     DEWARP_FLAG = "drone-dji:DewarpFlag"
+    DISTORTION = "drone-dji:DewarpData"
 
 
 class MicaSenseTags(XMPTags):

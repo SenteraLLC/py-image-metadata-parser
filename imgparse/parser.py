@@ -254,12 +254,27 @@ class MetadataParser:
     def distortion_parameters(self) -> list[float]:
         """Get the radial distortion parameters of the sensor that took the image."""
         try:
-            return list(
-                map(float, str(self.xmp_data[self.xmp_tags.DISTORTION]).split(","))
-            )
+            if self.make() == "DJI":
+                distortion_data = str(self.xmp_data[self.xmp_tags.DISTORTION])
+
+                parts = distortion_data.split(";")
+                if len(parts) != 2:
+                    raise ValueError("Invalid dewarp data format: missing semicolon")
+
+                values = [float(v) for v in parts[1].split(",")]
+                if len(values) != 9:
+                    raise ValueError("Expected 9 numeric values after semicolon")
+
+                k1, k2, p1, p2, k3 = values[4:9]
+                return [k1, k2, k3, p1, p2]
+            elif self.make() == "Sentera":
+                return list(
+                    map(float, str(self.xmp_data[self.xmp_tags.DISTORTION]).split(","))
+                )
+            raise ValueError("Sensor isn't supported")
         except (KeyError, ValueError):
             raise ParsingError(
-                "Couldn't find the distortion tag. Sensor might not be supported"
+                "Couldn't parse the distortion parameters. Sensor might not be supported"
             )
 
     def location(self) -> WorldCoords:
