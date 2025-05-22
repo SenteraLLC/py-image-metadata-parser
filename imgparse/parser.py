@@ -214,9 +214,10 @@ class MetadataParser:
         a boolean indicating if focal length is in pixels or not.
         """
         try:
-            fl = float(self.xmp_data[self.xmp_tags.FOCAL_LEN]) / 1000
+            fl = float(self.xmp_data[self.xmp_tags.FOCAL_LEN])
             if self.make() == "Sentera":
                 is_in_pixels = False
+                fl = fl / 1000
             else:
                 is_in_pixels = True
             return fl, is_in_pixels
