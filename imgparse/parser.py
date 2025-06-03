@@ -15,6 +15,7 @@ from imgparse.s3 import S3Path
 from imgparse.types import (
     AltitudeSource,
     Dimensions,
+    DistortionParams,
     Euler,
     PixelCoords,
     Version,
@@ -206,20 +207,26 @@ class MetadataParser:
 
         return pixel_pitch
 
-    def focal_length_meters(self, use_calibrated: bool = False) -> float:
+    def calibrated_focal_length(self) -> tuple[float, bool]:
         """
-        Get the focal length (in meters) of the sensor that took the image.
+        Get the calibrated focal length from xmp data.
 
-        :param use_calibrated: enable to use calibrated focal length if available
+        For Sentera sensors, this focal length is in meters. For DJI, it is in pixels. Returns
+        a boolean indicating if focal length is in pixels or not.
         """
-        if use_calibrated:
-            try:
-                return float(self.xmp_data[self.xmp_tags.FOCAL_LEN]) / 1000
-            except KeyError:
-                logger.warning(
-                    "Calibrated focal length not found in XMP. Defaulting to uncalibrated focal length"
-                )
+        try:
+            fl = float(self.xmp_data[self.xmp_tags.FOCAL_LEN])
+            if self.make() == "Sentera":
+                is_in_pixels = False
+                fl = fl / 1000
+            else:
+                is_in_pixels = True
+            return fl, is_in_pixels
+        except KeyError:
+            raise ParsingError("Calibrated focal length not found in XMP")
 
+    def focal_length_meters(self) -> float:
+        """Get the focal length (in meters) of the sensor that took the image."""
         try:
             return convert_to_float(self.exif_data["EXIF FocalLength"]) / 1000
         except KeyError:
@@ -229,9 +236,24 @@ class MetadataParser:
 
     def focal_length_pixels(self, use_calibrated_focal_length: bool = False) -> float:
         """Get the focal length (in pixels) of the sensor that took the image."""
-        fl = self.focal_length_meters(use_calibrated_focal_length)
-        pp = self.pixel_pitch_meters()
-        return fl / pp
+
+        def _get_focal_length() -> tuple[float, bool]:
+            """Get either the calibrated focal length or the exif focal length."""
+            if use_calibrated_focal_length:
+                try:
+                    return self.calibrated_focal_length()
+                except ParsingError:
+                    logger.warning(
+                        "Couldn't parse calibrated focal length from xmp. Falling back to exif"
+                    )
+            return self.focal_length_meters(), False
+
+        fl, is_in_pixels = _get_focal_length()
+        if not is_in_pixels:
+            pp = self.pixel_pitch_meters()
+            return fl / pp
+
+        return fl
 
     def principal_point(self) -> PixelCoords:
         """Get the principal point (x, y) in pixels of the sensor that took the image."""
@@ -251,15 +273,34 @@ class MetadataParser:
                 "Couldn't find the principal point tag. Sensor might not be supported"
             )
 
-    def distortion_parameters(self) -> list[float]:
-        """Get the radial distortion parameters of the sensor that took the image."""
+    def distortion_parameters(self) -> DistortionParams:
+        """
+        Get the radial distortion parameters of the sensor that took the image.
+
+        Returns distortion params in [k1, k2, p1, p2, k3] order.
+        """
         try:
-            return list(
-                map(float, str(self.xmp_data[self.xmp_tags.DISTORTION]).split(","))
-            )
+            if self.make() == "DJI":
+                distortion_data = str(self.xmp_data[self.xmp_tags.DISTORTION])
+
+                parts = distortion_data.split(";")
+                if len(parts) != 2:
+                    raise ValueError("Invalid dewarp data format: missing semicolon")
+
+                values = [float(v) for v in parts[1].split(",")]
+                if len(values) != 9:
+                    raise ValueError("Expected 9 numeric values after semicolon")
+
+                k1, k2, p1, p2, k3 = values[4:9]
+                return DistortionParams(k1, k2, p1, p2, k3)
+            elif self.make() == "Sentera":
+                distortion_data = str(self.xmp_data[self.xmp_tags.DISTORTION])
+                k1, k2, k3, p1, p2 = [float(v) for v in distortion_data.split(",")]
+                return DistortionParams(k1, k2, p1, p2, k3)
+            raise ValueError("Sensor isn't supported")
         except (KeyError, ValueError):
             raise ParsingError(
-                "Couldn't find the distortion tag. Sensor might not be supported"
+                "Couldn't parse the distortion parameters. Sensor might not be supported"
             )
 
     def location(self) -> WorldCoords:

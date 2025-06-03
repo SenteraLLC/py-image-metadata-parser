@@ -132,23 +132,19 @@ def s3_image_parser() -> MetadataParser:
 def test_get_camera_params_dji(dji_parser: MetadataParser) -> None:
     pitch1 = dji_parser.pixel_pitch_meters()
     focal1 = dji_parser.focal_length_meters()
-    focal2 = dji_parser.focal_length_meters(use_calibrated=True)
     focal_pixels = dji_parser.focal_length_pixels()
 
     assert focal1 == 0.0088
     assert pitch1 == 2.41e-06
-    assert focal2 == pytest.approx(3.666666, abs=1e-06)
     assert focal_pixels == pytest.approx(3651.4523, abs=1e-04)
 
 
 def test_get_camera_params_sentera(sentera_parser: MetadataParser) -> None:
     focal1 = sentera_parser.focal_length_meters()
-    focal2 = sentera_parser.focal_length_meters(use_calibrated=True)
     pitch = sentera_parser.pixel_pitch_meters()
     focal_pixels = sentera_parser.focal_length_pixels()
 
     assert focal1 == 0.025
-    assert focal2 == 0.025
     assert pitch == pytest.approx(1.55e-06, abs=1e-06)
     assert focal_pixels == pytest.approx(16129.032, abs=1e-03)
 
@@ -360,7 +356,12 @@ def test_get_principal_point_bad(bad_sentera_parser: MetadataParser) -> None:
 
 def test_get_distortion_params_65r(sentera_65r_parser: MetadataParser) -> None:
     params = sentera_65r_parser.distortion_parameters()
-    assert params == [-0.127, 0.126, 0.097, 0.0, 0.0]
+    assert params == (-0.127, 0.126, 0.0, 0.0, 0.097)
+
+
+def test_get_distortion_params_dji(dji_ms_parser: MetadataParser) -> None:
+    params = dji_ms_parser.distortion_parameters()
+    assert params == (-0.412558, 0.3754, -2.47e-05, -2.47e-05, -0.457753)
 
 
 def test_get_distortion_params_bad(bad_sentera_parser: MetadataParser) -> None:

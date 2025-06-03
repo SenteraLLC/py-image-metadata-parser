@@ -50,6 +50,16 @@ class Version(NamedTuple):
     patch: int
 
 
+class DistortionParams(NamedTuple):
+    """Distortion parameters in OpenCV order."""
+
+    k1: float
+    k2: float
+    p1: float
+    p2: float
+    k3: float
+
+
 class AltitudeSource(Enum):
     """Altitude source enum."""
 
