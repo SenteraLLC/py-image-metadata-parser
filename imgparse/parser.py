@@ -15,6 +15,7 @@ from imgparse.s3 import S3Path
 from imgparse.types import (
     AltitudeSource,
     Dimensions,
+    DistortionParams,
     Euler,
     PixelCoords,
     Version,
@@ -274,11 +275,11 @@ class MetadataParser:
                 "Couldn't find the principal point tag. Sensor might not be supported"
             )
 
-    def distortion_parameters(self) -> list[float]:
+    def distortion_parameters(self) -> DistortionParams:
         """
         Get the radial distortion parameters of the sensor that took the image.
 
-        Returns distortion params in [k1, k2, k3, p1, p2] order.
+        Returns distortion params in [k1, k2, p1, p2, k3] order.
         """
         try:
             if self.make() == "DJI":
@@ -293,11 +294,11 @@ class MetadataParser:
                     raise ValueError("Expected 9 numeric values after semicolon")
 
                 k1, k2, p1, p2, k3 = values[4:9]
-                return [k1, k2, k3, p1, p2]
+                return DistortionParams(k1, k2, p1, p2, k3)
             elif self.make() == "Sentera":
-                return list(
-                    map(float, str(self.xmp_data[self.xmp_tags.DISTORTION]).split(","))
-                )
+                distortion_data = str(self.xmp_data[self.xmp_tags.DISTORTION])
+                k1, k2, k3, p1, p2 = [float(v) for v in distortion_data.split(",")]
+                return DistortionParams(k1, k2, p1, p2, k3)
             raise ValueError("Sensor isn't supported")
         except (KeyError, ValueError):
             raise ParsingError(
