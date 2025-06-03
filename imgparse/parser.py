@@ -236,8 +236,9 @@ class MetadataParser:
 
     def focal_length_pixels(self, use_calibrated_focal_length: bool = False) -> float:
         """Get the focal length (in pixels) of the sensor that took the image."""
-        def get_focal_length():
-            """Helper to get focal length and its unit."""
+
+        def _get_focal_length() -> tuple[float, bool]:
+            """Get either the calibrated focal length or the exif focal length."""
             if use_calibrated_focal_length:
                 try:
                     return self.calibrated_focal_length()
@@ -247,7 +248,7 @@ class MetadataParser:
                     )
             return self.focal_length_meters(), False
 
-        fl, is_in_pixels = get_focal_length()
+        fl, is_in_pixels = _get_focal_length()
         if not is_in_pixels:
             pp = self.pixel_pitch_meters()
             return fl / pp
