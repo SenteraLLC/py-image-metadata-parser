@@ -63,7 +63,7 @@ def get_xmp_data(
         file_so_far = current_data.decode("latin_1")
         end_match = re.search(XMP_END, file_so_far)
         if end_match:
-            match = re.search(FULL_XMP, file_so_far)
+            match = re.search(FULL_XMP, file_so_far[:end_match.end()])
             if match:
                 xmp_str = match.group(0)
                 break
