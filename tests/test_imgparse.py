@@ -133,6 +133,7 @@ def s3_image_parser() -> MetadataParser:
 def two_xmp_end_tags_parser() -> MetadataParser:
     return MetadataParser(base_path / "2xmpendtags.jpg")
 
+
 def test_get_camera_params_dji(dji_parser: MetadataParser) -> None:
     pitch1 = dji_parser.pixel_pitch_meters()
     focal1 = dji_parser.focal_length_meters()
@@ -676,7 +677,8 @@ def test_get_roll_pitch_yaw_s3(
         s3_image_parser._raw_data = b""
         s3_image_parser.rotation()
 
+
 def test_multiple_xmp_end_tags(
-        two_xmp_end_tags_parser: MetadataParser,
+    two_xmp_end_tags_parser: MetadataParser,
 ) -> None:
     assert two_xmp_end_tags_parser.xmp_data is not None
