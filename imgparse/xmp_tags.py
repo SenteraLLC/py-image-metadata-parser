@@ -14,9 +14,9 @@ class XMPTags:
     PITCH: str = ""
     YAW: str = ""
     FOCAL_LEN: str = ""
-    WAVELENGTH_CENTRAL: str = ""
-    WAVELENGTH_FWHM: str = ""
-    BANDNAME: str = ""
+    WAVELENGTH_CENTRAL: str = "Camera:CentralWavelength"
+    WAVELENGTH_FWHM: str = "Camera:WavelengthFWHM"
+    BANDNAME: str = "Camera:BandName"
     LRF_ALT: str = ""
     LRF_ALT2: str = ""  # See SenteraTags below
     ILS: str = ""
@@ -39,9 +39,6 @@ class SenteraTags(XMPTags):
     PITCH = "Camera:Pitch"
     YAW = "Camera:Yaw"
     FOCAL_LEN = "Camera:PerspectiveFocalLength"
-    WAVELENGTH_CENTRAL = "Camera:CentralWavelength"
-    WAVELENGTH_FWHM = "Camera:WavelengthFWHM"
-    BANDNAME = "Camera:BandName"
     LRF_ALT = "Sentera:AltimeterCalculatedAGL"
     LRF_ALT2 = "Sentera:AltimeterCalcuatedAGL"  # l was left out in Quad v1.0.0
     ILS = "Camera:SunSensor"
@@ -61,9 +58,6 @@ class DJITags(XMPTags):
     PITCH = "drone-dji:GimbalPitchDegree"
     YAW = "drone-dji:GimbalYawDegree"
     FOCAL_LEN = "drone-dji:CalibratedFocalLength"
-    WAVELENGTH_CENTRAL = "Camera:CentralWavelength"
-    WAVELENGTH_FWHM = "Camera:WavelengthFWHM"
-    BANDNAME = "Camera:BandName"
     SELF_DATA = "drone-dji:SelfData"
     ILS = "Camera:SunSensor"
     IRRADIANCE = "Camera:Irradiance"
@@ -75,9 +69,6 @@ class DJITags(XMPTags):
 class MicaSenseTags(XMPTags):
     """MicaSense XMP Tags."""
 
-    WAVELENGTH_CENTRAL = "Camera:CentralWavelength"
-    WAVELENGTH_FWHM = "Camera:WavelengthFWHM"
-    BANDNAME = "Camera:BandName"
     CAPTURE_UUID = "MicaSense:CaptureId"
     IRRADIANCE = "Camera:Irradiance"
 
@@ -85,7 +76,4 @@ class MicaSenseTags(XMPTags):
 class ParrotTags(XMPTags):
     """Parrot XMP Tags."""
 
-    WAVELENGTH_CENTRAL = "Camera:CentralWavelength"
-    WAVELENGTH_FWHM = "Camera:WavelengthFWHM"
-    BANDNAME = "Camera:BandName"
     CAPTURE_UUID = "Camera:CaptureUUID"
