@@ -19,7 +19,7 @@ class XMPTags:
     BANDNAME: str = "Camera:BandName"
     LRF_ALT: str = ""
     LRF_ALT2: str = ""  # See SenteraTags below
-    ILS: str = ""
+    ILS: str = "Camera:SunSensor"
     HOMEPOINT_LAT: str = ""
     HOMEPOINT_LON: str = ""
     PRINCIPAL_POINT: str = ""
@@ -41,7 +41,6 @@ class SenteraTags(XMPTags):
     FOCAL_LEN = "Camera:PerspectiveFocalLength"
     LRF_ALT = "Sentera:AltimeterCalculatedAGL"
     LRF_ALT2 = "Sentera:AltimeterCalcuatedAGL"  # l was left out in Quad v1.0.0
-    ILS = "Camera:SunSensor"
     HOMEPOINT_LAT = "SENTERA:HomePointLatitude"
     HOMEPOINT_LON = "SENTERA:HomePointLongitude"
     PRINCIPAL_POINT = "Camera:PrincipalPoint"
@@ -59,7 +58,6 @@ class DJITags(XMPTags):
     YAW = "drone-dji:GimbalYawDegree"
     FOCAL_LEN = "drone-dji:CalibratedFocalLength"
     SELF_DATA = "drone-dji:SelfData"
-    ILS = "Camera:SunSensor"
     IRRADIANCE = "Camera:Irradiance"
     CAPTURE_UUID = "drone-dji:CaptureUUID"
     DEWARP_FLAG = "drone-dji:DewarpFlag"
