@@ -3,9 +3,9 @@
 
 class XMPTags:
     """
-    Generic tags defaulting to an empty string.
+    Generic tags defaulting to an empty string or a common default.
 
-    If a sensor isn't supported for a given tag, the empty string will cause a KeyError
+    If a sensor isn't supported for a given tag, the empty string or common default will cause a KeyError
     to be thrown, the same as if a valid tag wasn't found.
     """
 
