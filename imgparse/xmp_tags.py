@@ -29,6 +29,9 @@ class XMPTags:
     CAPTURE_UUID: str = ""
     FLIGHT_UUID: str = ""
     DEWARP_FLAG: str = ""
+    X_ACCURACY_M: str = ""
+    Y_ACCURACY_M: str = ""
+    Z_ACCURACY_M: str = ""
 
 
 class SenteraTags(XMPTags):
@@ -47,6 +50,9 @@ class SenteraTags(XMPTags):
     DISTORTION = "Camera:PerspectiveDistortion"
     CAPTURE_UUID = "Camera:CaptureUUID"
     FLIGHT_UUID = "Camera:FlightUUID"
+    X_ACCURACY_M: str = "Camera:GPSXYAccuracy"
+    Y_ACCURACY_M: str = "Camera:GPSXYAccuracy"
+    Z_ACCURACY_M: str = "Camera:GPSZAccuracy"
 
 
 class DJITags(XMPTags):
@@ -62,6 +68,9 @@ class DJITags(XMPTags):
     CAPTURE_UUID = "drone-dji:CaptureUUID"
     DEWARP_FLAG = "drone-dji:DewarpFlag"
     DISTORTION = "drone-dji:DewarpData"
+    X_ACCURACY_M: str = "drone-dji:RtkStdLon"
+    Y_ACCURACY_M: str = "drone-dji:RtkStdLat"
+    Z_ACCURACY_M: str = "drone-dji:RtkStdHgt"
 
 
 class MicaSenseTags(XMPTags):
