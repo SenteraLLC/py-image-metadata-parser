@@ -78,6 +78,9 @@ class MicaSenseTags(XMPTags):
 
     CAPTURE_UUID = "MicaSense:CaptureId"
     IRRADIANCE = "Camera:Irradiance"
+    X_ACCURACY_M: str = "Camera:GPSXYAccuracy"
+    Y_ACCURACY_M: str = "Camera:GPSXYAccuracy"
+    Z_ACCURACY_M: str = "Camera:GPSZAccuracy"
 
 
 class ParrotTags(XMPTags):
