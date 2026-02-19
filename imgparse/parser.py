@@ -602,3 +602,15 @@ class MetadataParser:
             raise ParsingError(
                 "Couldn't parse dewarp flag. Sensor might not be supported"
             )
+
+    def gps_accuracy(self) -> tuple[float, float, float]:
+        """Get the GPS accuracy values in meters for x, y, and z."""
+        try:
+            x_acc = float(self.xmp_data[self.xmp_tags.X_ACCURACY_M])
+            y_acc = float(self.xmp_data[self.xmp_tags.Y_ACCURACY_M])
+            z_acc = float(self.xmp_data[self.xmp_tags.Z_ACCURACY_M])
+            return x_acc, y_acc, z_acc
+        except KeyError:
+            raise ParsingError(
+                "Couldn't parse GPS accuracy. Sensor might not be supported"
+            )
