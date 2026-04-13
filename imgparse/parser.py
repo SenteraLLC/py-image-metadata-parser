@@ -3,6 +3,7 @@
 import logging
 import re
 from datetime import datetime, timedelta
+from fractions import Fraction
 from pathlib import Path
 from typing import Any
 
@@ -606,11 +607,26 @@ class MetadataParser:
     def gps_accuracy(self) -> tuple[float, float, float]:
         """Get the GPS accuracy values in meters for x, y, and z."""
         try:
-            x_acc = eval(self.xmp_data[self.xmp_tags.X_ACCURACY_M])
-            y_acc = eval(self.xmp_data[self.xmp_tags.Y_ACCURACY_M])
-            z_acc = eval(self.xmp_data[self.xmp_tags.Z_ACCURACY_M])
+            gps_accuracy_decimal_pattern = re.compile(r"[+-]?\d+(?:\.\d+)?")
+            gps_accuracy_fraction_pattern = re.compile(r"[+-]?\d+\s*/\s*[+-]?\d+")
+
+            def _parse_accuracy(value: Any) -> float:
+                """Parse a GPS accuracy value represented as a decimal or fraction."""
+                value_str = str(value).strip()
+
+                if gps_accuracy_decimal_pattern.fullmatch(value_str):
+                    return float(value_str)
+
+                if gps_accuracy_fraction_pattern.fullmatch(value_str):
+                    return float(Fraction(value_str.replace(" ", "")))
+
+                raise ValueError(f"Unsupported GPS accuracy format: {value_str}")
+
+            x_acc = _parse_accuracy(self.xmp_data[self.xmp_tags.X_ACCURACY_M])
+            y_acc = _parse_accuracy(self.xmp_data[self.xmp_tags.Y_ACCURACY_M])
+            z_acc = _parse_accuracy(self.xmp_data[self.xmp_tags.Z_ACCURACY_M])
             return x_acc, y_acc, z_acc
-        except KeyError:
+        except (KeyError, ValueError, ZeroDivisionError):
             raise ParsingError(
                 "Couldn't parse GPS accuracy. Sensor might not be supported"
             )

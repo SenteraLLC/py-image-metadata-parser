@@ -606,6 +606,50 @@ def test_get_capture_id(
         sentera_parser.capture_id()
 
 
+def test_get_gps_accuracy_parses_decimal_fraction_and_numeric(
+    bad_dji_parser: MetadataParser,
+) -> None:
+    bad_dji_parser._xmp_data.update(
+        {
+            bad_dji_parser.xmp_tags.X_ACCURACY_M: "1.5",
+            bad_dji_parser.xmp_tags.Y_ACCURACY_M: "-3 / 2",
+            bad_dji_parser.xmp_tags.Z_ACCURACY_M: 2,
+        }
+    )
+
+    x_acc, y_acc, z_acc = bad_dji_parser.gps_accuracy()
+
+    assert [x_acc, y_acc, z_acc] == pytest.approx([1.5, -1.5, 2.0], abs=1e-09)
+
+
+def test_get_gps_accuracy_bad_format_raises(bad_dji_parser: MetadataParser) -> None:
+    bad_dji_parser._xmp_data.update(
+        {
+            bad_dji_parser.xmp_tags.X_ACCURACY_M: "1.5m",
+            bad_dji_parser.xmp_tags.Y_ACCURACY_M: "1.0",
+            bad_dji_parser.xmp_tags.Z_ACCURACY_M: "2.0",
+        }
+    )
+
+    with pytest.raises(ParsingError):
+        bad_dji_parser.gps_accuracy()
+
+
+def test_get_gps_accuracy_zero_denominator_raises(
+    bad_dji_parser: MetadataParser,
+) -> None:
+    bad_dji_parser._xmp_data.update(
+        {
+            bad_dji_parser.xmp_tags.X_ACCURACY_M: "1/0",
+            bad_dji_parser.xmp_tags.Y_ACCURACY_M: "1.0",
+            bad_dji_parser.xmp_tags.Z_ACCURACY_M: "2.0",
+        }
+    )
+
+    with pytest.raises(ParsingError):
+        bad_dji_parser.gps_accuracy()
+
+
 @patch("imgparse.util.s3_resource")
 @patch("imgparse.util.exifread.process_file")
 def test_get_make_and_model_s3(
