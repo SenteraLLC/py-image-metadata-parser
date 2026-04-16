@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from io import BytesIO
 from pathlib import Path
-from typing import Any
+from typing import Any, no_type_check
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -606,6 +606,7 @@ def test_get_capture_id(
         sentera_parser.capture_id()
 
 
+@no_type_check
 def test_get_gps_accuracy_parses_decimal_fraction_and_numeric(
     bad_dji_parser: MetadataParser,
 ) -> None:
@@ -622,6 +623,7 @@ def test_get_gps_accuracy_parses_decimal_fraction_and_numeric(
     assert [x_acc, y_acc, z_acc] == pytest.approx([1.5, -1.5, 2.0], abs=1e-09)
 
 
+@no_type_check
 def test_get_gps_accuracy_bad_format_raises(bad_dji_parser: MetadataParser) -> None:
     bad_dji_parser._xmp_data.update(
         {
@@ -635,6 +637,7 @@ def test_get_gps_accuracy_bad_format_raises(bad_dji_parser: MetadataParser) -> N
         bad_dji_parser.gps_accuracy()
 
 
+@no_type_check
 def test_get_gps_accuracy_zero_denominator_raises(
     bad_dji_parser: MetadataParser,
 ) -> None:

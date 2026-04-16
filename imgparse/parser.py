@@ -42,9 +42,9 @@ class MetadataParser:
             if image_path[:5] == "s3://":
                 self.image_path = S3Path.from_uri(image_path)
             else:
-                self.image_path = Path(image_path)
+                self.image_path = Path(image_path)  # type: ignore
         else:
-            self.image_path = image_path
+            self.image_path = image_path  # type: ignore
 
         self.s3_role = s3_role
 
