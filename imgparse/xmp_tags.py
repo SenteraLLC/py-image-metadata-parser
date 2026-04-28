@@ -32,6 +32,7 @@ class XMPTags:
     X_ACCURACY_M: str = ""
     Y_ACCURACY_M: str = ""
     Z_ACCURACY_M: str = ""
+    ALTITUDE_SOURCE: str = ""
 
 
 class SenteraTags(XMPTags):
@@ -53,6 +54,7 @@ class SenteraTags(XMPTags):
     X_ACCURACY_M: str = "Camera:GPSXYAccuracy"
     Y_ACCURACY_M: str = "Camera:GPSXYAccuracy"
     Z_ACCURACY_M: str = "Camera:GPSZAccuracy"
+    ALTITUDE_SOURCE: str = "Sentera:AboveGroundAltitudeSource"
 
 
 class DJITags(XMPTags):
