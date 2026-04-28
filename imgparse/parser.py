@@ -476,6 +476,15 @@ class MetadataParser:
 
         return alt / focal_length
 
+    def altitude_source(self) -> str:
+        """Get the source of the altitude data."""
+        try:
+            return str(self.xmp_data[self.xmp_tags.ALTITUDE_SOURCE])
+        except KeyError:
+            raise ParsingError(
+                "Couldn't parse altitude source. Sensor might not be supported"
+            )
+
     def autoexposure(self) -> float:
         """
         Get the autoexposure value of the sensor when the image was taken.
