@@ -24,6 +24,7 @@ class S3PathStub:
 try:
     from s3path import S3Path
 except ImportError:
+    # Use the stub class as a fallback
     S3Path = S3PathStub  # type: ignore
 
 
