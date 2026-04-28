@@ -475,7 +475,7 @@ class MetadataParser:
             raise ValueError("Parsed gsd is less than or equal to 0")
 
         return alt / focal_length
-    
+
     def altitude_source(self) -> str:
         """Get the source of the altitude data."""
         try:

@@ -25,7 +25,7 @@ try:
     from s3path import S3Path
 except ImportError:
     # Use the stub class as a fallback
-    S3Path = S3PathStub  # type: ignore
+    S3Path = S3PathStub
 
 
 def s3_resource(role_arn: str | None = None) -> S3ServiceResource:
