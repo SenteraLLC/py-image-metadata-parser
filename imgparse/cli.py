@@ -250,3 +250,18 @@ def create_metadata_csv(imagery_path: str) -> None:  # noqa: D301
             )
 
     logger.info("Metadata csv saved at: %s", metadata_csv)
+
+
+@cli.command()
+@click.argument("imagery_path", required=True)
+def get_xmp(imagery_path: str) -> None:
+    """Parse the raw XMP metadata."""
+    for key, value in MetadataParser(imagery_path).xmp_data.items():
+        print(f"{key}: {value}")
+
+
+@cli.command()
+@click.argument("imagery_path")
+def get_altitude_source(imagery_path: str) -> None:
+    """Parse the source of the altitude data."""
+    print("Altitude source:", MetadataParser(imagery_path).altitude_source())
