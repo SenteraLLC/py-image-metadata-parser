@@ -24,6 +24,7 @@ DJI_PIXEL_PITCH = {
     "ZenmuseP1": 4.27e-06,  # Zemmuse P1 (M300) (24mm, 35mm, 50mm)
     "FC3170": 8e-07,  # Mavic Air 2
     "M3E": 3.28e-06,  # Mavic 3 Enterprise
+    "M4E": 3.28e-06,  # Matrice 4E (wide camera: 4/3" CMOS, 5280x3956)
     "FC6360": 3.0e-06,  # Phantom 4 Multispectral
     "FC6310R": 2.41e-06,  # Phatom 4 Pro RTK
     "M3M": 3.28e-06,  # Mavic 3 Multispectral

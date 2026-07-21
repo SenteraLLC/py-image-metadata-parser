@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "imgparse"
-version = "2.0.12"
+version = "2.0.13"
 description = "Python image-metadata-parser utilities"
 authors = []
 include = [
