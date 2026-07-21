@@ -214,9 +214,7 @@ class MetadataParser:
                 pixel_pitch = pixel_pitch[width]
             except KeyError:
                 raise ParsingError(
-                    f"Pixel pitch for {self.model()} at image width {width} isn't "
-                    "supported yet. Only the Wide camera is currently supported for "
-                    "this sensor."
+                    f"Pixel pitch for {self.model()} at image width {width} is not supported."
                 )
 
         return pixel_pitch
