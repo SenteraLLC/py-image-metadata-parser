@@ -27,7 +27,7 @@ jobs:
         uses: SebRollen/toml-action@2bd04b06a3ebc3e6a3eb6060de115710cad16cd6 #v1.0.2
         with:
           file: 'pyproject.toml'
-          field: 'tool.poetry.version'
+          field: 'project.version'
 
       - name: Define TAG
         run: echo TAG="v${{ steps.read_toml.outputs.value }}" >> $GITHUB_ENV

@@ -10,3 +10,9 @@ analytics-metadata.csv
 empty_dir/
 htmlcov/
 .DS_Store
+.venv/
+.venv-poetry/
+.env
+*.log
+uv.lock
+poetry.toml

@@ -24,7 +24,8 @@ repos:
       name: mypy
       language: system
       require_serial: true
-      entry: poetry run mypy
+      entry: bash .pre-commit-mypy.sh
+      pass_filenames: false
       types_or: [python, pyi]
 default_language_version:
     python: python3

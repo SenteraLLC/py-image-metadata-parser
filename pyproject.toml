@@ -1,36 +1,36 @@
-[tool.poetry]
+[project]
 name = "imgparse"
 version = "2.0.12"
 description = "Python image-metadata-parser utilities"
 authors = []
-include = [
-    "imgparse/py.typed"
+requires-python = ">=3.10,<4.0"
+dependencies = [
+    "exifread==3.1.0",
+    "click",
+    "xmltodict",
+    "requests",
 ]
 
-[tool.poetry.dependencies]
-python = "^3.10"
-exifread = "3.1.0"
-click = "*"
-xmltodict = "*"
-requests = "*"
-boto3 = {version = "*", optional = true}
-s3path = {version = "*", optional = true}
+[project.optional-dependencies]
+s3 = ["boto3", "s3path"]
 
-[tool.poetry.group.dev.dependencies]
-pytest = "*"
-pytest-cov = "*"
-pre_commit = "*"
-requests-mock = "*"
-mypy = "*"
-types-requests = "*"
-boto3-stubs = {version = "*", extras=["s3"]}
-
-[tool.poetry.scripts]
+[project.scripts]
 imgparse = "imgparse.cli:cli"
 
-[tool.poetry.extras]
-s3 = ["boto3", "s3path"]
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "pre-commit",
+    "requests-mock",
+    "mypy",
+    "types-requests",
+    "boto3-stubs[s3]",
+]
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+include = [{ path = "imgparse/py.typed", format = ["sdist", "wheel"] }]
