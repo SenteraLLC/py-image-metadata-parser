@@ -7,9 +7,17 @@ To add a new supported camera make, create a new dictionary of camera model/pixe
 to ``PIXEL_PITCHES``, indexed by camera make.
 
 To add a new supported camera model, simply append a new model/pixel pitch pair to the existing camera make dictionary.
+
+Some DJI models (e.g. the Matrice 4E) expose multiple cameras that all report the same ``Image Model``. For those,
+the value is a dictionary keyed by image width (in pixels), which uniquely identifies the lens/sensor. See
+``MetadataParser.pixel_pitch_meters`` for how these are resolved.
 """
 
-DJI_PIXEL_PITCH = {
+# A pixel pitch is either a single value (meters) or, for sensors whose cameras
+# share an ``Image Model``, a mapping of image width (pixels) -> pixel pitch.
+PixelPitch = float | dict[int, float]
+
+DJI_PIXEL_PITCH: dict[str, PixelPitch] = {
     "FC6310": 2.41e-06,  # Phantom 4 Pro
     "FC6310S": 2.41e-06,  # Phantom 4 Pro V2
     "FC220": 1.55e-06,  # Phantom 2 Vision
@@ -24,24 +32,26 @@ DJI_PIXEL_PITCH = {
     "ZenmuseP1": 4.27e-06,  # Zemmuse P1 (M300) (24mm, 35mm, 50mm)
     "FC3170": 8e-07,  # Mavic Air 2
     "M3E": 3.28e-06,  # Mavic 3 Enterprise
-    "M4E": 3.28e-06,  # Matrice 4E (wide camera: 4/3" CMOS, 5280x3956)
+    "M4E": {
+        5280: 3.28e-06,  # Wide camera (4/3" CMOS, 5280x3956)
+    },
     "FC6360": 3.0e-06,  # Phantom 4 Multispectral
     "FC6310R": 2.41e-06,  # Phatom 4 Pro RTK
     "M3M": 3.28e-06,  # Mavic 3 Multispectral
 }
 
-HASSELBLAD_PIXEL_PITCH = {
+HASSELBLAD_PIXEL_PITCH: dict[str, PixelPitch] = {
     "L1D-20c": 2.4e-06,  # Mavic 2 Pro
     "L2D-20c": 3.28e-06,  # Mavic 3 Classic
 }
 
-SONY_PIXEL_PITCH = {
+SONY_PIXEL_PITCH: dict[str, PixelPitch] = {
     "DSC-RX1RM2": 4.5e-06,  # Sony Cyber-shot RX1R II (42.4MP)
     "DSC-RX100M2": 2.41e-06,  # Sony Cyber-shot DSC-RX100 II (20.2MP)
     "ILCE-7RM4A": 3.76e-06,  # Sony A7R IV (60.2MP)
 }
 
-PIXEL_PITCHES = {
+PIXEL_PITCHES: dict[str, dict[str, PixelPitch]] = {
     "DJI": DJI_PIXEL_PITCH,
     "Hasselblad": HASSELBLAD_PIXEL_PITCH,
     "SONY": SONY_PIXEL_PITCH,

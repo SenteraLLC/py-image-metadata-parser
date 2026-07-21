@@ -19,6 +19,14 @@ class Tag:
         self.values = values
 
 
+class Ratio:
+    """Minimal stand-in for exifread's Ratio (has ``num`` / ``den``)."""
+
+    def __init__(self, num: int, den: int):
+        self.num = num
+        self.den = den
+
+
 @pytest.fixture
 def bad_data_parser() -> MetadataParser:
     parser = MetadataParser(base_path / "BAD_IMG.jpg")
@@ -75,6 +83,34 @@ def sentera_parser() -> MetadataParser:
 @pytest.fixture
 def dji_parser() -> MetadataParser:
     return MetadataParser(base_path / "DJI_normal.JPG")
+
+
+@pytest.fixture
+def m4e_wide_parser() -> MetadataParser:
+    parser = MetadataParser(base_path / "M4E_wide.JPG")
+    parser._exif_data = {
+        "Image Make": Tag("DJI"),
+        "Image Model": Tag("M4E"),
+        "EXIF FocalLength": Tag([Ratio(1229, 100)]),
+        "EXIF ExifImageWidth": Tag([5280]),
+        "EXIF ExifImageLength": Tag([3956]),
+    }
+    parser._xmp_data = {}
+    return parser
+
+
+@pytest.fixture
+def m4e_tele_parser() -> MetadataParser:
+    parser = MetadataParser(base_path / "M4E_tele.JPG")
+    parser._exif_data = {
+        "Image Make": Tag("DJI"),
+        "Image Model": Tag("M4E"),
+        "EXIF FocalLength": Tag([Ratio(1229, 100)]),
+        "EXIF ExifImageWidth": Tag([8064]),
+        "EXIF ExifImageLength": Tag([6048]),
+    }
+    parser._xmp_data = {}
+    return parser
 
 
 @pytest.fixture
@@ -142,6 +178,20 @@ def test_get_camera_params_dji(dji_parser: MetadataParser) -> None:
     assert focal1 == 0.0088
     assert pitch1 == 2.41e-06
     assert focal_pixels == pytest.approx(3651.4523, abs=1e-04)
+
+
+def test_get_camera_params_m4e_wide(m4e_wide_parser: MetadataParser) -> None:
+    assert m4e_wide_parser.pixel_pitch_meters() == 3.28e-06
+    assert m4e_wide_parser.focal_length_pixels() == pytest.approx(3746.9512, abs=1e-04)
+
+
+def test_get_camera_params_m4e_non_wide_unsupported(
+    m4e_tele_parser: MetadataParser,
+) -> None:
+    # Non-Wide M4E lenses (e.g. width 8064) aren't supported yet and must raise
+    # rather than silently reuse the Wide pixel pitch.
+    with pytest.raises(ParsingError):
+        m4e_tele_parser.pixel_pitch_meters()
 
 
 def test_get_camera_params_sentera(sentera_parser: MetadataParser) -> None:

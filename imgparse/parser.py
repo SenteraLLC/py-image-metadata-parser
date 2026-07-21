@@ -206,6 +206,19 @@ class MetadataParser:
                 "Couldn't parse pixel pitch. Sensor might not be supported"
             )
 
+        # Some models (e.g. Matrice 4E) have multiple cameras that share the same
+        # model string; the pixel pitch is stored per image width to identify the lens.
+        if isinstance(pixel_pitch, dict):
+            width = self.dimensions().width
+            try:
+                pixel_pitch = pixel_pitch[width]
+            except KeyError:
+                raise ParsingError(
+                    f"Pixel pitch for {self.model()} at image width {width} isn't "
+                    "supported yet. Only the Wide camera is currently supported for "
+                    "this sensor."
+                )
+
         return pixel_pitch
 
     def calibrated_focal_length(self) -> tuple[float, bool]:
