@@ -114,6 +114,34 @@ def m4e_tele_parser() -> MetadataParser:
 
 
 @pytest.fixture
+def m4d_wide_parser() -> MetadataParser:
+    parser = MetadataParser(base_path / "M4D_wide.JPG")
+    parser._exif_data = {
+        "Image Make": Tag("DJI"),
+        "Image Model": Tag("M4D"),
+        "EXIF FocalLength": Tag([Ratio(1229, 100)]),
+        "EXIF ExifImageWidth": Tag([5280]),
+        "EXIF ExifImageLength": Tag([3956]),
+    }
+    parser._xmp_data = {}
+    return parser
+
+
+@pytest.fixture
+def m4d_tele_parser() -> MetadataParser:
+    parser = MetadataParser(base_path / "M4D_tele.JPG")
+    parser._exif_data = {
+        "Image Make": Tag("DJI"),
+        "Image Model": Tag("M4D"),
+        "EXIF FocalLength": Tag([Ratio(1229, 100)]),
+        "EXIF ExifImageWidth": Tag([8064]),
+        "EXIF ExifImageLength": Tag([6048]),
+    }
+    parser._xmp_data = {}
+    return parser
+
+
+@pytest.fixture
 def dji_homepoint_parser() -> MetadataParser:
     return MetadataParser(base_path / "DJI_home_point.jpg")
 
@@ -192,6 +220,18 @@ def test_get_camera_params_m4e_non_wide_unsupported(
     # rather than silently reuse the Wide pixel pitch.
     with pytest.raises(ParsingError):
         m4e_tele_parser.pixel_pitch_meters()
+
+
+def test_get_camera_params_m4d_wide(m4d_wide_parser: MetadataParser) -> None:
+    assert m4d_wide_parser.pixel_pitch_meters() == 3.28e-06
+    assert m4d_wide_parser.focal_length_pixels() == pytest.approx(3746.9512, abs=1e-04)
+
+
+def test_get_camera_params_m4d_non_wide_unsupported(
+    m4d_tele_parser: MetadataParser,
+) -> None:
+    with pytest.raises(ParsingError):
+        m4d_tele_parser.pixel_pitch_meters()
 
 
 def test_get_camera_params_sentera(sentera_parser: MetadataParser) -> None:

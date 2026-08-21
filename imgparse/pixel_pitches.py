@@ -35,6 +35,9 @@ DJI_PIXEL_PITCH: dict[str, PixelPitch] = {
     "M4E": {
         5280: 3.28e-06,  # Wide camera (4/3" CMOS, 5280x3956)
     },
+    "M4D": {
+        5280: 3.28e-06,  # Wide camera (4/3" CMOS, 5280x3956)
+    },
     "FC6360": 3.0e-06,  # Phantom 4 Multispectral
     "FC6310R": 2.41e-06,  # Phatom 4 Pro RTK
     "M3M": 3.28e-06,  # Mavic 3 Multispectral
