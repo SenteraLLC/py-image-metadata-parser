@@ -111,8 +111,9 @@ def read_raw_data(
                 "Body"
             ].read()
         elif isinstance(image_path, BytesIO):
-            image_path.seek(len(current_data))
-            additional_data = image_path.read(read_size - len(current_data))
+            # already fully in memory, so read it all at once instead of chunking
+            image_path.seek(0)
+            additional_data = image_path.read()
         else:
             with open(image_path, "rb") as file:
                 file.seek(len(current_data))
