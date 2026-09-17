@@ -24,7 +24,9 @@ XMP_END = re.compile(r"</x:xmpmeta>")
 
 
 def get_exif_data(
-    image_path: Path | S3Path, s3_role: str | None = None, current_data: bytes = b""
+    image_path: Path | S3Path | BytesIO,
+    s3_role: str | None = None,
+    current_data: bytes = b"",
 ) -> tuple[dict[str, Any], bytes]:
     """
     Get a dictionary of lookup keys/values for the exif data of the provided image.
@@ -52,7 +54,9 @@ def get_exif_data(
 
 
 def get_xmp_data(
-    image_path: Path | S3Path, s3_role: str | None = None, current_data: bytes = b""
+    image_path: Path | S3Path | BytesIO,
+    s3_role: str | None = None,
+    current_data: bytes = b"",
 ) -> tuple[dict[str, Any], bytes]:
     """Extract the xmp data of the provided image as a continuous string."""
     start_byte = 0
@@ -90,7 +94,7 @@ def get_xmp_data(
 
 
 def read_raw_data(
-    image_path: Path | S3Path,
+    image_path: Path | S3Path | BytesIO,
     s3_role: str | None = None,
     read_size: int = CHUNK_SIZE,
     current_data: bytes = b"",
@@ -106,6 +110,10 @@ def read_raw_data(
             additional_data = obj.get(Range=f"bytes={len(current_data)}-{read_size}")[
                 "Body"
             ].read()
+        elif isinstance(image_path, BytesIO):
+            # already fully in memory, so read it all at once instead of chunking
+            image_path.seek(0)
+            additional_data = image_path.read()
         else:
             with open(image_path, "rb") as file:
                 file.seek(len(current_data))
