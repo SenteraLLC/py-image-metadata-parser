@@ -4,6 +4,7 @@ import logging
 import re
 from datetime import datetime, timedelta
 from fractions import Fraction
+from io import BytesIO
 from pathlib import Path
 from typing import Any
 
@@ -36,7 +37,11 @@ logger = logging.getLogger(__name__)
 class MetadataParser:
     """Metadata parsing class."""
 
-    def __init__(self, image_path: Path | str | S3Path, s3_role: str | None = None):
+    def __init__(
+        self,
+        image_path: Path | str | S3Path | BytesIO,
+        s3_role: str | None = None,
+    ):
         """Initialize metadata parser."""
         if isinstance(image_path, str):
             if image_path[:5] == "s3://":
@@ -155,7 +160,18 @@ class MetadataParser:
 
     def dimensions(self) -> Dimensions:
         """Get the height and width (in pixels) of the image."""
-        ext = self.image_path.suffix.lower()
+        if isinstance(self.image_path, BytesIO):
+            # BytesIO has no filename, so sniff the format from the file header instead
+            self.exif_data  # ensure raw bytes have been read at least once
+            header = self._raw_data[:4]
+            if header[:2] == b"\xff\xd8":
+                ext = ".jpg"
+            elif header in (b"II*\x00", b"MM\x00*"):
+                ext = ".tif"
+            else:
+                ext = ""
+        else:
+            ext = self.image_path.suffix.lower()
 
         try:
             if ext in [".jpg", ".jpeg"]:

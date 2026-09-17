@@ -194,6 +194,24 @@ def s3_image_parser() -> MetadataParser:
 
 
 @pytest.fixture
+def sentera_bytesio_parser() -> MetadataParser:
+    with open(base_path / "sentera_normal.jpg", "rb") as f:
+        return MetadataParser(BytesIO(f.read()))
+
+
+@pytest.fixture
+def dji_bytesio_parser() -> MetadataParser:
+    with open(base_path / "DJI_normal.JPG", "rb") as f:
+        return MetadataParser(BytesIO(f.read()))
+
+
+@pytest.fixture
+def sentera_6x_bytesio_parser() -> MetadataParser:
+    with open(base_path / "sentera_6x.tif", "rb") as f:
+        return MetadataParser(BytesIO(f.read()))
+
+
+@pytest.fixture
 def two_xmp_end_tags_parser() -> MetadataParser:
     return MetadataParser(base_path / "2xmpendtags.jpg")
 
@@ -819,3 +837,41 @@ def test_multiple_xmp_end_tags(
     two_xmp_end_tags_parser: MetadataParser,
 ) -> None:
     assert two_xmp_end_tags_parser.xmp_data is not None
+
+
+def test_bytesio_get_make_and_model(sentera_bytesio_parser: MetadataParser) -> None:
+    assert sentera_bytesio_parser.make() == "Sentera"
+
+
+def test_bytesio_get_make_and_model_dji(dji_bytesio_parser: MetadataParser) -> None:
+    assert dji_bytesio_parser.make() == "DJI"
+
+
+def test_bytesio_get_dimensions_jpg(sentera_bytesio_parser: MetadataParser) -> None:
+    height, width = sentera_bytesio_parser.dimensions()
+    assert [height, width] == [3000, 4000]
+
+
+def test_bytesio_get_dimensions_tif(
+    sentera_6x_bytesio_parser: MetadataParser,
+) -> None:
+    height, width = sentera_6x_bytesio_parser.dimensions()
+    assert [height, width] == [1464, 1952]
+
+
+def test_bytesio_get_dimensions_dji(dji_bytesio_parser: MetadataParser) -> None:
+    height, width = dji_bytesio_parser.dimensions()
+    assert [height, width] == [3648, 4864]
+
+
+def test_bytesio_get_lat_lon(sentera_bytesio_parser: MetadataParser) -> None:
+    lat, lon = sentera_bytesio_parser.location()
+    assert [lat, lon] == pytest.approx([27.564768, -97.657411], abs=1e-06)
+
+
+def test_bytesio_relative_altitude_session_fallback_raises(
+    sentera_bytesio_parser: MetadataParser,
+) -> None:
+    # session.txt fallback requires a local directory, which a BytesIO doesn't have
+    with pytest.raises(ParsingError):
+        parse_session_alt(sentera_bytesio_parser.image_path)

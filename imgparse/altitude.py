@@ -3,6 +3,7 @@
 import logging
 import os
 from functools import lru_cache
+from io import BytesIO
 from pathlib import Path
 
 import requests
@@ -16,7 +17,7 @@ TERRAIN_URL = "https://maps.googleapis.com/maps/api/elevation/json"
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 
-def parse_session_alt(image_path: Path | S3Path) -> float:
+def parse_session_alt(image_path: Path | S3Path | BytesIO) -> float:
     """
     Get the session ground altitude (meters above msl) from a `session.txt` file.
 
@@ -24,8 +25,8 @@ def parse_session_alt(image_path: Path | S3Path) -> float:
     altitude is written as a text file that needs to be read.  The `session.txt` must be in the same directory as the
     image in order to be read.
     """
-    if isinstance(image_path, S3Path):
-        raise ParsingError("File needs to be local to parse session.txt")
+    if isinstance(image_path, (S3Path, BytesIO)):
+        raise ParsingError("File needs to be a local file to parse session.txt")
 
     session_path = image_path.parent / "session.txt"
     if not session_path.is_file():
